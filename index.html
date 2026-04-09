@@ -3,689 +3,708 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arena RPG - P2P</title>
+    <title>Unity RPG Arena</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+        
         :root {
-            --verde-bosque: #1e3a2f;
-            --verde-claro: #2d5a3d;
-            --amarillo-oro: #f1c40f;
-            --amarillo-suave: #f39c12;
-            --azul-cielo: #3498db;
-            --azul-profundo: #2980b9;
-            --crema: #ecf0f1;
-            --marron-tierra: #5d4037;
+            --bg-dark: #1a1a1a;
+            --bg-panel: #252526;
+            --bg-input: #3c3c3c;
+            --accent: #007acc;
+            --accent-hover: #0098ff;
+            --text: #cccccc;
+            --text-muted: #808080;
+            --border: #3e3e42;
+            --success: #4ec9b0;
+            --danger: #f48771;
+            --warning: #dcdcaa;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Georgia', serif;
-            background: linear-gradient(135deg, #1e3a2f 0%, #2c5530 50%, #1e3a2f 100%);
-            color: var(--crema);
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
             overflow: hidden;
             height: 100vh;
-            position: relative;
-        }
-
-        /* Fondo decorativo cálido */
-        body::before {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                radial-gradient(circle at 20% 50%, rgba(243, 156, 18, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(52, 152, 219, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 40% 20%, rgba(241, 196, 15, 0.1) 0%, transparent 40%);
-            pointer-events: none;
-        }
-
-        #gameContainer {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+        }
+
+        /* Top Bar estilo Unity */
+        .top-bar {
+            height: 30px;
+            background: #2d2d30;
+            border-bottom: 1px solid var(--border);
+            display: flex;
             align-items: center;
+            padding: 0 15px;
+            font-size: 12px;
+            -webkit-app-region: drag;
+        }
+
+        .top-bar span { margin-right: 20px; color: var(--text-muted); }
+        .top-bar .active { color: var(--text); border-bottom: 2px solid var(--accent); height: 100%; display: flex; align-items: center; }
+
+        /* Layout principal */
+        #app {
+            flex: 1;
+            display: flex;
+            position: relative;
+        }
+
+        /* Canvas Container */
+        #game-view {
+            flex: 1;
+            background: #0f0f0f;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
         }
 
         canvas {
-            border: 4px solid #5d4037;
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.6), inset 0 0 20px rgba(0,0,0,0.3);
+            background: #1e3a2f;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
             image-rendering: pixelated;
-            background: #2d5016;
         }
 
-        /* Screens */
-        .screen {
+        /* Side Panel estilo Inspector */
+        .inspector {
+            width: 300px;
+            background: var(--bg-panel);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            padding: 10px 15px;
+            background: #2d2d30;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .component {
+            border-bottom: 1px solid var(--border);
+            padding: 15px;
+        }
+
+        .component-title {
+            color: var(--text-muted);
+            font-size: 11px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        /* Stats Grid */
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            font-size: 13px;
+        }
+
+        .stat-label { color: var(--text-muted); }
+        .stat-value { 
+            color: var(--text); 
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+        }
+
+        .stat-value.kill { color: var(--success); }
+        .stat-value.damage { color: var(--warning); }
+
+        /* Progress Bars estilo Unity */
+        .unity-bar {
+            height: 20px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            margin: 5px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .unity-bar-fill {
+            height: 100%;
+            transition: width 0.2s;
+            position: relative;
+        }
+
+        .unity-bar-text {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: linear-gradient(180deg, #3d2817 0%, #2c1810 100%);
-            padding: 40px;
-            border-radius: 20px;
-            border: 3px solid var(--amarillo-oro);
-            box-shadow: 0 0 30px rgba(241, 196, 15, 0.3), inset 0 0 60px rgba(0,0,0,0.5);
-            text-align: center;
-            min-width: 450px;
-            max-width: 500px;
+            font-size: 11px;
+            font-weight: 600;
+            z-index: 2;
+            text-shadow: 0 1px 2px black;
         }
 
-        .screen.hidden { display: none !important; }
+        .hp-fill { background: #e81123; }
+        .mp-fill { background: var(--accent); }
 
-        h1 {
-            color: var(--amarillo-oro);
-            font-size: 2.8em;
-            margin-bottom: 10px;
-            text-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
-            font-family: 'Palatino Linotype', serif;
-            letter-spacing: 2px;
+        /* Modal estilo Editor Unity */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
         }
 
-        .subtitle {
-            color: #bbb;
-            margin-bottom: 30px;
-            font-size: 1.1em;
-            font-style: italic;
+        .modal {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            width: 500px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
         }
 
+        .modal-header {
+            background: #2d2d30;
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border);
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* Unity Buttons */
         .btn {
-            display: block;
-            width: 100%;
-            padding: 16px;
-            margin: 12px 0;
-            background: linear-gradient(180deg, var(--amarillo-suave) 0%, #d35400 100%);
-            border: 2px solid var(--amarillo-oro);
-            border-radius: 8px;
-            color: #2c1810;
-            font-size: 1.2em;
-            font-weight: bold;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 6px 20px;
+            font-family: inherit;
+            font-size: 13px;
             cursor: pointer;
-            transition: all 0.3s;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(241, 196, 15, 0.4);
-            background: linear-gradient(180deg, #f39c12 0%, #e67e22 100%);
+            background: #404040;
+            border-color: #555;
         }
 
-        .btn.secondary {
-            background: linear-gradient(180deg, var(--verde-claro) 0%, var(--verde-bosque) 100%);
-            color: var(--crema);
-            border-color: #27ae60;
-            font-size: 1em;
+        .btn-primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
         }
 
-        .btn.secondary:hover {
-            background: linear-gradient(180deg, #3d8b5f 0%, #2d5a3d 100%);
-            border-color: #2ecc71;
+        .btn-primary:hover {
+            background: var(--accent-hover);
         }
 
-        .btn:disabled {
-            background: #555;
-            border-color: #777;
-            cursor: not-allowed;
-            opacity: 0.6;
+        .btn-success {
+            background: #2d5a3d;
+            border-color: var(--success);
+            color: var(--success);
         }
 
-        .back-btn {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid var(--amarillo-oro);
-            color: var(--amarillo-oro);
-            padding: 8px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 0.9em;
-            transition: all 0.2s;
-        }
-
-        .back-btn:hover {
-            background: rgba(241, 196, 15, 0.2);
-            transform: translateX(-2px);
-        }
-
-        /* Código estilo pergamino */
-        .code-container {
-            background: #f4e4bc;
-            border: 2px solid #8b6914;
-            border-radius: 8px;
-            padding: 15px;
-            margin: 20px 0;
-            color: #2c1810;
-            font-family: 'Courier New', monospace;
-            font-size: 0.85em;
-            word-break: break-all;
-            min-height: 80px;
-            position: relative;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
-        }
-
-        .code-label {
-            position: absolute;
-            top: -10px;
-            left: 10px;
-            background: var(--amarillo-oro);
-            color: #2c1810;
-            padding: 2px 10px;
-            border-radius: 4px;
-            font-size: 0.75em;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-
-        textarea.code-input {
+        /* Inputs estilo Unity */
+        .unity-input {
             width: 100%;
-            min-height: 80px;
-            background: #f4e4bc;
-            border: 2px solid #8b6914;
-            border-radius: 8px;
-            padding: 15px;
-            color: #2c1810;
-            font-family: 'Courier New', monospace;
-            font-size: 0.85em;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
             resize: none;
             margin: 10px 0;
         }
 
-        .instructions {
-            color: #d4c4a8;
+        .unity-input:focus {
+            outline: 1px solid var(--accent);
+            border-color: var(--accent);
+        }
+
+        .input-group {
             margin: 15px 0;
-            line-height: 1.6;
-            font-size: 0.95em;
         }
 
-        .instructions strong {
-            color: var(--amarillo-oro);
+        .input-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+            display: block;
         }
 
-        .step-number {
-            display: inline-block;
-            width: 28px;
-            height: 28px;
-            background: var(--azul-cielo);
-            color: white;
-            border-radius: 50%;
-            text-align: center;
-            line-height: 28px;
-            margin-right: 8px;
-            font-weight: bold;
-            font-size: 0.9em;
-        }
-
-        /* HUD */
-        #hud {
+        /* Tooltips */
+        .tooltip {
             position: absolute;
-            top: 15px;
-            left: 15px;
-            right: 15px;
+            background: #ffffcc;
+            color: black;
+            padding: 5px 10px;
+            font-size: 12px;
+            border-radius: 3px;
+            pointer-events: none;
+            z-index: 100;
+            display: none;
+        }
+
+        /* Gameplay HUD Overlay */
+        #game-hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 320px;
+            pointer-events: none;
             display: flex;
             justify-content: space-between;
-            pointer-events: none;
-            z-index: 10;
         }
 
-        .hud-panel {
-            background: rgba(46, 32, 20, 0.9);
-            border: 2px solid;
-            border-radius: 12px;
-            padding: 12px 18px;
+        .player-card {
+            background: rgba(37, 37, 38, 0.9);
+            border: 1px solid var(--border);
+            padding: 15px;
             min-width: 200px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
         }
 
-        .hud-p1 { border-color: var(--amarillo-oro); }
-        .hud-p2 { border-color: var(--azul-cielo); }
-
-        .hud-title {
-            font-weight: bold;
+        .player-name {
+            font-weight: 700;
             margin-bottom: 8px;
-            font-size: 0.95em;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            font-size: 14px;
         }
 
-        .hud-p1 .hud-title { color: var(--amarillo-oro); }
-        .hud-p2 .hud-title { color: var(--azul-cielo); }
+        .p1-name { color: #4ec9b0; }
+        .p2-name { color: #569cd6; }
 
-        .bar {
-            height: 18px;
-            background: rgba(0,0,0,0.5);
-            border-radius: 9px;
-            margin: 6px 0;
-            overflow: hidden;
-            position: relative;
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-
-        .bar-fill {
-            height: 100%;
-            transition: width 0.3s;
-            border-radius: 9px;
-        }
-
-        .hp-fill { background: linear-gradient(90deg, #c0392b, #e74c3c); }
-        .mp-fill { background: linear-gradient(90deg, #2980b9, #3498db); }
-
-        .bar-text {
+        /* Floating Combat Text */
+        .combat-text {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 10px;
-            font-weight: bold;
-            text-shadow: 1px 1px 2px black;
-            white-space: nowrap;
+            font-weight: 700;
+            font-size: 16px;
+            pointer-events: none;
+            text-shadow: 0 2px 4px black;
+            animation: floatUp 1.5s ease-out forwards;
         }
 
-        .stats-row {
-            display: flex;
-            gap: 15px;
-            margin-top: 8px;
-            font-size: 0.85em;
-            color: #aaa;
+        @keyframes floatUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-40px); opacity: 0; }
         }
 
-        .stat-item {
-            color: var(--crema);
+        .damage-text { color: #ff6b6b; }
+        .heal-text { color: #4ec9b0; }
+        .level-text { color: #ffd700; }
+
+        /* Status indicators */
+        .status-connected {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            color: var(--success);
+            font-size: 12px;
         }
 
-        .stat-item span {
-            color: var(--amarillo-oro);
-            font-weight: bold;
-        }
-
-        #controls-hint {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(46, 32, 20, 0.9);
-            padding: 12px 25px;
-            border-radius: 25px;
-            border: 1px solid var(--amarillo-oro);
-            font-size: 0.9em;
-            color: #d4c4a8;
-        }
-
-        .key {
-            display: inline-block;
-            background: #5d4037;
-            border: 1px solid #8d6e63;
-            padding: 4px 10px;
-            border-radius: 6px;
-            margin: 0 3px;
-            font-family: monospace;
-            font-size: 0.9em;
-            color: var(--amarillo-oro);
-        }
-
-        .success-msg {
-            color: #2ecc71;
-            margin-top: 10px;
-            font-weight: bold;
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
             animation: pulse 2s infinite;
         }
 
         @keyframes pulse {
             0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
+            50% { opacity: 0.5; }
         }
 
-        .loading-text {
-            color: var(--azul-cielo);
-            font-style: italic;
-            margin: 10px 0;
+        /* Scrollbar estilo Unity */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
         }
 
-        .error-msg {
-            color: #e74c3c;
-            margin-top: 10px;
-            font-size: 0.9em;
+        ::-webkit-scrollbar-track {
+            background: var(--bg-panel);
         }
 
-        /* Decoración de hojas */
-        .leaf {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            background: rgba(46, 204, 113, 0.3);
-            border-radius: 0 50% 0 50%;
-            transform: rotate(45deg);
-            pointer-events: none;
+        ::-webkit-scrollbar-thumb {
+            background: #424242;
+            border: 1px solid var(--border);
         }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4f4f4f;
+        }
+
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
-    <div id="gameContainer">
-        <canvas id="gameCanvas" width="800" height="600"></canvas>
-        
-        <!-- HUD del juego -->
-        <div id="hud" class="hidden">
-            <div class="hud-panel hud-p1">
-                <div class="hud-title">🛡️ Tu Guerrero (Nv.<span id="lv1">1</span>)</div>
-                <div class="bar">
-                    <div class="bar-fill hp-fill" id="hp1" style="width: 100%"></div>
-                    <div class="bar-text" id="hpText1">100/100</div>
+    <div class="top-bar">
+        <span class="active">Game</span>
+        <span>Scene</span>
+        <span>Project</span>
+        <span>Console</span>
+        <span style="margin-left: auto;">Unity RPG Arena v1.0</span>
+    </div>
+
+    <div id="app">
+        <!-- Game View -->
+        <div id="game-view">
+            <canvas id="gameCanvas" width="800" height="600"></canvas>
+            
+            <!-- In-Game HUD -->
+            <div id="game-hud" class="hidden">
+                <div class="player-card">
+                    <div class="player-name p1-name">● Player 1 (You)</div>
+                    <div class="unity-bar">
+                        <div class="unity-bar-fill hp-fill" id="hp-bar-1" style="width: 100%"></div>
+                        <div class="unity-bar-text" id="hp-text-1">100/100</div>
+                    </div>
+                    <div class="unity-bar">
+                        <div class="unity-bar-fill mp-fill" id="mp-bar-1" style="width: 100%"></div>
+                        <div class="unity-bar-text" id="mp-text-1">100/100</div>
+                    </div>
                 </div>
-                <div class="bar">
-                    <div class="bar-fill mp-fill" id="mp1" style="width: 100%"></div>
-                    <div class="bar-text" id="mpText1">50/50</div>
-                </div>
-                <div class="stats-row">
-                    <div class="stat-item">ATK: <span id="atk1">10</span></div>
-                    <div class="stat-item">DEF: <span id="def1">5</span></div>
+                
+                <div class="player-card">
+                    <div class="player-name p2-name">● Player 2 (Opponent)</div>
+                    <div class="unity-bar">
+                        <div class="unity-bar-fill hp-fill" id="hp-bar-2" style="width: 100%"></div>
+                        <div class="unity-bar-text" id="hp-text-2">100/100</div>
+                    </div>
                 </div>
             </div>
 
-            <div class="hud-panel hud-p2">
-                <div class="hud-title">⚔️ Rival (Nv.<span id="lv2">1</span>)</div>
-                <div class="bar">
-                    <div class="bar-fill hp-fill" id="hp2" style="width: 100%"></div>
-                    <div class="bar-text" id="hpText2">100/100</div>
+            <!-- Combat text container -->
+            <div id="combat-container" style="position: absolute; width: 800px; height: 600px; pointer-events: none;"></div>
+        </div>
+
+        <!-- Inspector Panel -->
+        <div class="inspector">
+            <div class="panel-header">
+                <span style="color: var(--accent);">❖</span> Inspector
+            </div>
+
+            <!-- Connection Status -->
+            <div class="component">
+                <div class="component-title">Network Manager</div>
+                <div id="connection-status" style="font-size: 12px; color: var(--text-muted);">
+                    Status: <span style="color: var(--danger);">Disconnected</span>
                 </div>
-                <div class="bar">
-                    <div class="bar-fill mp-fill" id="mp2" style="width: 100%"></div>
-                    <div class="bar-text" id="mpText2">50/50</div>
+                <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" onclick="showModal('host')" id="btn-host">
+                    Create Room
+                </button>
+                <button class="btn" style="width: 100%; margin-top: 5px;" onclick="showModal('join')" id="btn-join">
+                    Join Room
+                </button>
+            </div>
+
+            <!-- Match Statistics -->
+            <div class="component">
+                <div class="component-title">Match Statistics</div>
+                
+                <div class="stat-row">
+                    <span class="stat-label">Kills</span>
+                    <span class="stat-value kill" id="stat-kills">0</span>
                 </div>
-                <div class="stats-row">
-                    <div class="stat-item">ATK: <span id="atk2">10</span></div>
-                    <div class="stat-item">DEF: <span id="def2">5</span></div>
+                <div class="stat-row">
+                    <span class="stat-label">Deaths</span>
+                    <span class="stat-value" id="stat-deaths">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Damage Dealt</span>
+                    <span class="stat-value damage" id="stat-damage">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Current Streak</span>
+                    <span class="stat-value" id="stat-streak">0</span>
+                </div>
+                
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border);">
+                    <div class="stat-row">
+                        <span class="stat-label">Session Time</span>
+                        <span class="stat-value" id="session-time">00:00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="component">
+                <div class="component-title">Input Manager</div>
+                <div style="font-size: 12px; line-height: 1.6; color: var(--text-muted);">
+                    <div style="margin: 5px 0;"><kbd style="background: #333; padding: 2px 6px; border-radius: 3px;">WASD</kbd> Move</div>
+                    <div style="margin: 5px 0;"><kbd style="background: #333; padding: 2px 6px; border-radius: 3px;">SPACE</kbd> Attack</div>
+                    <div style="margin: 5px 0;"><kbd style="background: #333; padding: 2px 6px; border-radius: 3px;">ESC</kbd> Reset</div>
+                </div>
+            </div>
+
+            <!-- Console -->
+            <div class="component" style="flex: 1; display: flex; flex-direction: column;">
+                <div class="component-title">Console</div>
+                <div id="console-log" style="flex: 1; background: #0f0f0f; border: 1px solid var(--border); padding: 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; overflow-y: auto; color: #888;">
+                    > System initialized...<br>
+                    > Waiting for connection...
                 </div>
             </div>
         </div>
+    </div>
 
-        <div id="controls-hint" class="hidden">
-            <span class="key">WASD</span> Mover <span style="margin: 0 10px;">|</span> <span class="key">ESPACIO</span> Atacar
-        </div>
-
-        <!-- MENÚ PRINCIPAL -->
-        <div id="menu" class="screen">
-            <h1>🌿 RPG Arena</h1>
-            <div class="subtitle">Aventura P2P en tiempo real</div>
-            
-            <button class="btn" onclick="showScreen('host-setup')">🜲 Crear Sala</button>
-            <button class="btn secondary" onclick="showScreen('join-setup')">⚔ Unirse</button>
-            <button class="btn secondary" onclick="showScreen('howto')" style="margin-top: 20px; opacity: 0.8;">¿Cómo jugar?</button>
-            
-            <div id="loadingMsg" style="margin-top: 20px; color: #f39c12; display: none;">Cargando recursos...</div>
-        </div>
-
-        <!-- HOST: Crear sala -->
-        <div id="host-setup" class="screen hidden">
-            <button class="back-btn" onclick="showScreen('menu')">← Volver</button>
-            <h2 style="color: var(--amarillo-oro); margin-bottom: 20px;">Crear Sala</h2>
-            
-            <div id="host-step1">
-                <div class="instructions">
-                    <span class="step-number">1</span>
-                    <strong>Comparte este código</strong> con tu amigo<br>
-                    <small style="color: #aaa;">Copia el código y envíalo por WhatsApp/Discord</small>
-                </div>
-                
-                <div class="code-container" id="hostCodeBox" style="display: none;">
-                    <div class="code-label">Código de Invitación</div>
-                    <div id="hostCode" style="font-size: 0.75em; line-height: 1.4;"></div>
-                </div>
-                
-                <div id="generatingHost" class="loading-text">Generando sala mágica...</div>
-                
-                <button class="btn" onclick="generateHostCode()" id="btnGenerate">Generar Código</button>
-                <button class="btn secondary" onclick="copyHostCode()" id="btnCopyHost" style="display: none; margin-top: 10px;">📋 Copiar Código</button>
+    <!-- Modals -->
+    
+    <!-- Host Modal -->
+    <div id="modal-host" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <span style="color: var(--accent);">🖧</span> Create Room
             </div>
-
-            <div id="host-step2" style="display: none; margin-top: 20px;">
-                <div class="instructions" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
-                    <span class="step-number">2</span>
-                    <strong>Pega la respuesta</strong> de tu amigo aquí:
+            <div class="modal-body">
+                <div class="input-group">
+                    <label class="input-label">Room Code (Share this)</label>
+                    <textarea class="unity-input" id="host-code" rows="4" readonly style="background: #1a1a1a;"></textarea>
+                    <button class="btn" onclick="copyToClipboard('host-code')" style="margin-top: 5px; width: 100%;">
+                        📋 Copy to Clipboard
+                    </button>
                 </div>
                 
-                <textarea class="code-input" id="hostAnswerInput" placeholder="Tu amigo debe enviarte un código de respuesta... Pégalo aquí"></textarea>
-                
-                <button class="btn" onclick="completeHostConnection()">⚔ ¡A luchar!</button>
-                <div id="hostError" class="error-msg"></div>
-            </div>
-        </div>
-
-        <!-- GUEST: Unirse -->
-        <div id="join-setup" class="screen hidden">
-            <button class="back-btn" onclick="showScreen('menu')">← Volver</button>
-            <h2 style="color: var(--azul-cielo); margin-bottom: 20px;">Unirse a Sala</h2>
-            
-            <div id="join-step1">
-                <div class="instructions">
-                    <span class="step-number">1</span>
-                    <strong>Pega el código</strong> que te envió tu amigo:
-                </div>
-                
-                <textarea class="code-input" id="joinCodeInput" placeholder="Pega aquí el código de invitación..."></textarea>
-                
-                <button class="btn" onclick="generateGuestResponse()">Conectar</button>
-                <div id="joinError" class="error-msg"></div>
-            </div>
-
-            <div id="join-step2" style="display: none; margin-top: 20px;">
-                <div class="instructions" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
-                    <span class="step-number">2</span>
-                    <strong>Envía este código</strong> de vuelta a tu amigo<br>
-                    <small style="color: #aaa;">Copia y pégalo donde te envió el primero</small>
-                </div>
-                
-                <div class="code-container">
-                    <div class="code-label">Tu Respuesta</div>
-                    <div id="guestResponseCode" style="font-size: 0.75em;"></div>
-                </div>
-                
-                <button class="btn secondary" onclick="copyGuestResponse()">📋 Copiar y Listo</button>
-                <div class="success-msg" id="waitingMsg" style="display: none;">
-                    Esperando que el host conecte... <span style="display: inline-block; animation: pulse 1s infinite;">⏳</span>
+                <div class="input-group" id="host-step-2" style="display: none;">
+                    <label class="input-label">Opponent Response Code (Paste here)</label>
+                    <textarea class="unity-input" id="host-answer" rows="4" placeholder="Paste opponent's code here..."></textarea>
                 </div>
             </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="hideModal('host')">Cancel</button>
+                <button class="btn btn-success" onclick="completeHostConnection()" id="btn-connect-host">
+                    Connect
+                </button>
+            </div>
         </div>
+    </div>
 
-        <!-- CÓMO JUGAR -->
-        <div id="howto" class="screen hidden">
-            <button class="back-btn" onclick="showScreen('menu')">← Volver</button>
-            <h2 style="color: var(--amarillo-oro);">Guía de Aventura</h2>
-            
-            <div class="instructions" style="text-align: left; margin: 20px 0;">
-                <p style="margin: 15px 0;"><strong style="color: var(--amarillo-oro);">Conexión:</strong><br>
-                1. Un jugador crea sala y copia el código<br>
-                2. El otro pega el código y copia su respuesta<br>
-                3. El primero pega la respuesta y ¡a jugar!</p>
+    <!-- Join Modal -->
+    <div id="modal-join" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <span style="color: var(--success);">⚔</span> Join Room
+            </div>
+            <div class="modal-body">
+                <div class="input-group" id="join-step-1">
+                    <label class="input-label">Enter Room Code</label>
+                    <textarea class="unity-input" id="join-code" rows="4" placeholder="Paste room code from host..."></textarea>
+                    <button class="btn btn-primary" onclick="generateJoinResponse()" style="width: 100%; margin-top: 10px;">
+                        Generate Response
+                    </button>
+                </div>
                 
-                <p style="margin: 15px 0;"><strong style="color: var(--amarillo-oro);">Controles:</strong><br>
-                <span class="key">WASD</span> Mover por el mapa<br>
-                <span class="key">ESPACIO</span> Atacar (cuerpo a cuerpo)<br>
-                <span class="key">ESC</span> Salir al menú</p>
-                
-                <p style="margin: 15px 0; color: #aaa; font-size: 0.9em;">
-                Derrota a tu rival para subir de nivel y mejorar tus estadísticas.
-                ¡El combate es en tiempo real!</p>
+                <div class="input-group" id="join-step-2" style="display: none;">
+                    <label class="input-label">Your Response Code (Give this to host)</label>
+                    <textarea class="unity-input" id="join-response" rows="4" readonly style="background: #1a1a1a; color: var(--success);"></textarea>
+                    <button class="btn" onclick="copyToClipboard('join-response')" style="width: 100%; margin-top: 5px;">
+                        📋 Copy Response
+                    </button>
+                    <div style="margin-top: 10px; padding: 10px; background: rgba(78, 201, 176, 0.1); border: 1px solid var(--success); border-radius: 3px; font-size: 12px; color: var(--success);">
+                        ✓ Waiting for host to connect...
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="hideModal('join')">Cancel</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Configuración
-        const CANVAS = document.getElementById('gameCanvas');
-        const CTX = CANVAS.getContext('2d');
-        const TILE = 64;
-        const MAP_W = 25;
-        const MAP_H = 19;
-        
-        let camera = {x: 0, y: 0};
-        let keys = {};
-        let map = [];
-        let player, opponent;
-        let particles = [];
-        let peerConn, dataChan;
-        let isHost = false;
-        let images = {};
+        // Game State
+        const STATE = {
+            peer: null,
+            channel: null,
+            isHost: false,
+            player: null,
+            opponent: null,
+            stats: { kills: 0, deaths: 0, damage: 0, streak: 0 },
+            sessionStart: null,
+            camera: { x: 0, y: 0 },
+            keys: {},
+            particles: [],
+            images: {}
+        };
 
-        // Navegación UI
-        function showScreen(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-            document.getElementById(id).classList.remove('hidden');
-            if (id === 'menu') {
-                document.getElementById('host-step1').style.display = 'block';
-                document.getElementById('host-step2').style.display = 'none';
-                document.getElementById('join-step1').style.display = 'block';
-                document.getElementById('join-step2').style.display = 'none';
-                document.getElementById('hostCodeBox').style.display = 'none';
-                document.getElementById('btnCopyHost').style.display = 'none';
-                document.getElementById('btnGenerate').style.display = 'block';
-                document.getElementById('generatingHost').style.display = 'none';
-            }
-        }
-
-        // Cargar imágenes
-        function init() {
-            const loadImg = (src, placeholderColor) => new Promise(resolve => {
-                const img = new Image();
-                img.onload = () => resolve(img);
-                img.onerror = () => {
-                    const c = document.createElement('canvas');
-                    c.width = c.height = 64;
-                    const x = c.getContext('2d');
-                    x.fillStyle = placeholderColor;
-                    x.fillRect(16, 16, 32, 32);
-                    const i = new Image();
-                    i.src = c.toDataURL();
-                    resolve(i);
-                };
-                img.src = src;
-            });
+        // Assets
+        function loadAssets() {
+            const loadImg = (src, fallback) => {
+                return new Promise(resolve => {
+                    const img = new Image();
+                    img.onload = () => resolve(img);
+                    img.onerror = () => {
+                        const c = document.createElement('canvas');
+                        c.width = c.height = 64;
+                        const x = c.getContext('2d');
+                        x.fillStyle = fallback;
+                        x.fillRect(16, 16, 32, 32);
+                        const i = new Image();
+                        i.src = c.toDataURL();
+                        resolve(i);
+                    };
+                    img.src = src;
+                });
+            };
 
             Promise.all([
                 loadImg('pla1.png', '#888'),
                 loadImg('esp1.png', '#silver')
             ]).then(([p, s]) => {
-                images.player = p;
-                images.sword = s;
+                STATE.images.player = p;
+                STATE.images.sword = s;
+                log('Assets loaded');
             });
         }
 
-        // WEBRTC SIMPLIFICADO
-        async function generateHostCode() {
-            isHost = true;
-            document.getElementById('btnGenerate').style.display = 'none';
-            document.getElementById('generatingHost').style.display = 'block';
+        // UI Functions
+        function showModal(type) {
+            document.getElementById(`modal-${type}`).classList.remove('hidden');
+            if (type === 'host') generateHostOffer();
+        }
+
+        function hideModal(type) {
+            document.getElementById(`modal-${type}`).classList.add('hidden');
+        }
+
+        function log(msg) {
+            const console = document.getElementById('console-log');
+            console.innerHTML += `> ${msg}<br>`;
+            console.scrollTop = console.scrollHeight;
+        }
+
+        function copyToClipboard(id) {
+            const el = document.getElementById(id);
+            el.select();
+            document.execCommand('copy');
+            log('Copied to clipboard');
+        }
+
+        // WebRTC P2P - Simplified Flow
+        async function generateHostOffer() {
+            STATE.isHost = true;
+            const config = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+            STATE.peer = new RTCPeerConnection(config);
             
-            const config = {iceServers: [{urls: 'stun:stun.l.google.com:19302'}]};
-            peerConn = new RTCPeerConnection(config);
-            dataChan = peerConn.createDataChannel('game');
+            STATE.channel = STATE.peer.createDataChannel('game');
             setupDataChannel();
 
-            peerConn.onicecandidate = (e) => {
+            STATE.peer.onicecandidate = (e) => {
                 if (!e.candidate) {
-                    const code = btoa(JSON.stringify(peerConn.localDescription));
-                    document.getElementById('hostCode').textContent = code;
-                    document.getElementById('hostCodeBox').style.display = 'block';
-                    document.getElementById('btnCopyHost').style.display = 'block';
-                    document.getElementById('generatingHost').style.display = 'none';
-                    document.getElementById('host-step2').style.display = 'block';
+                    const code = btoa(JSON.stringify(STATE.peer.localDescription));
+                    document.getElementById('host-code').value = code;
+                    document.getElementById('host-step-2').style.display = 'block';
+                    log('Host offer generated');
                 }
             };
 
-            const offer = await peerConn.createOffer();
-            await peerConn.setLocalDescription(offer);
+            const offer = await STATE.peer.createOffer();
+            await STATE.peer.setLocalDescription(offer);
         }
 
-        function copyHostCode() {
-            const code = document.getElementById('hostCode').textContent;
-            navigator.clipboard.writeText(code).then(() => {
-                document.getElementById('btnCopyHost').textContent = '✓ Copiado!';
-                setTimeout(() => document.getElementById('btnCopyHost').textContent = '📋 Copiar Código', 2000);
-            });
-        }
+        async function generateJoinResponse() {
+            const code = document.getElementById('join-code').value.trim();
+            if (!code) return log('Error: No code provided');
 
-        async function generateGuestResponse() {
-            const code = document.getElementById('joinCodeInput').value.trim();
-            if (!code) return showError('joinError', 'Pega el código primero');
-            
             try {
-                const config = {iceServers: [{urls: 'stun:stun.l.google.com:19302'}]};
-                peerConn = new RTCPeerConnection(config);
+                const config = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+                STATE.peer = new RTCPeerConnection(config);
                 
-                peerConn.ondatachannel = (e) => {
-                    dataChan = e.channel;
+                STATE.peer.ondatachannel = (e) => {
+                    STATE.channel = e.channel;
                     setupDataChannel();
                 };
 
-                peerConn.onicecandidate = (e) => {
+                STATE.peer.onicecandidate = (e) => {
                     if (!e.candidate) {
-                        const resp = btoa(JSON.stringify(peerConn.localDescription));
-                        document.getElementById('guestResponseCode').textContent = resp;
-                        document.getElementById('join-step1').style.display = 'none';
-                        document.getElementById('join-step2').style.display = 'block';
-                        document.getElementById('waitingMsg').style.display = 'block';
-                        
-                        // Auto-copy
-                        navigator.clipboard.writeText(resp);
+                        const resp = btoa(JSON.stringify(STATE.peer.localDescription));
+                        document.getElementById('join-response').value = resp;
+                        document.getElementById('join-step-1').style.display = 'none';
+                        document.getElementById('join-step-2').style.display = 'block';
+                        log('Join response generated - waiting for host');
                     }
                 };
 
-                await peerConn.setRemoteDescription(JSON.parse(atob(code)));
-                const answer = await peerConn.createAnswer();
-                await peerConn.setLocalDescription(answer);
+                await STATE.peer.setRemoteDescription(JSON.parse(atob(code)));
+                const answer = await STATE.peer.createAnswer();
+                await STATE.peer.setLocalDescription(answer);
             } catch (e) {
-                showError('joinError', 'Código inválido. Asegúrate de copiarlo completo.');
+                log('Error: Invalid code');
+                console.error(e);
             }
         }
 
-        function copyGuestResponse() {
-            const code = document.getElementById('guestResponseCode').textContent;
-            navigator.clipboard.writeText(code).then(() => {
-                alert('Código copiado al portapapeles. Pégalo donde enviaste el primero.');
-            });
-        }
-
         async function completeHostConnection() {
-            const answer = document.getElementById('hostAnswerInput').value.trim();
-            if (!answer) return showError('hostError', 'Pega la respuesta de tu amigo');
-            
+            const answer = document.getElementById('host-answer').value.trim();
+            if (!answer) return log('Error: Paste response code first');
+
             try {
-                await peerConn.setRemoteDescription(JSON.parse(atob(answer)));
+                await STATE.peer.setRemoteDescription(JSON.parse(atob(answer)));
                 startGame();
+                hideModal('host');
             } catch (e) {
-                showError('hostError', 'Código de respuesta inválido');
+                log('Error: Invalid response code');
             }
         }
 
         function setupDataChannel() {
-            dataChan.onopen = () => { if (!isHost) startGame(); };
-            dataChan.onmessage = (e) => {
-                const d = JSON.parse(e.data);
-                if (!opponent) return;
-                if (d.t === 's') opponent.setState(d);
-                if (d.t === 'h') player.takeDamage(d.d);
-                if (d.t === 'a') opponent.attacking = true;
+            STATE.channel.onopen = () => {
+                log('Connection established');
+                document.getElementById('connection-status').innerHTML = 
+                    '<span class="status-connected"><span class="status-dot"></span> Connected</span>';
+                document.getElementById('btn-host').style.display = 'none';
+                document.getElementById('btn-join').style.display = 'none';
+                
+                if (!STATE.isHost) startGame();
+            };
+
+            STATE.channel.onmessage = (e) => {
+                const data = JSON.parse(e.data);
+                if (!STATE.opponent) return;
+                
+                if (data.t === 's') STATE.opponent.setState(data);
+                if (data.t === 'h') {
+                    STATE.player.takeDamage(data.d, false);
+                    STATE.stats.damage += data.d;
+                    updateStats();
+                }
+                if (data.t === 'a') STATE.opponent.attacking = true;
             };
         }
 
-        function send(t, data) {
-            if (dataChan?.readyState === 'open') {
-                dataChan.send(JSON.stringify({t, ...data}));
+        function send(data) {
+            if (STATE.channel?.readyState === 'open') {
+                STATE.channel.send(JSON.stringify(data));
             }
         }
 
-        function showError(id, msg) {
-            const el = document.getElementById(id);
-            el.textContent = msg;
-            el.style.display = 'block';
-            setTimeout(() => el.style.display = 'none', 3000);
-        }
-
-        // GAME CLASSES (optimizado)
+        // Game Logic
         class Entity {
             constructor(x, y, isLocal) {
                 this.x = x; this.y = y;
@@ -696,270 +715,301 @@
                 this.anim = 0;
                 this.hp = 100; this.maxHp = 100;
                 this.mp = 50; this.maxMp = 50;
-                this.atk = 10; this.def = 5; this.lv = 1;
+                this.atk = 12; this.def = 5;
                 this.attacking = false;
                 this.atkCd = 0;
-                this.speed = 4;
+                this.speed = 5;
+                this.respawnTimer = 0;
+                this.isDead = false;
             }
 
             update() {
+                if (this.isDead) {
+                    if (this.respawnTimer > 0) {
+                        this.respawnTimer--;
+                        if (this.respawnTimer === 0) this.respawn();
+                    }
+                    return;
+                }
+
                 if (this.isLocal) {
                     this.vx = this.vy = 0;
                     this.moving = false;
-                    
-                    if (keys['w']) { this.vy = -this.speed; this.dir = 0; this.moving = true; }
-                    if (keys['s']) { this.vy = this.speed; this.dir = 2; this.moving = true; }
-                    if (keys['a']) { this.vx = -this.speed; this.dir = 3; this.moving = true; }
-                    if (keys['d']) { this.vx = this.speed; this.dir = 1; this.moving = true; }
-                    
-                    if (keys[' '] && this.atkCd <= 0) this.attack();
+
+                    if (STATE.keys['w']) { this.vy = -this.speed; this.dir = 0; this.moving = true; }
+                    if (STATE.keys['s']) { this.vy = this.speed; this.dir = 2; this.moving = true; }
+                    if (STATE.keys['a']) { this.vx = -this.speed; this.dir = 3; this.moving = true; }
+                    if (STATE.keys['d']) { this.vx = this.speed; this.dir = 1; this.moving = true; }
+                    if (STATE.keys[' '] && this.atkCd <= 0) this.attack();
                 }
 
-                // Colisión simple
+                // Movement with collision
                 const nx = this.x + this.vx;
                 const ny = this.y + this.vy;
-                if (!this.collide(nx + 12, this.y + 36) && !this.collide(nx + 36, this.y + 36)) this.x = nx;
-                if (!this.collide(this.x + 12, ny + 36) && !this.collide(this.x + 36, ny + 36)) this.y = ny;
+                
+                if (!this.collide(nx + 12, this.y + 40) && !this.collide(nx + 36, this.y + 40)) this.x = nx;
+                if (!this.collide(this.x + 12, ny + 40) && !this.collide(this.x + 36, ny + 40)) this.y = ny;
 
-                this.x = Math.max(0, Math.min(this.x, MAP_W * TILE - 48));
-                this.y = Math.max(0, Math.min(this.y, MAP_H * TILE - 48));
-                
+                this.x = Math.max(0, Math.min(this.x, 1600 - 48));
+                this.y = Math.max(0, this.y, 1200 - 48);
+
                 if (this.atkCd > 0) this.atkCd--;
-                if (this.moving) this.anim += 0.15;
-                if (this.mp < this.maxMp && Math.random() < 0.02) this.mp++;
-                
+                if (this.moving) this.anim += 0.2;
+                if (this.mp < this.maxMp) this.mp += 0.05;
+
                 if (this.isLocal) updateHUD();
             }
 
             collide(x, y) {
-                const tx = Math.floor(x / TILE), ty = Math.floor(y / TILE);
-                return tx < 0 || tx >= MAP_W || ty < 0 || ty >= MAP_H || map[ty][tx];
+                // Simple boundary check for infinite arena
+                return x < 0 || x > 1600 || y < 0 || y > 1200;
             }
 
             attack() {
                 this.attacking = true;
-                this.atkCd = 25;
-                send('a', {});
-                
-                if (opponent) {
-                    const dx = opponent.x - this.x;
-                    const dy = opponent.y - this.y;
+                this.atkCd = 20;
+                send({t: 'a'});
+
+                if (STATE.opponent && !STATE.opponent.isDead) {
+                    const dx = STATE.opponent.x - this.x;
+                    const dy = STATE.opponent.y - this.y;
                     const dist = Math.hypot(dx, dy);
-                    
-                    if (dist < 70) {
+
+                    if (dist < 60) {
+                        // Directional check
                         let hit = false;
-                        if (this.dir === 0 && dy < 0 && Math.abs(dx) < 40) hit = true;
-                        if (this.dir === 2 && dy > 0 && Math.abs(dx) < 40) hit = true;
-                        if (this.dir === 1 && dx > 0 && Math.abs(dy) < 40) hit = true;
-                        if (this.dir === 3 && dx < 0 && Math.abs(dy) < 40) hit = true;
-                        
+                        if (this.dir === 0 && dy < 0 && Math.abs(dx) < 30) hit = true;
+                        if (this.dir === 2 && dy > 0 && Math.abs(dx) < 30) hit = true;
+                        if (this.dir === 1 && dx > 0 && Math.abs(dy) < 30) hit = true;
+                        if (this.dir === 3 && dx < 0 && Math.abs(dy) < 30) hit = true;
+
                         if (hit) {
-                            const dmg = Math.max(1, this.atk - Math.floor(opponent.def * 0.3));
-                            opponent.takeDamage(dmg);
-                            send('h', {d: dmg});
-                            addParticles(opponent.x + 24, opponent.y + 24, '#ff0000');
+                            const dmg = Math.max(1, Math.floor(this.atk * (0.8 + Math.random() * 0.4)));
+                            STATE.opponent.takeDamage(dmg, true);
+                            send({t: 'h', d: dmg});
+                            
+                            if (this.isLocal) {
+                                STATE.stats.damage += dmg;
+                                updateStats();
+                            }
                         }
                     }
                 }
-                setTimeout(() => this.attacking = false, 200);
+                setTimeout(() => this.attacking = false, 150);
             }
 
-            takeDamage(amt) {
-                this.hp = Math.max(0, this.hp - amt);
-                addFloat(this.x, this.y - 10, `-${amt}`, '#ff6b6b');
+            takeDamage(amount, isLocalDealer) {
+                if (this.isDead) return;
                 
-                if (this.hp <= 0 && this.isLocal) {
-                    setTimeout(() => alert('¡Has caído en combate!'), 100);
-                } else if (this.hp <= 0) {
-                    player.lv++;
-                    player.maxHp += 20; player.hp = player.maxHp;
-                    player.atk += 3;
-                    addFloat(player.x, player.y - 40, '¡NIVEL +1!', '#f1c40f');
-                    setTimeout(() => { this.hp = this.maxHp; this.x = Math.random() * 500; this.y = Math.random() * 500; }, 1000);
+                this.hp -= amount;
+                showCombatText(this.x, this.y, `-${amount}`, 'damage');
+                
+                if (this.hp <= 0) {
+                    this.die(isLocalDealer);
                 }
             }
 
-            draw() {
-                const sx = this.x - camera.x;
-                const sy = this.y - camera.y;
+            die(killedByLocal) {
+                this.isDead = true;
+                this.hp = 0;
+                this.respawnTimer = 180; // 3 seconds at 60fps
                 
-                // Sombra
-                CTX.fillStyle = 'rgba(0,0,0,0.3)';
-                CTX.beginPath();
-                CTX.ellipse(sx + 24, sy + 44, 16, 6, 0, 0, Math.PI * 2);
-                CTX.fill();
-                
-                // Sprite
-                CTX.save();
-                CTX.translate(sx + 24, sy + 24);
-                if (!this.isLocal) CTX.filter = 'hue-rotate(180deg) saturate(1.5)';
+                if (!this.isLocal && killedByLocal) {
+                    STATE.stats.kills++;
+                    STATE.stats.streak++;
+                    STATE.sessionStart = STATE.sessionStart || Date.now();
+                    showCombatText(this.x, this.y, 'KILL!', 'level');
+                    log('You scored a kill!');
+                } else if (this.isLocal) {
+                    STATE.stats.deaths++;
+                    STATE.stats.streak = 0;
+                    log('You died - Respawning...');
+                }
+                updateStats();
+                updateHUD();
+            }
+
+            respawn() {
+                this.isDead = false;
+                this.hp = this.maxHp;
+                this.mp = this.maxMp;
+                // Random spawn away from center
+                this.x = 200 + Math.random() * 1200;
+                this.y = 200 + Math.random() * 800;
+                if (this.isLocal) {
+                    showCombatText(this.x, this.y, 'RESPAWN', 'heal');
+                    log('Respawned');
+                }
+            }
+
+            draw(ctx) {
+                const sx = this.x - STATE.camera.x;
+                const sy = this.y - STATE.camera.y;
+
+                if (this.isDead) return;
+
+                // Shadow
+                ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                ctx.beginPath();
+                ctx.ellipse(sx + 24, sy + 44, 16, 6, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Player
+                ctx.save();
+                ctx.translate(sx + 24, sy + 24);
+                if (!this.isLocal) ctx.filter = 'hue-rotate(200deg) saturate(1.2)';
                 
                 const bounce = this.moving ? Math.sin(this.anim * 2) * 2 : 0;
-                if (images.player?.complete) {
-                    CTX.drawImage(images.player, -24, -24 + bounce, 48, 48);
+                if (STATE.images.player?.complete) {
+                    ctx.drawImage(STATE.images.player, -24, -24 + bounce, 48, 48);
                 } else {
-                    CTX.fillStyle = this.isLocal ? '#f1c40f' : '#3498db';
-                    CTX.fillRect(-20, -20 + bounce, 40, 40);
+                    ctx.fillStyle = this.isLocal ? '#4ec9b0' : '#569cd6';
+                    ctx.fillRect(-20, -20 + bounce, 40, 40);
                 }
-                CTX.restore();
-                
-                // Espada
-                if (images.sword?.complete) {
-                    CTX.save();
-                    CTX.translate(sx + 24, sy + 24);
+                ctx.restore();
+
+                // Sword
+                if (STATE.images.sword?.complete) {
+                    ctx.save();
+                    ctx.translate(sx + 24, sy + 24);
                     const angles = [-Math.PI/2, 0, Math.PI/2, Math.PI];
-                    let ang = angles[this.dir];
-                    if (this.attacking) ang += Math.sin(Date.now()/50) * 0.5;
-                    CTX.rotate(ang);
-                    CTX.drawImage(images.sword, 8, -16, 32, 32);
-                    CTX.restore();
+                    let angle = angles[this.dir];
+                    if (this.attacking) angle += Math.sin(Date.now() / 30) * 0.6;
+                    ctx.rotate(angle);
+                    ctx.drawImage(STATE.images.sword, 8, -16, 32, 32);
+                    ctx.restore();
                 }
-                
-                // Barra HP
-                const pct = this.hp / this.maxHp;
-                CTX.fillStyle = '#300';
-                CTX.fillRect(sx + 8, sy - 8, 32, 4);
-                CTX.fillStyle = pct > 0.5 ? '#2ecc71' : pct > 0.25 ? '#f1c40f' : '#e74c3c';
-                CTX.fillRect(sx + 8, sy - 8, 32 * pct, 4);
+
+                // HP Bar above head
+                const hpPct = this.hp / this.maxHp;
+                ctx.fillStyle = '#000';
+                ctx.fillRect(sx + 8, sy - 10, 32, 4);
+                ctx.fillStyle = hpPct > 0.5 ? '#4ec9b0' : hpPct > 0.25 ? '#dcdcaa' : '#f48771';
+                ctx.fillRect(sx + 8, sy - 10, 32 * hpPct, 4);
             }
 
-            getState() { return {x: this.x, y: this.y, d: this.dir, m: this.moving, a: this.anim, h: this.hp, p: this.mp, l: this.lv}; }
-            setState(s) { Object.assign(this, {x: s.x, y: s.y, dir: s.d, moving: s.m, anim: s.a, hp: s.h, mp: s.p, lv: s.l}); }
+            getState() {
+                return {
+                    x: this.x, y: this.y, d: this.dir,
+                    h: this.hp, m: this.mp,
+                    a: this.attacking, dead: this.isDead
+                };
+            }
+
+            setState(s) {
+                this.x = s.x; this.y = s.y; this.dir = s.d;
+                this.hp = s.h; this.mp = s.m;
+                this.attacking = s.a; this.isDead = s.dead;
+            }
+        }
+
+        function showCombatText(x, y, text, type) {
+            const el = document.createElement('div');
+            el.className = `combat-text ${type}-text`;
+            el.textContent = text;
+            
+            const sx = x - STATE.camera.x + document.getElementById('gameCanvas').offsetLeft;
+            const sy = y - STATE.camera.y + document.getElementById('gameCanvas').offsetTop;
+            
+            el.style.left = sx + 'px';
+            el.style.top = sy + 'px';
+            document.getElementById('combat-container').appendChild(el);
+            setTimeout(() => el.remove(), 1500);
         }
 
         function updateHUD() {
-            if (!player || !opponent) return;
-            document.getElementById('lv1').textContent = player.lv;
-            document.getElementById('lv2').textContent = opponent.lv;
+            if (!STATE.player) return;
             
-            ['hp', 'mp'].forEach((t, i) => {
-                const m = i ? 'maxMp' : 'maxHp';
-                const p = (player[t] / player[m] * 100) + '%';
-                const o = (opponent[t] / opponent[m] * 100) + '%';
-                document.getElementById(t + '1').style.width = p;
-                document.getElementById(t + '2').style.width = o;
-                document.getElementById(t + 'Text1').textContent = `${Math.ceil(player[t])}/${player[m]}`;
-                document.getElementById(t + 'Text2').textContent = `${Math.ceil(opponent[t])}/${opponent[m]}`;
-            });
+            const p1 = STATE.player;
+            const p2 = STATE.opponent;
             
-            document.getElementById('atk1').textContent = player.atk;
-            document.getElementById('atk2').textContent = opponent.atk;
+            document.getElementById('hp-bar-1').style.width = (p1.hp / p1.maxHp * 100) + '%';
+            document.getElementById('hp-text-1').textContent = `${Math.ceil(p1.hp)}/${p1.maxHp}`;
+            document.getElementById('mp-bar-1').style.width = (p1.mp / p1.maxMp * 100) + '%';
+            document.getElementById('mp-text-1').textContent = `${Math.ceil(p1.mp)}/${p1.maxMp}`;
+            
+            if (p2) {
+                document.getElementById('hp-bar-2').style.width = (p2.hp / p2.maxHp * 100) + '%';
+                document.getElementById('hp-text-2').textContent = `${Math.ceil(p2.hp)}/${p2.maxHp}`;
+            }
         }
 
-        function generateMap() {
-            map = [];
-            for (let y = 0; y < MAP_H; y++) {
-                const row = [];
-                for (let x = 0; x < MAP_W; x++) {
-                    row.push((x===0||x===MAP_W-1||y===0||y===MAP_H-1||Math.random()<0.06)?1:0);
-                }
-                map.push(row);
+        function updateStats() {
+            document.getElementById('stat-kills').textContent = STATE.stats.kills;
+            document.getElementById('stat-deaths').textContent = STATE.stats.deaths;
+            document.getElementById('stat-damage').textContent = STATE.stats.damage;
+            document.getElementById('stat-streak').textContent = STATE.stats.streak;
+            
+            if (STATE.sessionStart) {
+                const elapsed = Math.floor((Date.now() - STATE.sessionStart) / 1000);
+                const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
+                const secs = (elapsed % 60).toString().padStart(2, '0');
+                document.getElementById('session-time').textContent = `${mins}:${secs}`;
             }
         }
 
         function startGame() {
-            document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-            document.getElementById('hud').classList.remove('hidden');
-            document.getElementById('controls-hint').classList.remove('hidden');
+            document.getElementById('game-hud').classList.remove('hidden');
+            STATE.sessionStart = Date.now();
             
-            generateMap();
-            const x1 = isHost ? 400 : 1200;
-            player = new Entity(x1, 600, true);
-            opponent = new Entity(x1 + 200, 600, false);
+            const x1 = STATE.isHost ? 600 : 1000;
+            STATE.player = new Entity(x1, 600, true);
+            STATE.opponent = new Entity(x1 + 200, 600, false);
             
-            requestAnimationFrame(loop);
-            setInterval(() => send('s', player.getState()), 50);
+            log('Game started - Infinite mode active');
+            gameLoop();
+            
+            setInterval(() => {
+                send({t: 's', ...STATE.player.getState()});
+            }, 50);
+            
+            setInterval(updateStats, 1000);
         }
 
-        function addParticles(x, y, color) {
-            for (let i = 0; i < 6; i++) {
-                particles.push({
-                    x, y,
-                    vx: (Math.random() - 0.5) * 8,
-                    vy: (Math.random() - 0.5) * 8,
-                    life: 20, color
-                });
-            }
-        }
-
-        function addFloat(x, y, text, color) {
-            particles.push({x, y, text, color, life: 40, vy: -1, float: true});
-        }
-
-        function loop() {
-            if (player) {
-                player.update();
-                camera.x = player.x - 400;
-                camera.y = player.y - 300;
-                camera.x = Math.max(0, Math.min(camera.x, MAP_W * TILE - 800));
-                camera.y = Math.max(0, Math.min(camera.y, MAP_H * TILE - 600));
-            }
-            if (opponent) opponent.update();
+        function gameLoop() {
+            if (!STATE.player) return;
             
-            // Dibujo
-            CTX.fillStyle = '#2d5016';
-            CTX.fillRect(0, 0, 800, 600);
+            const ctx = document.getElementById('gameCanvas').getContext('2d');
             
-            // Pasto decorativo
-            CTX.fillStyle = '#3d6b26';
-            for (let i = 0; i < 50; i++) {
-                CTX.fillRect(((i * 137) % 800), ((i * 53) % 600), 3, 3);
-            }
+            // Update
+            STATE.player.update();
+            if (STATE.opponent) STATE.opponent.update();
             
-            // Mapa
-            const sc = Math.floor(camera.x / TILE);
-            const ec = sc + 13;
-            const sr = Math.floor(camera.y / TILE);
-            const er = sr + 10;
+            // Camera follow
+            STATE.camera.x = STATE.player.x - 400;
+            STATE.camera.y = STATE.player.y - 300;
+            STATE.camera.x = Math.max(0, Math.min(STATE.camera.x, 1600 - 800));
+            STATE.camera.y = Math.max(0, Math.min(STATE.camera.y, 1200 - 600));
             
-            for (let y = sr; y <= er; y++) {
-                for (let x = sc; x <= ec; x++) {
-                    if (y < 0 || y >= MAP_H || x < 0 || x >= MAP_W) continue;
-                    if (map[y][x]) {
-                        const sx = x * TILE - camera.x;
-                        const sy = y * TILE - camera.y;
-                        CTX.fillStyle = '#5d4037';
-                        CTX.fillRect(sx + 2, sy + 2, 60, 60);
-                        CTX.fillStyle = '#795548';
-                        CTX.fillRect(sx + 6, sy + 6, 52, 52);
-                    }
+            // Render Background (Procedural grass)
+            ctx.fillStyle = '#1e3a2f';
+            ctx.fillRect(0, 0, 800, 600);
+            
+            // Grid pattern
+            ctx.fillStyle = '#264a34';
+            for (let i = 0; i < 800; i += 40) {
+                for (let j = 0; j < 600; j += 40) {
+                    if ((i + j) % 80 === 0) ctx.fillRect(i, j, 2, 2);
                 }
             }
             
-            // Partículas
-            particles = particles.filter(p => {
-                p.life--;
-                const sx = p.x - camera.x;
-                const sy = p.y - camera.y;
-                if (p.float) {
-                    p.y += p.vy;
-                    CTX.fillStyle = p.color;
-                    CTX.font = 'bold 14px Georgia';
-                    CTX.fillText(p.text, sx, sy);
-                } else {
-                    p.x += p.vx;
-                    p.y += p.vy;
-                    CTX.fillStyle = p.color;
-                    CTX.fillRect(sx, sy, 4, 4);
-                }
-                return p.life > 0;
-            });
+            // Draw entities
+            if (STATE.opponent) STATE.opponent.draw(ctx);
+            STATE.player.draw(ctx);
             
-            if (opponent) opponent.draw();
-            if (player) player.draw();
-            
-            requestAnimationFrame(loop);
+            requestAnimationFrame(gameLoop);
         }
 
         // Input
         window.addEventListener('keydown', e => {
-            keys[e.key] = true;
+            STATE.keys[e.key] = true;
             if (e.code === 'Space' && e.target.tagName !== 'TEXTAREA') e.preventDefault();
             if (e.key === 'Escape') location.reload();
         });
-        window.addEventListener('keyup', e => keys[e.key] = false);
+        window.addEventListener('keyup', e => STATE.keys[e.key] = false);
 
-        init();
+        // Init
+        loadAssets();
     </script>
 </body>
 </html>

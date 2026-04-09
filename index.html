@@ -3,16 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P2P RPG Arena Simple</title>
+    <title>Arena RPG - P2P</title>
     <style>
+        :root {
+            --verde-bosque: #1e3a2f;
+            --verde-claro: #2d5a3d;
+            --amarillo-oro: #f1c40f;
+            --amarillo-suave: #f39c12;
+            --azul-cielo: #3498db;
+            --azul-profundo: #2980b9;
+            --crema: #ecf0f1;
+            --marron-tierra: #5d4037;
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #1a1a2e;
-            color: white;
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #1e3a2f 0%, #2c5530 50%, #1e3a2f 100%);
+            color: var(--crema);
             overflow: hidden;
             height: 100vh;
+            position: relative;
+        }
+
+        /* Fondo decorativo cálido */
+        body::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(243, 156, 18, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(52, 152, 219, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(241, 196, 15, 0.1) 0%, transparent 40%);
+            pointer-events: none;
         }
 
         #gameContainer {
@@ -25,817 +50,916 @@
         }
 
         canvas {
-            border: 3px solid #4a4a6a;
-            border-radius: 8px;
-            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            border: 4px solid #5d4037;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6), inset 0 0 20px rgba(0,0,0,0.3);
             image-rendering: pixelated;
+            background: #2d5016;
         }
 
-        #connectionPanel {
+        /* Screens */
+        .screen {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(30, 30, 46, 0.95);
-            padding: 30px;
-            border-radius: 15px;
-            border: 2px solid #4a4a6a;
+            background: linear-gradient(180deg, #3d2817 0%, #2c1810 100%);
+            padding: 40px;
+            border-radius: 20px;
+            border: 3px solid var(--amarillo-oro);
+            box-shadow: 0 0 30px rgba(241, 196, 15, 0.3), inset 0 0 60px rgba(0,0,0,0.5);
+            text-align: center;
+            min-width: 450px;
             max-width: 500px;
-            width: 90%;
-            z-index: 20;
         }
 
-        h1 { color: #FFD700; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+        .screen.hidden { display: none !important; }
 
-        button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            margin: 5px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            transition: transform 0.2s, box-shadow 0.2s;
+        h1 {
+            color: var(--amarillo-oro);
+            font-size: 2.8em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
+            font-family: 'Palatino Linotype', serif;
+            letter-spacing: 2px;
         }
 
-        button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
-        button:disabled { background: #555; cursor: not-allowed; }
+        .subtitle {
+            color: #bbb;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+            font-style: italic;
+        }
 
-        textarea {
+        .btn {
+            display: block;
             width: 100%;
-            height: 100px;
-            margin: 10px 0;
-            padding: 10px;
+            padding: 16px;
+            margin: 12px 0;
+            background: linear-gradient(180deg, var(--amarillo-suave) 0%, #d35400 100%);
+            border: 2px solid var(--amarillo-oro);
             border-radius: 8px;
-            border: 1px solid #4a4a6a;
-            background: #2d2d44;
-            color: white;
-            font-family: monospace;
-            resize: none;
+            color: #2c1810;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
 
-        .hidden { display: none !important; }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(241, 196, 15, 0.4);
+            background: linear-gradient(180deg, #f39c12 0%, #e67e22 100%);
+        }
 
-        #rpgHud {
+        .btn.secondary {
+            background: linear-gradient(180deg, var(--verde-claro) 0%, var(--verde-bosque) 100%);
+            color: var(--crema);
+            border-color: #27ae60;
+            font-size: 1em;
+        }
+
+        .btn.secondary:hover {
+            background: linear-gradient(180deg, #3d8b5f 0%, #2d5a3d 100%);
+            border-color: #2ecc71;
+        }
+
+        .btn:disabled {
+            background: #555;
+            border-color: #777;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .back-btn {
             position: absolute;
-            top: 10px;
+            top: 15px;
+            left: 15px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid var(--amarillo-oro);
+            color: var(--amarillo-oro);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background: rgba(241, 196, 15, 0.2);
+            transform: translateX(-2px);
+        }
+
+        /* Código estilo pergamino */
+        .code-container {
+            background: #f4e4bc;
+            border: 2px solid #8b6914;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            color: #2c1810;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            word-break: break-all;
+            min-height: 80px;
+            position: relative;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .code-label {
+            position: absolute;
+            top: -10px;
             left: 10px;
-            right: 10px;
+            background: var(--amarillo-oro);
+            color: #2c1810;
+            padding: 2px 10px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        textarea.code-input {
+            width: 100%;
+            min-height: 80px;
+            background: #f4e4bc;
+            border: 2px solid #8b6914;
+            border-radius: 8px;
+            padding: 15px;
+            color: #2c1810;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            resize: none;
+            margin: 10px 0;
+        }
+
+        .instructions {
+            color: #d4c4a8;
+            margin: 15px 0;
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        .instructions strong {
+            color: var(--amarillo-oro);
+        }
+
+        .step-number {
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+            background: var(--azul-cielo);
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 28px;
+            margin-right: 8px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        /* HUD */
+        #hud {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
             display: flex;
             justify-content: space-between;
             pointer-events: none;
             z-index: 10;
         }
 
-        .characterPanel {
-            background: rgba(0,0,0,0.8);
+        .hud-panel {
+            background: rgba(46, 32, 20, 0.9);
             border: 2px solid;
-            border-radius: 10px;
-            padding: 15px;
-            min-width: 220px;
+            border-radius: 12px;
+            padding: 12px 18px;
+            min-width: 200px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
 
-        .player1Panel { border-color: #ff6b6b; }
-        .player2Panel { border-color: #4ecdc4; }
+        .hud-p1 { border-color: var(--amarillo-oro); }
+        .hud-p2 { border-color: var(--azul-cielo); }
 
-        .statBar {
-            margin: 5px 0;
+        .hud-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .hud-p1 .hud-title { color: var(--amarillo-oro); }
+        .hud-p2 .hud-title { color: var(--azul-cielo); }
+
+        .bar {
             height: 18px;
-            background: #333;
+            background: rgba(0,0,0,0.5);
             border-radius: 9px;
+            margin: 6px 0;
             overflow: hidden;
             position: relative;
+            border: 1px solid rgba(255,255,255,0.2);
         }
 
-        .hpFill { height: 100%; background: linear-gradient(90deg, #ff4444, #ff6666); transition: width 0.3s; }
-        .mpFill { height: 100%; background: linear-gradient(90deg, #4444ff, #6666ff); transition: width 0.3s; }
-        .expFill { height: 100%; background: linear-gradient(90deg, #ffd700, #ffed4e); transition: width 0.3s; }
+        .bar-fill {
+            height: 100%;
+            transition: width 0.3s;
+            border-radius: 9px;
+        }
 
-        .statText {
+        .hp-fill { background: linear-gradient(90deg, #c0392b, #e74c3c); }
+        .mp-fill { background: linear-gradient(90deg, #2980b9, #3498db); }
+
+        .bar-text {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 11px;
+            font-size: 10px;
             font-weight: bold;
             text-shadow: 1px 1px 2px black;
+            white-space: nowrap;
         }
 
-        .statsGrid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 5px;
+        .stats-row {
+            display: flex;
+            gap: 15px;
             margin-top: 8px;
-            font-size: 11px;
+            font-size: 0.85em;
+            color: #aaa;
         }
 
-        .statItem {
-            background: rgba(255,255,255,0.1);
-            padding: 3px 8px;
-            border-radius: 5px;
+        .stat-item {
+            color: var(--crema);
         }
 
-        #controls {
+        .stat-item span {
+            color: var(--amarillo-oro);
+            font-weight: bold;
+        }
+
+        #controls-hint {
             position: absolute;
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0,0,0,0.8);
-            padding: 15px;
-            border-radius: 10px;
-            font-size: 13px;
-            text-align: center;
-            border: 1px solid #666;
+            background: rgba(46, 32, 20, 0.9);
+            padding: 12px 25px;
+            border-radius: 25px;
+            border: 1px solid var(--amarillo-oro);
+            font-size: 0.9em;
+            color: #d4c4a8;
         }
 
         .key {
             display: inline-block;
-            background: #444;
+            background: #5d4037;
+            border: 1px solid #8d6e63;
             padding: 4px 10px;
-            border-radius: 4px;
+            border-radius: 6px;
             margin: 0 3px;
-            border: 1px solid #666;
+            font-family: monospace;
+            font-size: 0.9em;
+            color: var(--amarillo-oro);
+        }
+
+        .success-msg {
+            color: #2ecc71;
+            margin-top: 10px;
             font-weight: bold;
+            animation: pulse 2s infinite;
         }
 
-        .sprite-info {
-            background: rgba(255,255,255,0.1);
-            padding: 10px;
-            border-radius: 5px;
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .loading-text {
+            color: var(--azul-cielo);
+            font-style: italic;
             margin: 10px 0;
-            font-size: 12px;
-            text-align: left;
         }
 
-        .sprite-info code {
-            color: #FFD700;
-            background: rgba(0,0,0,0.3);
-            padding: 2px 5px;
-            border-radius: 3px;
+        .error-msg {
+            color: #e74c3c;
+            margin-top: 10px;
+            font-size: 0.9em;
         }
 
-        #loadingStatus { color: #ffd700; margin: 10px 0; }
+        /* Decoración de hojas */
+        .leaf {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: rgba(46, 204, 113, 0.3);
+            border-radius: 0 50% 0 50%;
+            transform: rotate(45deg);
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
     <div id="gameContainer">
         <canvas id="gameCanvas" width="800" height="600"></canvas>
         
-        <div id="rpgHud" class="hidden">
-            <div class="characterPanel player1Panel">
-                <div style="font-weight: bold; margin-bottom: 5px; color: #ff6b6b;">🗡️ Tú (Nv <span id="level1">1</span>)</div>
-                <div class="statBar">
-                    <div class="hpFill" id="hp1" style="width: 100%"></div>
-                    <div class="statText">HP: <span id="hpText1">100/100</span></div>
+        <!-- HUD del juego -->
+        <div id="hud" class="hidden">
+            <div class="hud-panel hud-p1">
+                <div class="hud-title">🛡️ Tu Guerrero (Nv.<span id="lv1">1</span>)</div>
+                <div class="bar">
+                    <div class="bar-fill hp-fill" id="hp1" style="width: 100%"></div>
+                    <div class="bar-text" id="hpText1">100/100</div>
                 </div>
-                <div class="statBar">
-                    <div class="mpFill" id="mp1" style="width: 100%"></div>
-                    <div class="statText">MP: <span id="mpText1">50/50</span></div>
+                <div class="bar">
+                    <div class="bar-fill mp-fill" id="mp1" style="width: 100%"></div>
+                    <div class="bar-text" id="mpText1">50/50</div>
                 </div>
-                <div class="statsGrid">
-                    <div class="statItem">ATK: <span id="atk1">10</span></div>
-                    <div class="statItem">DEF: <span id="def1">5</span></div>
+                <div class="stats-row">
+                    <div class="stat-item">ATK: <span id="atk1">10</span></div>
+                    <div class="stat-item">DEF: <span id="def1">5</span></div>
                 </div>
             </div>
 
-            <div class="characterPanel player2Panel">
-                <div style="font-weight: bold; margin-bottom: 5px; color: #4ecdc4;">🛡️ Rival (Nv <span id="level2">1</span>)</div>
-                <div class="statBar">
-                    <div class="hpFill" id="hp2" style="width: 100%"></div>
-                    <div class="statText">HP: <span id="hpText2">100/100</span></div>
+            <div class="hud-panel hud-p2">
+                <div class="hud-title">⚔️ Rival (Nv.<span id="lv2">1</span>)</div>
+                <div class="bar">
+                    <div class="bar-fill hp-fill" id="hp2" style="width: 100%"></div>
+                    <div class="bar-text" id="hpText2">100/100</div>
                 </div>
-                <div class="statBar">
-                    <div class="mpFill" id="mp2" style="width: 100%"></div>
-                    <div class="statText">MP: <span id="mpText2">50/50</span></div>
+                <div class="bar">
+                    <div class="bar-fill mp-fill" id="mp2" style="width: 100%"></div>
+                    <div class="bar-text" id="mpText2">50/50</div>
                 </div>
-                <div class="statsGrid">
-                    <div class="statItem">ATK: <span id="atk2">10</span></div>
-                    <div class="statItem">DEF: <span id="def2">5</span></div>
+                <div class="stats-row">
+                    <div class="stat-item">ATK: <span id="atk2">10</span></div>
+                    <div class="stat-item">DEF: <span id="def2">5</span></div>
                 </div>
             </div>
         </div>
 
-        <div id="connectionPanel">
-            <h1>⚔️ RPG P2P Arena</h1>
+        <div id="controls-hint" class="hidden">
+            <span class="key">WASD</span> Mover <span style="margin: 0 10px;">|</span> <span class="key">ESPACIO</span> Atacar
+        </div>
+
+        <!-- MENÚ PRINCIPAL -->
+        <div id="menu" class="screen">
+            <h1>🌿 RPG Arena</h1>
+            <div class="subtitle">Aventura P2P en tiempo real</div>
             
-            <div class="sprite-info">
-                <strong>Archivos necesarios:</strong><br>
-                • <code>pla1.png</code> - Personaje (64x64px)<br>
-                • <code>esp1.png</code> - Espada/Arma (32x32px o 64x64px)<br>
-                <small>El mismo sprite para ambos jugadores. El terreno es automático.</small>
-            </div>
-
-            <div id="step1">
-                <p>Duelo RPG 1v1 - Top Down</p>
-                <div id="loadingStatus">Cargando recursos...</div>
-                <button onclick="createRoom()" id="btnCreate" disabled>Crear Sala</button>
-                <button onclick="showJoin()" id="btnJoin" disabled>Unirse</button>
-            </div>
+            <button class="btn" onclick="showScreen('host-setup')">🜲 Crear Sala</button>
+            <button class="btn secondary" onclick="showScreen('join-setup')">⚔ Unirse</button>
+            <button class="btn secondary" onclick="showScreen('howto')" style="margin-top: 20px; opacity: 0.8;">¿Cómo jugar?</button>
             
-            <div id="step2" class="hidden">
-                <p>Código de invitación:</p>
-                <textarea id="sdpOffer" readonly></textarea>
-                <button onclick="copySDP()">Copiar</button>
-                <button onclick="reset()">Volver</button>
+            <div id="loadingMsg" style="margin-top: 20px; color: #f39c12; display: none;">Cargando recursos...</div>
+        </div>
+
+        <!-- HOST: Crear sala -->
+        <div id="host-setup" class="screen hidden">
+            <button class="back-btn" onclick="showScreen('menu')">← Volver</button>
+            <h2 style="color: var(--amarillo-oro); margin-bottom: 20px;">Crear Sala</h2>
+            
+            <div id="host-step1">
+                <div class="instructions">
+                    <span class="step-number">1</span>
+                    <strong>Comparte este código</strong> con tu amigo<br>
+                    <small style="color: #aaa;">Copia el código y envíalo por WhatsApp/Discord</small>
+                </div>
+                
+                <div class="code-container" id="hostCodeBox" style="display: none;">
+                    <div class="code-label">Código de Invitación</div>
+                    <div id="hostCode" style="font-size: 0.75em; line-height: 1.4;"></div>
+                </div>
+                
+                <div id="generatingHost" class="loading-text">Generando sala mágica...</div>
+                
+                <button class="btn" onclick="generateHostCode()" id="btnGenerate">Generar Código</button>
+                <button class="btn secondary" onclick="copyHostCode()" id="btnCopyHost" style="display: none; margin-top: 10px;">📋 Copiar Código</button>
             </div>
 
-            <div id="step3" class="hidden">
-                <p>Pega el código:</p>
-                <textarea id="sdpAnswer" placeholder="Código aquí..."></textarea>
-                <button onclick="acceptAnswer()">Conectar</button>
-                <button onclick="reset()">Volver</button>
-            </div>
-
-            <div id="step4" class="hidden">
-                <p>Respuesta:</p>
-                <textarea id="sdpFinal" readonly></textarea>
-                <button onclick="copyFinal()">Copiar Respuesta</button>
+            <div id="host-step2" style="display: none; margin-top: 20px;">
+                <div class="instructions" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+                    <span class="step-number">2</span>
+                    <strong>Pega la respuesta</strong> de tu amigo aquí:
+                </div>
+                
+                <textarea class="code-input" id="hostAnswerInput" placeholder="Tu amigo debe enviarte un código de respuesta... Pégalo aquí"></textarea>
+                
+                <button class="btn" onclick="completeHostConnection()">⚔ ¡A luchar!</button>
+                <div id="hostError" class="error-msg"></div>
             </div>
         </div>
 
-        <div id="controls" class="hidden">
-            <span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span> Mover | 
-            <span class="key">ESPACIO</span> Atacar
+        <!-- GUEST: Unirse -->
+        <div id="join-setup" class="screen hidden">
+            <button class="back-btn" onclick="showScreen('menu')">← Volver</button>
+            <h2 style="color: var(--azul-cielo); margin-bottom: 20px;">Unirse a Sala</h2>
+            
+            <div id="join-step1">
+                <div class="instructions">
+                    <span class="step-number">1</span>
+                    <strong>Pega el código</strong> que te envió tu amigo:
+                </div>
+                
+                <textarea class="code-input" id="joinCodeInput" placeholder="Pega aquí el código de invitación..."></textarea>
+                
+                <button class="btn" onclick="generateGuestResponse()">Conectar</button>
+                <div id="joinError" class="error-msg"></div>
+            </div>
+
+            <div id="join-step2" style="display: none; margin-top: 20px;">
+                <div class="instructions" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+                    <span class="step-number">2</span>
+                    <strong>Envía este código</strong> de vuelta a tu amigo<br>
+                    <small style="color: #aaa;">Copia y pégalo donde te envió el primero</small>
+                </div>
+                
+                <div class="code-container">
+                    <div class="code-label">Tu Respuesta</div>
+                    <div id="guestResponseCode" style="font-size: 0.75em;"></div>
+                </div>
+                
+                <button class="btn secondary" onclick="copyGuestResponse()">📋 Copiar y Listo</button>
+                <div class="success-msg" id="waitingMsg" style="display: none;">
+                    Esperando que el host conecte... <span style="display: inline-block; animation: pulse 1s infinite;">⏳</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- CÓMO JUGAR -->
+        <div id="howto" class="screen hidden">
+            <button class="back-btn" onclick="showScreen('menu')">← Volver</button>
+            <h2 style="color: var(--amarillo-oro);">Guía de Aventura</h2>
+            
+            <div class="instructions" style="text-align: left; margin: 20px 0;">
+                <p style="margin: 15px 0;"><strong style="color: var(--amarillo-oro);">Conexión:</strong><br>
+                1. Un jugador crea sala y copia el código<br>
+                2. El otro pega el código y copia su respuesta<br>
+                3. El primero pega la respuesta y ¡a jugar!</p>
+                
+                <p style="margin: 15px 0;"><strong style="color: var(--amarillo-oro);">Controles:</strong><br>
+                <span class="key">WASD</span> Mover por el mapa<br>
+                <span class="key">ESPACIO</span> Atacar (cuerpo a cuerpo)<br>
+                <span class="key">ESC</span> Salir al menú</p>
+                
+                <p style="margin: 15px 0; color: #aaa; font-size: 0.9em;">
+                Derrota a tu rival para subir de nivel y mejorar tus estadísticas.
+                ¡El combate es en tiempo real!</p>
+            </div>
         </div>
     </div>
 
     <script>
         // Configuración
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const TILE_SIZE = 64;
-        const MAP_WIDTH = 30;
-        const MAP_HEIGHT = 25;
+        const CANVAS = document.getElementById('gameCanvas');
+        const CTX = CANVAS.getContext('2d');
+        const TILE = 64;
+        const MAP_W = 25;
+        const MAP_H = 19;
         
-        let camera = { x: 0, y: 0 };
+        let camera = {x: 0, y: 0};
         let keys = {};
-        
-        // Solo 2 imágenes necesarias
-        const images = {
-            player: null,
-            sword: null
-        };
-        
-        // Game state
-        let game = {
-            player: null,
-            opponent: null,
-            map: [],
-            particles: [],
-            projectiles: []
-        };
-        
-        let peerConnection, dataChannel, isHost = false;
+        let map = [];
+        let player, opponent;
+        let particles = [];
+        let peerConn, dataChan;
+        let isHost = false;
+        let images = {};
 
-        // Cargar solo los 2 archivos necesarios
-        function loadImages() {
-            let loaded = 0;
-            const total = 2;
-            
-            function checkLoaded() {
-                loaded++;
-                if (loaded >= total) {
-                    document.getElementById('loadingStatus').textContent = '✅ Listo';
-                    document.getElementById('btnCreate').disabled = false;
-                    document.getElementById('btnJoin').disabled = false;
-                }
+        // Navegación UI
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+            if (id === 'menu') {
+                document.getElementById('host-step1').style.display = 'block';
+                document.getElementById('host-step2').style.display = 'none';
+                document.getElementById('join-step1').style.display = 'block';
+                document.getElementById('join-step2').style.display = 'none';
+                document.getElementById('hostCodeBox').style.display = 'none';
+                document.getElementById('btnCopyHost').style.display = 'none';
+                document.getElementById('btnGenerate').style.display = 'block';
+                document.getElementById('generatingHost').style.display = 'none';
             }
-            
-            // Cargar pla1.png
-            images.player = new Image();
-            images.player.onload = checkLoaded;
-            images.player.onerror = () => {
-                // Placeholder si no existe
-                const c = document.createElement('canvas');
-                c.width = c.height = 64;
-                const x = c.getContext('2d');
-                x.fillStyle = '#888';
-                x.fillRect(16, 16, 32, 32);
-                x.fillStyle = '#333';
-                x.fillText('P', 28, 40);
-                images.player.src = c.toDataURL();
-                checkLoaded();
-            };
-            images.player.src = 'pla1.png';
-            
-            // Cargar esp1.png
-            images.sword = new Image();
-            images.sword.onload = checkLoaded;
-            images.sword.onerror = () => {
-                // Placeholder espada
-                const c = document.createElement('canvas');
-                c.width = c.height = 32;
-                const x = c.getContext('2d');
-                x.fillStyle = '#silver';
-                x.fillRect(14, 0, 4, 24);
-                x.fillStyle = '#8B4513';
-                x.fillRect(10, 24, 12, 8);
-                images.sword.src = c.toDataURL();
-                checkLoaded();
-            };
-            images.sword.src = 'esp1.png';
         }
 
-        class Character {
-            constructor(x, y, isLocal) {
-                this.x = x;
-                this.y = y;
-                this.width = 48;
-                this.height = 48;
-                this.isLocal = isLocal;
-                
-                // Stats RPG
-                this.level = 1;
-                this.hp = 100;
-                this.maxHp = 100;
-                this.mp = 50;
-                this.maxMp = 50;
-                this.atk = 10;
-                this.def = 5;
-                this.spd = 4;
-                
-                // Movimiento
-                this.vx = 0;
-                this.vy = 0;
-                this.direction = 2; // 0:up, 1:right, 2:down, 3:left
-                this.moving = false;
-                this.animFrame = 0;
-                
-                // Combate
-                this.attacking = false;
-                this.attackCooldown = 0;
-                this.attackRange = 60;
-                
-                // Para diferenciar visualmente
-                this.isPlayer1 = isLocal; // El local es "jugador 1" visualmente
-            }
-
-            update() {
-                if (this.isLocal) {
-                    this.vx = 0;
-                    this.vy = 0;
-                    this.moving = false;
-                    
-                    if (keys['w'] || keys['W']) { this.vy = -this.spd; this.direction = 0; this.moving = true; }
-                    if (keys['s'] || keys['S']) { this.vy = this.spd; this.direction = 2; this.moving = true; }
-                    if (keys['a'] || keys['A']) { this.vx = -this.spd; this.direction = 3; this.moving = true; }
-                    if (keys['d'] || keys['D']) { this.vx = this.spd; this.direction = 1; this.moving = true; }
-                    
-                    if (keys[' '] && this.attackCooldown <= 0) {
-                        this.attack();
-                    }
-                }
-
-                // Colisiones con mapa
-                let nextX = this.x + this.vx;
-                let nextY = this.y + this.vy;
-                
-                if (!checkCollision(nextX + 12, this.y + 24) && !checkCollision(nextX + 36, this.y + 24)) {
-                    this.x = nextX;
-                }
-                if (!checkCollision(this.x + 12, nextY + 24) && !checkCollision(this.x + 36, nextY + 36)) {
-                    this.y = nextY;
-                }
-
-                // Limites
-                this.x = Math.max(0, Math.min(this.x, MAP_WIDTH * TILE_SIZE - this.width));
-                this.y = Math.max(0, Math.min(this.y, MAP_HEIGHT * TILE_SIZE - this.height));
-
-                if (this.attackCooldown > 0) this.attackCooldown--;
-                if (this.moving) this.animFrame += 0.15;
-                
-                // Regen MP
-                if (this.mp < this.maxMp && Math.random() < 0.01) this.mp++;
-                
-                updateHUD();
-            }
-
-            attack() {
-                this.attacking = true;
-                this.attackCooldown = 25;
-                
-                // Calcular posición del "hit" según dirección
-                let hitX = this.x + 24;
-                let hitY = this.y + 24;
-                let range = this.attackRange;
-                
-                switch(this.direction) {
-                    case 0: hitY -= range; break;
-                    case 1: hitX += range; break;
-                    case 2: hitY += range; break;
-                    case 3: hitX -= range; break;
-                }
-                
-                // Verificar hit
-                if (game.opponent) {
-                    const dx = game.opponent.x + 24 - hitX;
-                    const dy = game.opponent.y + 24 - hitY;
-                    const dist = Math.sqrt(dx*dx + dy*dy);
-                    
-                    if (dist < 40) { // Radio de hit
-                        let dmg = Math.max(1, this.atk - Math.floor(game.opponent.def * 0.3));
-                        game.opponent.takeDamage(dmg);
-                        
-                        if (this.isLocal) {
-                            sendData({type: 'hit', dmg: dmg});
-                        }
-                        
-                        // Efecto visual
-                        createParticle(hitX, hitY, 'hit');
-                    }
-                }
-                
-                setTimeout(() => this.attacking = false, 200);
-            }
-
-            takeDamage(amount) {
-                this.hp -= amount;
-                createFloatingText(this.x, this.y - 10, `-${amount}`, '#ff4444');
-                
-                if (this.hp <= 0) {
-                    this.hp = 0;
-                    if (this.isLocal) {
-                        setTimeout(() => alert('¡Derrotado!'), 500);
-                    } else {
-                        // Ganar EXP
-                        game.player.level++;
-                        game.player.maxHp += 20;
-                        game.player.hp = game.player.maxHp;
-                        game.player.atk += 3;
-                        createFloatingText(game.player.x, game.player.y - 40, '¡SUBES DE NIVEL!', '#ffd700');
-                        
-                        // Respawn oponente
-                        setTimeout(() => {
-                            this.hp = this.maxHp;
-                            this.x = Math.random() * MAP_WIDTH * TILE_SIZE;
-                            this.y = Math.random() * MAP_HEIGHT * TILE_SIZE;
-                        }, 1000);
-                    }
-                }
-                updateHUD();
-            }
-
-            draw() {
-                const screenX = this.x - camera.x;
-                const screenY = this.y - camera.y;
-                
-                // Sombra
-                ctx.fillStyle = 'rgba(0,0,0,0.2)';
-                ctx.beginPath();
-                ctx.ellipse(screenX + 24, screenY + 44, 18, 6, 0, 0, Math.PI * 2);
-                ctx.fill();
-                
-                ctx.save();
-                ctx.translate(screenX + 24, screenY + 24);
-                
-                // Si es el oponente, tinte azulado (efecto simple)
-                if (!this.isPlayer1) {
-                    ctx.globalCompositeOperation = 'source-atop';
-                }
-                
-                // Dibujar personaje pla1.png
-                if (images.player && images.player.complete) {
-                    // Animación simple (cambio de escala al caminar)
-                    const bounce = this.moving ? Math.sin(this.animFrame * 2) * 2 : 0;
-                    ctx.drawImage(images.player, -24, -24 + bounce, 48, 48);
-                } else {
-                    // Placeholder
-                    ctx.fillStyle = this.isPlayer1 ? '#ff6b6b' : '#4ecdc4';
-                    ctx.fillRect(-20, -20, 40, 40);
-                }
-                
-                ctx.restore();
-                
-                // Dibujar espada esp1.png
-                if (images.sword && images.sword.complete) {
-                    ctx.save();
-                    ctx.translate(screenX + 24, screenY + 24);
-                    
-                    // Rotar según dirección
-                    const angles = [-Math.PI/2, 0, Math.PI/2, Math.PI]; // up, right, down, left
-                    let angle = angles[this.direction];
-                    
-                    // Animación de ataque
-                    if (this.attacking) {
-                        angle += Math.sin(Date.now() / 50) * 0.5;
-                    }
-                    
-                    ctx.rotate(angle);
-                    ctx.drawImage(images.sword, 10, -16, 32, 32);
-                    ctx.restore();
-                }
-                
-                // Barra vida arriba
-                const hpPercent = this.hp / this.maxHp;
-                ctx.fillStyle = 'red';
-                ctx.fillRect(screenX + 8, screenY - 8, 32, 4);
-                ctx.fillStyle = '#00ff00';
-                ctx.fillRect(screenX + 8, screenY - 8, 32 * hpPercent, 4);
-            }
-
-            getState() {
-                return {
-                    x: this.x, y: this.y,
-                    direction: this.direction,
-                    moving: this.moving,
-                    animFrame: this.animFrame,
-                    hp: this.hp, mp: this.mp,
-                    level: this.level,
-                    attacking: this.attacking
+        // Cargar imágenes
+        function init() {
+            const loadImg = (src, placeholderColor) => new Promise(resolve => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = () => {
+                    const c = document.createElement('canvas');
+                    c.width = c.height = 64;
+                    const x = c.getContext('2d');
+                    x.fillStyle = placeholderColor;
+                    x.fillRect(16, 16, 32, 32);
+                    const i = new Image();
+                    i.src = c.toDataURL();
+                    resolve(i);
                 };
-            }
+                img.src = src;
+            });
 
-            setState(data) {
-                this.x = data.x;
-                this.y = data.y;
-                this.direction = data.direction;
-                this.moving = data.moving;
-                this.animFrame = data.animFrame;
-                this.hp = data.hp;
-                this.mp = data.mp;
-                this.level = data.level;
-                this.attacking = data.attacking;
-            }
-        }
-
-        function checkCollision(x, y) {
-            const tx = Math.floor(x / TILE_SIZE);
-            const ty = Math.floor(y / TILE_SIZE);
-            if (tx < 0 || tx >= MAP_WIDTH || ty < 0 || ty >= MAP_HEIGHT) return true;
-            return game.map[ty] && game.map[ty][tx] === 1;
-        }
-
-        function createParticle(x, y, type) {
-            for (let i = 0; i < 5; i++) {
-                game.particles.push({
-                    x: x, y: y,
-                    vx: (Math.random() - 0.5) * 6,
-                    vy: (Math.random() - 0.5) * 6,
-                    life: 20,
-                    color: type === 'hit' ? '#ff0000' : '#ffff00'
-                });
-            }
-        }
-
-        function createFloatingText(x, y, text, color) {
-            game.particles.push({
-                x: x, y: y,
-                text: text,
-                color: color,
-                life: 40,
-                vy: -1
+            Promise.all([
+                loadImg('pla1.png', '#888'),
+                loadImg('esp1.png', '#silver')
+            ]).then(([p, s]) => {
+                images.player = p;
+                images.sword = s;
             });
         }
 
-        function updateHUD() {
-            if (!game.player || !game.opponent) return;
-            
-            // Jugador local
-            document.getElementById('level1').textContent = game.player.level;
-            document.getElementById('hp1').style.width = (game.player.hp / game.player.maxHp * 100) + '%';
-            document.getElementById('mp1').style.width = (game.player.mp / game.player.maxMp * 100) + '%';
-            document.getElementById('hpText1').textContent = `${game.player.hp}/${game.player.maxHp}`;
-            document.getElementById('atk1').textContent = game.player.atk;
-            document.getElementById('def1').textContent = game.player.def;
-            
-            // Oponente
-            document.getElementById('level2').textContent = game.opponent.level;
-            document.getElementById('hp2').style.width = (game.opponent.hp / game.opponent.maxHp * 100) + '%';
-            document.getElementById('mp2').style.width = (game.opponent.mp / game.opponent.maxMp * 100) + '%';
-            document.getElementById('hpText2').textContent = `${game.opponent.hp}/${game.opponent.maxHp}`;
-            document.getElementById('atk2').textContent = game.opponent.atk;
-            document.getElementById('def2').textContent = game.opponent.def;
-        }
-
-        function generateMap() {
-            game.map = [];
-            for (let y = 0; y < MAP_HEIGHT; y++) {
-                const row = [];
-                for (let x = 0; x < MAP_WIDTH; x++) {
-                    // Bordes y algunas rocas aleatorias
-                    if (x === 0 || x === MAP_WIDTH - 1 || y === 0 || y === MAP_HEIGHT - 1) {
-                        row.push(1);
-                    } else {
-                        row.push(Math.random() < 0.05 ? 1 : 0);
-                    }
-                }
-                game.map.push(row);
-            }
-        }
-
-        // WebRTC P2P
-        async function createRoom() {
+        // WEBRTC SIMPLIFICADO
+        async function generateHostCode() {
             isHost = true;
-            document.getElementById('step1').classList.add('hidden');
-            document.getElementById('step2').classList.remove('hidden');
-
-            const config = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
-            peerConnection = new RTCPeerConnection(config);
-            dataChannel = peerConnection.createDataChannel('game');
+            document.getElementById('btnGenerate').style.display = 'none';
+            document.getElementById('generatingHost').style.display = 'block';
             
+            const config = {iceServers: [{urls: 'stun:stun.l.google.com:19302'}]};
+            peerConn = new RTCPeerConnection(config);
+            dataChan = peerConn.createDataChannel('game');
             setupDataChannel();
-            
-            peerConnection.onicecandidate = (e) => {
+
+            peerConn.onicecandidate = (e) => {
                 if (!e.candidate) {
-                    document.getElementById('sdpOffer').value = btoa(JSON.stringify(peerConnection.localDescription));
+                    const code = btoa(JSON.stringify(peerConn.localDescription));
+                    document.getElementById('hostCode').textContent = code;
+                    document.getElementById('hostCodeBox').style.display = 'block';
+                    document.getElementById('btnCopyHost').style.display = 'block';
+                    document.getElementById('generatingHost').style.display = 'none';
+                    document.getElementById('host-step2').style.display = 'block';
                 }
             };
 
-            const offer = await peerConnection.createOffer();
-            await peerConnection.setLocalDescription(offer);
+            const offer = await peerConn.createOffer();
+            await peerConn.setLocalDescription(offer);
         }
 
-        function showJoin() {
-            document.getElementById('step1').classList.add('hidden');
-            document.getElementById('step3').classList.remove('hidden');
+        function copyHostCode() {
+            const code = document.getElementById('hostCode').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                document.getElementById('btnCopyHost').textContent = '✓ Copiado!';
+                setTimeout(() => document.getElementById('btnCopyHost').textContent = '📋 Copiar Código', 2000);
+            });
         }
 
-        async function acceptAnswer() {
-            const sdp = document.getElementById('sdpAnswer').value.trim();
-            if (!sdp) return;
+        async function generateGuestResponse() {
+            const code = document.getElementById('joinCodeInput').value.trim();
+            if (!code) return showError('joinError', 'Pega el código primero');
             
             try {
-                if (isHost) {
-                    await peerConnection.setRemoteDescription(JSON.parse(atob(sdp)));
-                    document.getElementById('step2').classList.add('hidden');
-                    startGame();
-                } else {
-                    const config = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
-                    peerConnection = new RTCPeerConnection(config);
-                    peerConnection.ondatachannel = (e) => {
-                        dataChannel = e.channel;
-                        setupDataChannel();
-                    };
-                    peerConnection.onicecandidate = (e) => {
-                        if (!e.candidate) {
-                            document.getElementById('sdpAnswer').value = btoa(JSON.stringify(peerConnection.localDescription));
-                            document.getElementById('step3').classList.add('hidden');
-                            document.getElementById('step4').classList.remove('hidden');
-                        }
-                    };
-                    
-                    await peerConnection.setRemoteDescription(JSON.parse(atob(sdp)));
-                    const answer = await peerConnection.createAnswer();
-                    await peerConnection.setLocalDescription(answer);
-                }
+                const config = {iceServers: [{urls: 'stun:stun.l.google.com:19302'}]};
+                peerConn = new RTCPeerConnection(config);
+                
+                peerConn.ondatachannel = (e) => {
+                    dataChan = e.channel;
+                    setupDataChannel();
+                };
+
+                peerConn.onicecandidate = (e) => {
+                    if (!e.candidate) {
+                        const resp = btoa(JSON.stringify(peerConn.localDescription));
+                        document.getElementById('guestResponseCode').textContent = resp;
+                        document.getElementById('join-step1').style.display = 'none';
+                        document.getElementById('join-step2').style.display = 'block';
+                        document.getElementById('waitingMsg').style.display = 'block';
+                        
+                        // Auto-copy
+                        navigator.clipboard.writeText(resp);
+                    }
+                };
+
+                await peerConn.setRemoteDescription(JSON.parse(atob(code)));
+                const answer = await peerConn.createAnswer();
+                await peerConn.setLocalDescription(answer);
             } catch (e) {
-                alert('Error: ' + e.message);
+                showError('joinError', 'Código inválido. Asegúrate de copiarlo completo.');
+            }
+        }
+
+        function copyGuestResponse() {
+            const code = document.getElementById('guestResponseCode').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                alert('Código copiado al portapapeles. Pégalo donde enviaste el primero.');
+            });
+        }
+
+        async function completeHostConnection() {
+            const answer = document.getElementById('hostAnswerInput').value.trim();
+            if (!answer) return showError('hostError', 'Pega la respuesta de tu amigo');
+            
+            try {
+                await peerConn.setRemoteDescription(JSON.parse(atob(answer)));
+                startGame();
+            } catch (e) {
+                showError('hostError', 'Código de respuesta inválido');
             }
         }
 
         function setupDataChannel() {
-            dataChannel.onopen = () => { if (isHost) startGame(); };
-            dataChannel.onmessage = (e) => {
-                const data = JSON.parse(e.data);
-                if (data.type === 'state' && game.opponent) {
-                    game.opponent.setState(data);
-                } else if (data.type === 'hit') {
-                    game.player.takeDamage(data.dmg);
-                }
+            dataChan.onopen = () => { if (!isHost) startGame(); };
+            dataChan.onmessage = (e) => {
+                const d = JSON.parse(e.data);
+                if (!opponent) return;
+                if (d.t === 's') opponent.setState(d);
+                if (d.t === 'h') player.takeDamage(d.d);
+                if (d.t === 'a') opponent.attacking = true;
             };
         }
 
-        function sendData(data) {
-            if (dataChannel && dataChannel.readyState === 'open') {
-                dataChannel.send(JSON.stringify(data));
+        function send(t, data) {
+            if (dataChan?.readyState === 'open') {
+                dataChan.send(JSON.stringify({t, ...data}));
+            }
+        }
+
+        function showError(id, msg) {
+            const el = document.getElementById(id);
+            el.textContent = msg;
+            el.style.display = 'block';
+            setTimeout(() => el.style.display = 'none', 3000);
+        }
+
+        // GAME CLASSES (optimizado)
+        class Entity {
+            constructor(x, y, isLocal) {
+                this.x = x; this.y = y;
+                this.vx = 0; this.vy = 0;
+                this.isLocal = isLocal;
+                this.dir = 2;
+                this.moving = false;
+                this.anim = 0;
+                this.hp = 100; this.maxHp = 100;
+                this.mp = 50; this.maxMp = 50;
+                this.atk = 10; this.def = 5; this.lv = 1;
+                this.attacking = false;
+                this.atkCd = 0;
+                this.speed = 4;
+            }
+
+            update() {
+                if (this.isLocal) {
+                    this.vx = this.vy = 0;
+                    this.moving = false;
+                    
+                    if (keys['w']) { this.vy = -this.speed; this.dir = 0; this.moving = true; }
+                    if (keys['s']) { this.vy = this.speed; this.dir = 2; this.moving = true; }
+                    if (keys['a']) { this.vx = -this.speed; this.dir = 3; this.moving = true; }
+                    if (keys['d']) { this.vx = this.speed; this.dir = 1; this.moving = true; }
+                    
+                    if (keys[' '] && this.atkCd <= 0) this.attack();
+                }
+
+                // Colisión simple
+                const nx = this.x + this.vx;
+                const ny = this.y + this.vy;
+                if (!this.collide(nx + 12, this.y + 36) && !this.collide(nx + 36, this.y + 36)) this.x = nx;
+                if (!this.collide(this.x + 12, ny + 36) && !this.collide(this.x + 36, ny + 36)) this.y = ny;
+
+                this.x = Math.max(0, Math.min(this.x, MAP_W * TILE - 48));
+                this.y = Math.max(0, Math.min(this.y, MAP_H * TILE - 48));
+                
+                if (this.atkCd > 0) this.atkCd--;
+                if (this.moving) this.anim += 0.15;
+                if (this.mp < this.maxMp && Math.random() < 0.02) this.mp++;
+                
+                if (this.isLocal) updateHUD();
+            }
+
+            collide(x, y) {
+                const tx = Math.floor(x / TILE), ty = Math.floor(y / TILE);
+                return tx < 0 || tx >= MAP_W || ty < 0 || ty >= MAP_H || map[ty][tx];
+            }
+
+            attack() {
+                this.attacking = true;
+                this.atkCd = 25;
+                send('a', {});
+                
+                if (opponent) {
+                    const dx = opponent.x - this.x;
+                    const dy = opponent.y - this.y;
+                    const dist = Math.hypot(dx, dy);
+                    
+                    if (dist < 70) {
+                        let hit = false;
+                        if (this.dir === 0 && dy < 0 && Math.abs(dx) < 40) hit = true;
+                        if (this.dir === 2 && dy > 0 && Math.abs(dx) < 40) hit = true;
+                        if (this.dir === 1 && dx > 0 && Math.abs(dy) < 40) hit = true;
+                        if (this.dir === 3 && dx < 0 && Math.abs(dy) < 40) hit = true;
+                        
+                        if (hit) {
+                            const dmg = Math.max(1, this.atk - Math.floor(opponent.def * 0.3));
+                            opponent.takeDamage(dmg);
+                            send('h', {d: dmg});
+                            addParticles(opponent.x + 24, opponent.y + 24, '#ff0000');
+                        }
+                    }
+                }
+                setTimeout(() => this.attacking = false, 200);
+            }
+
+            takeDamage(amt) {
+                this.hp = Math.max(0, this.hp - amt);
+                addFloat(this.x, this.y - 10, `-${amt}`, '#ff6b6b');
+                
+                if (this.hp <= 0 && this.isLocal) {
+                    setTimeout(() => alert('¡Has caído en combate!'), 100);
+                } else if (this.hp <= 0) {
+                    player.lv++;
+                    player.maxHp += 20; player.hp = player.maxHp;
+                    player.atk += 3;
+                    addFloat(player.x, player.y - 40, '¡NIVEL +1!', '#f1c40f');
+                    setTimeout(() => { this.hp = this.maxHp; this.x = Math.random() * 500; this.y = Math.random() * 500; }, 1000);
+                }
+            }
+
+            draw() {
+                const sx = this.x - camera.x;
+                const sy = this.y - camera.y;
+                
+                // Sombra
+                CTX.fillStyle = 'rgba(0,0,0,0.3)';
+                CTX.beginPath();
+                CTX.ellipse(sx + 24, sy + 44, 16, 6, 0, 0, Math.PI * 2);
+                CTX.fill();
+                
+                // Sprite
+                CTX.save();
+                CTX.translate(sx + 24, sy + 24);
+                if (!this.isLocal) CTX.filter = 'hue-rotate(180deg) saturate(1.5)';
+                
+                const bounce = this.moving ? Math.sin(this.anim * 2) * 2 : 0;
+                if (images.player?.complete) {
+                    CTX.drawImage(images.player, -24, -24 + bounce, 48, 48);
+                } else {
+                    CTX.fillStyle = this.isLocal ? '#f1c40f' : '#3498db';
+                    CTX.fillRect(-20, -20 + bounce, 40, 40);
+                }
+                CTX.restore();
+                
+                // Espada
+                if (images.sword?.complete) {
+                    CTX.save();
+                    CTX.translate(sx + 24, sy + 24);
+                    const angles = [-Math.PI/2, 0, Math.PI/2, Math.PI];
+                    let ang = angles[this.dir];
+                    if (this.attacking) ang += Math.sin(Date.now()/50) * 0.5;
+                    CTX.rotate(ang);
+                    CTX.drawImage(images.sword, 8, -16, 32, 32);
+                    CTX.restore();
+                }
+                
+                // Barra HP
+                const pct = this.hp / this.maxHp;
+                CTX.fillStyle = '#300';
+                CTX.fillRect(sx + 8, sy - 8, 32, 4);
+                CTX.fillStyle = pct > 0.5 ? '#2ecc71' : pct > 0.25 ? '#f1c40f' : '#e74c3c';
+                CTX.fillRect(sx + 8, sy - 8, 32 * pct, 4);
+            }
+
+            getState() { return {x: this.x, y: this.y, d: this.dir, m: this.moving, a: this.anim, h: this.hp, p: this.mp, l: this.lv}; }
+            setState(s) { Object.assign(this, {x: s.x, y: s.y, dir: s.d, moving: s.m, anim: s.a, hp: s.h, mp: s.p, lv: s.l}); }
+        }
+
+        function updateHUD() {
+            if (!player || !opponent) return;
+            document.getElementById('lv1').textContent = player.lv;
+            document.getElementById('lv2').textContent = opponent.lv;
+            
+            ['hp', 'mp'].forEach((t, i) => {
+                const m = i ? 'maxMp' : 'maxHp';
+                const p = (player[t] / player[m] * 100) + '%';
+                const o = (opponent[t] / opponent[m] * 100) + '%';
+                document.getElementById(t + '1').style.width = p;
+                document.getElementById(t + '2').style.width = o;
+                document.getElementById(t + 'Text1').textContent = `${Math.ceil(player[t])}/${player[m]}`;
+                document.getElementById(t + 'Text2').textContent = `${Math.ceil(opponent[t])}/${opponent[m]}`;
+            });
+            
+            document.getElementById('atk1').textContent = player.atk;
+            document.getElementById('atk2').textContent = opponent.atk;
+        }
+
+        function generateMap() {
+            map = [];
+            for (let y = 0; y < MAP_H; y++) {
+                const row = [];
+                for (let x = 0; x < MAP_W; x++) {
+                    row.push((x===0||x===MAP_W-1||y===0||y===MAP_H-1||Math.random()<0.06)?1:0);
+                }
+                map.push(row);
             }
         }
 
         function startGame() {
-            document.getElementById('connectionPanel').classList.add('hidden');
-            document.getElementById('rpgHud').classList.remove('hidden');
-            document.getElementById('controls').classList.remove('hidden');
+            document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+            document.getElementById('hud').classList.remove('hidden');
+            document.getElementById('controls-hint').classList.remove('hidden');
             
             generateMap();
+            const x1 = isHost ? 400 : 1200;
+            player = new Entity(x1, 600, true);
+            opponent = new Entity(x1 + 200, 600, false);
             
-            const startX = isHost ? 400 : 1200;
-            const startY = 600;
-            
-            game.player = new Character(startX, startY, true);
-            game.opponent = new Character(startX + 200, startY, false);
-            
-            gameLoop();
-            
-            setInterval(() => {
-                if (game.player) sendData({type: 'state', ...game.player.getState()});
-            }, 50);
+            requestAnimationFrame(loop);
+            setInterval(() => send('s', player.getState()), 50);
         }
 
-        function gameLoop() {
-            update();
-            draw();
-            requestAnimationFrame(gameLoop);
-        }
-
-        function update() {
-            if (game.player) {
-                game.player.update();
-                
-                // Cámara sigue al jugador
-                camera.x = game.player.x - canvas.width / 2;
-                camera.y = game.player.y - canvas.height / 2;
-                camera.x = Math.max(0, Math.min(camera.x, MAP_WIDTH * TILE_SIZE - canvas.width));
-                camera.y = Math.max(0, Math.min(camera.y, MAP_HEIGHT * TILE_SIZE - canvas.height));
+        function addParticles(x, y, color) {
+            for (let i = 0; i < 6; i++) {
+                particles.push({
+                    x, y,
+                    vx: (Math.random() - 0.5) * 8,
+                    vy: (Math.random() - 0.5) * 8,
+                    life: 20, color
+                });
             }
-            if (game.opponent) game.opponent.update();
+        }
+
+        function addFloat(x, y, text, color) {
+            particles.push({x, y, text, color, life: 40, vy: -1, float: true});
+        }
+
+        function loop() {
+            if (player) {
+                player.update();
+                camera.x = player.x - 400;
+                camera.y = player.y - 300;
+                camera.x = Math.max(0, Math.min(camera.x, MAP_W * TILE - 800));
+                camera.y = Math.max(0, Math.min(camera.y, MAP_H * TILE - 600));
+            }
+            if (opponent) opponent.update();
+            
+            // Dibujo
+            CTX.fillStyle = '#2d5016';
+            CTX.fillRect(0, 0, 800, 600);
+            
+            // Pasto decorativo
+            CTX.fillStyle = '#3d6b26';
+            for (let i = 0; i < 50; i++) {
+                CTX.fillRect(((i * 137) % 800), ((i * 53) % 600), 3, 3);
+            }
+            
+            // Mapa
+            const sc = Math.floor(camera.x / TILE);
+            const ec = sc + 13;
+            const sr = Math.floor(camera.y / TILE);
+            const er = sr + 10;
+            
+            for (let y = sr; y <= er; y++) {
+                for (let x = sc; x <= ec; x++) {
+                    if (y < 0 || y >= MAP_H || x < 0 || x >= MAP_W) continue;
+                    if (map[y][x]) {
+                        const sx = x * TILE - camera.x;
+                        const sy = y * TILE - camera.y;
+                        CTX.fillStyle = '#5d4037';
+                        CTX.fillRect(sx + 2, sy + 2, 60, 60);
+                        CTX.fillStyle = '#795548';
+                        CTX.fillRect(sx + 6, sy + 6, 52, 52);
+                    }
+                }
+            }
             
             // Partículas
-            game.particles = game.particles.filter(p => {
-                if (p.text) {
-                    p.y += p.vy || 0;
+            particles = particles.filter(p => {
+                p.life--;
+                const sx = p.x - camera.x;
+                const sy = p.y - camera.y;
+                if (p.float) {
+                    p.y += p.vy;
+                    CTX.fillStyle = p.color;
+                    CTX.font = 'bold 14px Georgia';
+                    CTX.fillText(p.text, sx, sy);
                 } else {
                     p.x += p.vx;
                     p.y += p.vy;
+                    CTX.fillStyle = p.color;
+                    CTX.fillRect(sx, sy, 4, 4);
                 }
-                p.life--;
                 return p.life > 0;
             });
-        }
-
-        function draw() {
-            // Fondo verde (terreno)
-            ctx.fillStyle = '#2d5016';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Pasto detalle
-            ctx.fillStyle = '#3a6b1f';
-            for (let y = 0; y < canvas.height; y += 40) {
-                for (let x = 0; x < canvas.width; x += 40) {
-                    if ((x + y) % 80 === 0) {
-                        ctx.fillRect(x - (camera.x % 40), y - (camera.y % 40), 2, 2);
-                    }
-                }
-            }
+            if (opponent) opponent.draw();
+            if (player) player.draw();
             
-            // Dibujar solo lo visible del mapa
-            const startCol = Math.floor(camera.x / TILE_SIZE);
-            const endCol = startCol + (canvas.width / TILE_SIZE) + 1;
-            const startRow = Math.floor(camera.y / TILE_SIZE);
-            const endRow = startRow + (canvas.height / TILE_SIZE) + 1;
-            
-            for (let y = startRow; y <= endRow; y++) {
-                for (let x = startCol; x <= endCol; x++) {
-                    if (y < 0 || y >= MAP_HEIGHT || x < 0 || x >= MAP_WIDTH) continue;
-                    
-                    const screenX = x * TILE_SIZE - camera.x;
-                    const screenY = y * TILE_SIZE - camera.y;
-                    
-                    if (game.map[y] && game.map[y][x] === 1) {
-                        // Roca/Obstáculo - dibujo simple
-                        ctx.fillStyle = '#555';
-                        ctx.fillRect(screenX + 2, screenY + 2, 60, 60);
-                        ctx.fillStyle = '#777';
-                        ctx.fillRect(screenX + 5, screenY + 5, 54, 54);
-                    }
-                }
-            }
-            
-            // Partículas
-            game.particles.forEach(p => {
-                const sx = p.x - camera.x;
-                const sy = p.y - camera.y;
-                
-                if (p.text) {
-                    ctx.fillStyle = p.color;
-                    ctx.font = 'bold 16px Arial';
-                    ctx.fillText(p.text, sx, sy);
-                } else {
-                    ctx.fillStyle = p.color;
-                    ctx.fillRect(sx, sy, 4, 4);
-                }
-            });
-            
-            // Jugadores
-            if (game.opponent) game.opponent.draw();
-            if (game.player) game.player.draw();
-        }
-
-        function copySDP() {
-            document.getElementById('sdpOffer').select();
-            document.execCommand('copy');
-        }
-
-        function copyFinal() {
-            document.getElementById('sdpFinal').select();
-            document.execCommand('copy');
-            startGame();
-        }
-
-        function reset() {
-            location.reload();
+            requestAnimationFrame(loop);
         }
 
         // Input
         window.addEventListener('keydown', e => {
             keys[e.key] = true;
-            if (e.code === 'Space' && e.target === document.body) e.preventDefault();
+            if (e.code === 'Space' && e.target.tagName !== 'TEXTAREA') e.preventDefault();
+            if (e.key === 'Escape') location.reload();
         });
         window.addEventListener('keyup', e => keys[e.key] = false);
 
-        // Iniciar
-        loadImages();
+        init();
     </script>
 </body>
 </html>

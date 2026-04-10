@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tactical P2P Arena Mobile</title>
+    <title>OmegaPvPsl</title>
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap');
+        
         * {
             margin: 0;
             padding: 0;
@@ -17,8 +19,8 @@
         }
         
         body {
-            font-family: 'Consolas', 'Courier New', monospace;
-            background: #0d0d0d;
+            font-family: 'Rajdhani', sans-serif;
+            background: #0a0a0a;
             color: #e0e0e0;
             overflow: hidden;
             position: fixed;
@@ -26,69 +28,300 @@
             height: 100%;
         }
         
-        #menu {
+        /* MAIN MENU - Estilo Free Fire */
+        #mainMenu {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+            display: flex;
+            flex-direction: column;
+            z-index: 200;
+            overflow: hidden;
+        }
+        
+        /* Header con logo */
+        .menu-header {
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+        
+        #gameTitle {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 42px;
+            font-weight: 900;
+            background: linear-gradient(180deg, #d4af37 0%, #8b6914 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
+            letter-spacing: 3px;
+            margin-bottom: 5px;
+        }
+        
+        .menu-subtitle {
+            color: #666;
+            font-size: 12px;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+        }
+        
+        /* Área del personaje */
+        .character-showcase {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        
+        .character-bg {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: pulseBg 3s ease-in-out infinite;
+        }
+        
+        @keyframes pulseBg {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+        
+        #characterDisplay {
+            width: 200px;
+            height: 200px;
+            image-rendering: pixelated;
+            filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.4));
+            animation: floatChar 3s ease-in-out infinite;
+            z-index: 5;
+        }
+        
+        @keyframes floatChar {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(2deg); }
+        }
+        
+        /* Controles inferiores */
+        .menu-controls {
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%);
+        }
+        
+        .nickname-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        #nicknameDisplay {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #d4af37;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            min-width: 150px;
+            text-align: center;
+        }
+        
+        .edit-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(212, 175, 55, 0.2);
+            border: 1px solid #d4af37;
+            color: #d4af37;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .edit-btn:hover {
+            background: rgba(212, 175, 55, 0.4);
+            transform: scale(1.1);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        .menu-btn {
+            flex: 1;
+            max-width: 150px;
+            padding: 15px;
+            border: 1px solid #444;
+            background: rgba(255, 255, 255, 0.05);
+            color: #aaa;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .menu-btn:hover {
+            border-color: #d4af37;
+            color: #d4af37;
+            background: rgba(212, 175, 55, 0.1);
+        }
+        
+        .menu-btn i {
+            font-size: 24px;
+        }
+        
+        #playBtn {
+            width: 100%;
+            max-width: none;
+            padding: 20px;
+            background: linear-gradient(180deg, #d4af37 0%, #8b6914 100%);
+            border: none;
+            color: #000;
+            font-size: 24px;
+            font-weight: 900;
+            border-radius: 10px;
+            margin-top: 10px;
+            text-shadow: 0 1px 0 rgba(255,255,255,0.3);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+            animation: btnPulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes btnPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(212, 175, 55, 0.4); }
+            50% { box-shadow: 0 0 40px rgba(212, 175, 55, 0.6); }
+        }
+        
+        #playBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 30px rgba(212, 175, 55, 0.6);
+        }
+        
+        /* Modal de nickname */
+        #nicknameModal {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 300;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        #nicknameInput {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #d4af37;
+            padding: 15px 30px;
+            color: #fff;
+            font-size: 20px;
+            text-align: center;
+            border-radius: 5px;
+            width: 250px;
+        }
+        
+        /* LOBBY P2P - El menú anterior */
+        #lobbyMenu {
+            display: none;
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             text-align: center;
             background: #1a1a1a;
-            padding: 30px;
-            border-radius: 2px;
+            padding: 40px;
             border: 1px solid #333;
             box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
             z-index: 100;
             max-width: 90%;
+            border-top: 3px solid #d4af37;
         }
         
-        h1 {
-            color: #d4d4d4;
+        #lobbyMenu h2 {
+            color: #d4af37;
+            font-family: 'Orbitron', sans-serif;
             margin-bottom: 20px;
             font-size: 24px;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            border-bottom: 2px solid #555;
-            padding-bottom: 10px;
         }
         
+        .back-btn {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: none;
+            border: 1px solid #666;
+            color: #666;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-family: 'Rajdhani', sans-serif;
+        }
+        
+        .back-btn:hover {
+            border-color: #d4af37;
+            color: #d4af37;
+        }
+        
+        /* Estilos del juego anteriores */
         input {
             padding: 12px;
             margin: 10px;
             border: 1px solid #444;
-            border-radius: 0;
             background: #2a2a2a;
             color: #fff;
-            width: 200px;
+            width: 220px;
             font-family: inherit;
-            font-size: 14px;
         }
         
         button {
             padding: 12px 25px;
             margin: 8px;
             border: 1px solid #555;
-            border-radius: 0;
             background: #333;
             color: #d0d0d0;
             cursor: pointer;
+            font-family: inherit;
             font-size: 13px;
             text-transform: uppercase;
-            letter-spacing: 1px;
             transition: all 0.2s;
         }
         
-        button:hover, button:active {
-            background: #444;
-            border-color: #777;
-            color: #fff;
+        button:hover {
+            border-color: #d4af37;
+            color: #d4af37;
         }
         
         #gameCanvas {
             display: none;
             background: #3d3429;
-            image-rendering: pixelated;
-            image-rendering: -moz-crisp-edges;
-            image-rendering: crisp-edges;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 100%;
+            max-height: 100%;
         }
         
         #ui {
@@ -114,7 +347,7 @@
         
         #health {
             height: 100%;
-            background: linear-gradient(90deg, #8b0000, #cc0000);
+            background: linear-gradient(90deg, #d4af37, #8b6914);
             width: 100%;
             transition: width 0.3s;
         }
@@ -161,19 +394,23 @@
         .connected { color: #7c9c6c; }
         .disconnected { color: #8b4513; }
         
-        #instructions {
-            margin-top: 20px;
-            font-size: 12px;
-            color: #888;
-            line-height: 1.6;
-            text-transform: uppercase;
-        }
-        
         .loading {
             color: #999;
             font-size: 14px;
             margin: 15px 0;
             letter-spacing: 2px;
+        }
+        
+        #crosshair {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            pointer-events: none;
+            display: none;
+            transform: translate(-50%, -50%);
+            z-index: 45;
         }
         
         /* Controles Móviles */
@@ -195,7 +432,6 @@
             width: 120px;
             height: 120px;
             pointer-events: auto;
-            touch-action: none;
         }
         
         #joystickBase {
@@ -211,8 +447,8 @@
             position: absolute;
             width: 50px;
             height: 50px;
-            background: rgba(255, 255, 255, 0.3);
-            border: 2px solid rgba(255, 255, 255, 0.5);
+            background: rgba(212, 175, 55, 0.3);
+            border: 2px solid #d4af37;
             border-radius: 50%;
             top: 50%;
             left: 50%;
@@ -235,36 +471,38 @@
             height: 60px;
             border-radius: 50%;
             background: rgba(40, 40, 40, 0.8);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            color: #fff;
-            font-size: 18px;
+            border: 2px solid rgba(212, 175, 55, 0.5);
+            color: #d4af37;
+            font-size: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
             touch-action: none;
             position: relative;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
         }
         
         .mobile-btn:active {
-            background: rgba(80, 80, 80, 0.9);
+            background: rgba(212, 175, 55, 0.3);
             transform: scale(0.95);
         }
         
         #btnAttack {
             width: 80px;
             height: 80px;
-            font-size: 24px;
+            font-size: 30px;
         }
         
         #btnDash {
             display: none;
-            border-color: rgba(212, 175, 55, 0.5);
-            color: #d4af37;
+            border-color: rgba(212, 175, 55, 0.8);
+            background: rgba(212, 175, 55, 0.2);
         }
         
         #btnDash.cooldown {
-            opacity: 0.5;
-            color: #666;
+            opacity: 0.3;
+            border-color: #555;
         }
         
         #weaponSelect {
@@ -287,38 +525,14 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 24px;
+            cursor: pointer;
         }
         
         .weapon-btn.active {
             border-color: #d4af37;
             background: rgba(212, 175, 55, 0.2);
-        }
-        
-        #crosshair {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            border-radius: 50%;
-            pointer-events: none;
-            display: none;
-            transform: translate(-50%, -50%);
-            z-index: 45;
-        }
-        
-        .dash-indicator {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border: 2px solid rgba(212, 175, 55, 0.3);
-            border-radius: 50%;
-            animation: dashPulse 0.5s ease-out;
-            pointer-events: none;
-        }
-        
-        @keyframes dashPulse {
-            to { transform: scale(2); opacity: 0; }
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
         }
         
         #cooldownOverlay {
@@ -327,43 +541,158 @@
             left: 0;
             width: 100%;
             height: 0%;
-            background: rgba(0, 0, 0, 0.6);
+            background: rgba(0, 0, 0, 0.8);
             transition: height 0.1s;
+            border-radius: 50%;
+        }
+        
+        /* Skin selector simple */
+        .color-picker {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 10px 0;
+        }
+        
+        .color-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .color-option.selected {
+            border-color: #d4af37;
+            transform: scale(1.2);
+            box-shadow: 0 0 10px currentColor;
+        }
+        
+        .stats-display {
+            position: absolute;
+            top: 80px;
+            right: 20px;
+            text-align: right;
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .stat-item {
+            margin: 5px 0;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+        
+        .stat-bar {
+            width: 60px;
+            height: 4px;
+            background: #333;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .stat-fill {
+            height: 100%;
+            background: #d4af37;
         }
     </style>
 </head>
 <body>
     <div id="crosshair"></div>
     
-    <div id="menu">
-        <h1>Tactical P2P Arena</h1>
-        <div id="setup">
-            <p class="loading" id="loadingText">Cargando...</p>
-            <div id="gameControls" style="display: none;">
-                <p style="color: #888; font-size: 11px; margin-bottom: 10px;">ID: <span id="myId" style="color: #d0d0d0;">...</span></p>
-                <input type="text" id="peerId" placeholder="ID oponente">
-                <br>
-                <button onclick="hostGame()" id="btnHost">Crear Sala</button>
-                <button onclick="joinGame()" id="btnJoin">Unirse</button>
+    <!-- MAIN MENU - Estilo Free Fire -->
+    <div id="mainMenu">
+        <div class="stats-display">
+            <div class="stat-item">
+                <span>RANGO: OR</span>
+                <div class="stat-bar"><div class="stat-fill" style="width: 80%"></div></div>
+            </div>
+            <div class="stat-item">
+                <span>NIVEL: 42</span>
+                <div class="stat-bar"><div class="stat-fill" style="width: 65%"></div></div>
             </div>
         </div>
-        <div id="waiting" style="display: none;">
-            <p style="color: #999; font-size: 13px;">Esperando...</p>
-            <p style="color: #b0b0b0; margin-top: 10px; font-size: 11px; word-break: break-all;">ID: <b id="shareId" style="color: #fff;"></b></p>
+        
+        <div class="menu-header">
+            <h1 id="gameTitle">OMEGAPVPSL</h1>
+            <div class="menu-subtitle">Tactical P2P Combat</div>
         </div>
-        <div id="instructions">
-            <p><span style="color: #fff;">WASD</span> Mover | <span style="color: #fff;">Mouse</span> Apuntar</p>
-            <p><span style="color: #fff;">[1]</span> Espada <span style="color: #fff;">[2]</span> Pistola</p>
-            <p><span style="color: #d4af37;">[Q]</span> Dash (Solo Espada)</p>
-            <p style="margin-top: 10px; color: #666; font-size: 10px;">También compatible con móvil</p>
+        
+        <div class="character-showcase">
+            <div class="character-bg"></div>
+            <img id="characterDisplay" src="pla1.png" alt="Character">
+        </div>
+        
+        <div class="menu-controls">
+            <div class="nickname-container">
+                <div id="nicknameDisplay">Jugador_1</div>
+                <button class="edit-btn" onclick="editNickname()">✎</button>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="menu-btn" onclick="openSkins()">
+                    <span style="font-size: 20px;">👕</span>
+                    <span>SKINS</span>
+                </button>
+                <button class="menu-btn" onclick="openSettings()">
+                    <span style="font-size: 20px;">⚙️</span>
+                    <span>AJUSTES</span>
+                </button>
+            </div>
+            
+            <button id="playBtn" onclick="goToLobby()">JUGAR</button>
+        </div>
+    </div>
+    
+    <!-- Modal Nickname -->
+    <div id="nicknameModal">
+        <h3 style="color: #d4af37; font-family: 'Orbitron', sans-serif;">EDITAR NOMBRE</h3>
+        <input type="text" id="nicknameInput" maxlength="12" placeholder="Tu nombre">
+        <button onclick="saveNickname()" style="background: #d4af37; color: #000; border: none; font-weight: bold;">GUARDAR</button>
+        <button onclick="closeNicknameModal()" style="background: transparent; border: 1px solid #666;">CANCELAR</button>
+    </div>
+    
+    <!-- Modal Skins -->
+    <div id="skinsModal" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 300; flex-direction: column; align-items: center; justify-content: center;">
+        <h2 style="color: #d4af37; font-family: 'Orbitron'; margin-bottom: 30px;">SELECCIONAR SKIN</h2>
+        <div class="color-picker">
+            <div class="color-option selected" style="background: #00fff2;" onclick="changeSkin('#00fff2', this)"></div>
+            <div class="color-option" style="background: #e94560;" onclick="changeSkin('#e94560', this)"></div>
+            <div class="color-option" style="background: #7c9c6c;" onclick="changeSkin('#7c9c6c', this)"></div>
+            <div class="color-option" style="background: #d4af37;" onclick="changeSkin('#d4af37', this)"></div>
+            <div class="color-option" style="background: #8b4513;" onclick="changeSkin('#8b4513', this)"></div>
+        </div>
+        <p style="color: #666; margin: 20px; font-size: 12px;">Vista previa aplicada automáticamente</p>
+        <button onclick="closeSkins()" style="background: #d4af37; color: #000; border: none; padding: 15px 40px; font-weight: bold;">LISTO</button>
+    </div>
+
+    <!-- LOBBY MENU - P2P -->
+    <div id="lobbyMenu">
+        <button class="back-btn" onclick="backToMain()">← VOLVER</button>
+        <h2>SALA DE ESPERA</h2>
+        <div id="lobbyContent">
+            <p style="color: #888; font-size: 11px; margin-bottom: 15px;">ID: <span id="myId" style="color: #d4af37;">...</span></p>
+            <input type="text" id="peerId" placeholder="ID del oponente">
+            <br>
+            <button onclick="hostGame()" style="background: rgba(212, 175, 55, 0.2); border-color: #d4af37; color: #d4af37;">CREAR SALA</button>
+            <button onclick="joinGame()">UNIRSE</button>
+        </div>
+        <div id="waiting" style="display: none;">
+            <p style="color: #d4af37; margin: 20px;">Esperando oponente...</p>
+            <p style="color: #666; font-size: 12px; word-break: break-all;">ID: <b id="shareId" style="color: #fff;"></b></p>
+            <button onclick="cancelWait()" style="margin-top: 20px; border-color: #e94560; color: #e94560;">CANCELAR</button>
         </div>
     </div>
 
+    <!-- UI del juego -->
     <div id="ui">
         <div class="health-bar">
             <div id="health"></div>
         </div>
-        <div style="font-size: 10px; color: #666;">HP 100/100</div>
+        <div style="font-size: 10px; color: #666;">100/100 HP</div>
         <div id="weaponInfo">
             <div id="weaponIcon">
                 <img id="currentWeaponImg" src="" alt="w">
@@ -400,14 +729,14 @@
     <canvas id="gameCanvas"></canvas>
 
     <script>
+        // Configuración
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        canvas.width = 1000;
+        canvas.height = 600;
         
-        const WORLD_WIDTH = 1000;
-        const WORLD_HEIGHT = 600;
-        
-        canvas.width = WORLD_WIDTH;
-        canvas.height = WORLD_HEIGHT;
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        let playerColor = '#00fff2';
         
         const assets = {
             player: new Image(),
@@ -415,7 +744,6 @@
             pistol: new Image()
         };
         
-        let assetsLoaded = false;
         assets.player.src = 'pla1.png';
         assets.sword.src = 'esp1.png';
         assets.pistol.src = 'pis1.png';
@@ -423,119 +751,107 @@
         let peer = null;
         let conn = null;
         let isHost = false;
-        let gameLoop = null;
         
-        // Detectar móvil
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 800;
-        
-        // Sistema de armas actualizado
+        // Sistema de armas (Pistola 15, Espada 20, Vida 100)
         const WEAPONS = {
-            SWORD: {
-                name: 'Espada',
-                type: 'melee',
-                damage: 20,  // Cambiado a 20
-                range: 60,
-                cooldown: 500,
-                image: assets.sword,
-                offsetX: 20,
-                offsetY: 10,
-                canDash: true,
-                dashCooldown: 2000,
-                dashDistance: 120,
-                dashSpeed: 15
-            },
-            PISTOL: {
-                name: 'Pistola',
-                type: 'ranged',
-                damage: 15,  // Cambiado a 15
-                speed: 12,
-                cooldown: 300,
-                image: assets.pistol,
-                offsetX: 25,
-                offsetY: 5,
-                recoil: 0.3,
-                recoilRecovery: 0.05,
-                canDash: false
-            }
+            SWORD: { name: 'Espada', type: 'melee', damage: 20, range: 60, cooldown: 500, 
+                    image: assets.sword, offsetX: 20, offsetY: 10, canDash: true, 
+                    dashCooldown: 2000, dashDistance: 120 },
+            PISTOL: { name: 'Pistola', type: 'ranged', damage: 15, speed: 12, cooldown: 300,
+                     image: assets.pistol, offsetX: 25, offsetY: 5, recoil: 0.3, 
+                     recoilRecovery: 0.05, canDash: false }
         };
         
-        // Jugador con sistema de dash
         const player = {
-            x: 200,
-            y: 300,
-            width: 40,
-            height: 40,
-            angle: 0,
-            health: 100,  // 100/100
-            maxHealth: 100,
-            speed: 4,
-            lastAttack: 0,
-            currentWeapon: 'SWORD', // Empezar con espada para probar dash
-            isAttacking: false,
-            attackAnimation: 0,
-            weaponRecoil: 0,
-            isDead: false,
-            score: 0,
-            flip: false,
-            // Dash
-            isDashing: false,
-            dashCooldown: 0,
-            dashTrail: [],
-            lastDashTime: 0
-        };
-        
-        const opponent = {
-            x: 800,
-            y: 300,
-            width: 40,
-            height: 40,
-            angle: 0,
-            health: 100,
-            maxHealth: 100,
-            currentWeapon: 'SWORD',
-            isAttacking: false,
-            attackAnimation: 0,
-            weaponRecoil: 0,
-            isDead: false,
-            score: 0,
-            flip: false,
-            isDashing: false,
+            x: 200, y: 300, width: 40, height: 40, angle: 0,
+            health: 100, maxHealth: 100, speed: 4,
+            lastAttack: 0, currentWeapon: 'SWORD',
+            isAttacking: false, attackAnimation: 0,
+            weaponRecoil: 0, isDead: false, score: 0,
+            flip: false, isDashing: false, lastDashTime: 0,
             dashTrail: []
         };
         
+        const opponent = {
+            x: 800, y: 300, width: 40, height: 40, angle: 0,
+            health: 100, currentWeapon: 'SWORD',
+            isAttacking: false, attackAnimation: 0,
+            weaponRecoil: 0, isDead: false, score: 0,
+            flip: false, isDashing: false, dashTrail: []
+        };
+        
         const keys = {};
-        const mouse = { x: 0, y: 0, down: false };
-        let bullets = [];
-        let slashEffects = [];
-        let particles = [];
+        const mouse = { x: 0, y: 0 };
+        let bullets = [], slashEffects = [], particles = [];
         
         const walls = [
-            { x: 0, y: 0, width: WORLD_WIDTH, height: 20 },
-            { x: 0, y: WORLD_HEIGHT - 20, width: WORLD_WIDTH, height: 20 },
-            { x: 0, y: 0, width: 20, height: WORLD_HEIGHT },
-            { x: WORLD_WIDTH - 20, y: 0, width: 20, height: WORLD_HEIGHT },
+            { x: 0, y: 0, width: 1000, height: 20 },
+            { x: 0, y: 580, width: 1000, height: 20 },
+            { x: 0, y: 0, width: 20, height: 600 },
+            { x: 980, y: 0, width: 20, height: 600 },
             { x: 400, y: 200, width: 200, height: 20 },
             { x: 400, y: 400, width: 200, height: 20 },
             { x: 300, y: 250, width: 20, height: 100 },
             { x: 680, y: 250, width: 20, height: 100 },
             { x: 150, y: 150, width: 60, height: 60 },
-            { x: 790, y: 390, width: 60, height: 60 },
-            { x: 100, y: 450, width: 80, height: 30 },
-            { x: 820, y: 120, width: 80, height: 30 }
+            { x: 790, y: 390, width: 60, height: 60 }
         ];
         
-        // Cargar recursos
-        Promise.all([
-            new Promise(resolve => assets.player.onload = resolve),
-            new Promise(resolve => assets.sword.onload = resolve),
-            new Promise(resolve => assets.pistol.onload = resolve)
-        ]).then(() => {
-            assetsLoaded = true;
-            document.getElementById('loadingText').style.display = 'none';
-            document.getElementById('gameControls').style.display = 'block';
-            initPeer();
-        });
+        // Funciones del Menú
+        function editNickname() {
+            document.getElementById('nicknameModal').style.display = 'flex';
+            document.getElementById('nicknameInput').value = document.getElementById('nicknameDisplay').textContent;
+        }
         
+        function saveNickname() {
+            const val = document.getElementById('nicknameInput').value.trim();
+            if (val) document.getElementById('nicknameDisplay').textContent = val;
+            closeNicknameModal();
+        }
+        
+        function closeNicknameModal() {
+            document.getElementById('nicknameModal').style.display = 'none';
+        }
+        
+        function openSkins() {
+            document.getElementById('skinsModal').style.display = 'flex';
+        }
+        
+        function closeSkins() {
+            document.getElementById('skinsModal').style.display = 'none';
+        }
+        
+        function changeSkin(color, element) {
+            playerColor = color;
+            document.querySelectorAll('.color-option').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            
+            // Aplicar filtro al personaje del menú (simulado con brillo)
+            const char = document.getElementById('characterDisplay');
+            char.style.filter = `drop-shadow(0 0 20px ${color}) brightness(1.2)`;
+        }
+        
+        function openSettings() {
+            alert('Configuración: Sonido, Sensibilidad, etc.\n(En desarrollo)');
+        }
+        
+        function goToLobby() {
+            document.getElementById('mainMenu').style.display = 'none';
+            document.getElementById('lobbyMenu').style.display = 'block';
+            if (!peer) initPeer();
+        }
+        
+        function backToMain() {
+            document.getElementById('lobbyMenu').style.display = 'none';
+            document.getElementById('mainMenu').style.display = 'flex';
+        }
+        
+        function cancelWait() {
+            document.getElementById('waiting').style.display = 'none';
+            document.getElementById('lobbyContent').style.display = 'block';
+        }
+        
+        // PeerJS
         function initPeer() {
             peer = new Peer();
             peer.on('open', (id) => {
@@ -546,19 +862,16 @@
                 setupConnection();
                 startGame();
             });
-            peer.on('error', (err) => alert('Error: ' + err));
         }
         
         function hostGame() {
-            if (!assetsLoaded) return;
             isHost = true;
-            document.getElementById('setup').style.display = 'none';
+            document.getElementById('lobbyContent').style.display = 'none';
             document.getElementById('waiting').style.display = 'block';
             document.getElementById('shareId').textContent = peer.id;
         }
         
         function joinGame() {
-            if (!assetsLoaded) return;
             const peerId = document.getElementById('peerId').value;
             if (!peerId) return alert('Introduce ID');
             conn = peer.connect(peerId);
@@ -573,43 +886,20 @@
             document.getElementById('status').textContent = 'Conectado';
             document.getElementById('status').className = 'connected';
             conn.on('data', handleNetworkData);
-            conn.on('close', () => {
-                document.getElementById('status').textContent = 'Desconectado';
-                document.getElementById('status').className = 'disconnected';
-            });
         }
         
         function handleNetworkData(data) {
             if (data.type === 'player') {
-                opponent.x = data.x;
-                opponent.y = data.y;
-                opponent.angle = data.angle;
-                opponent.health = data.health;
-                opponent.isDead = data.isDead;
-                opponent.score = data.score;
-                opponent.currentWeapon = data.weapon;
-                opponent.isAttacking = data.isAttacking;
-                opponent.attackAnimation = data.attackAnimation;
-                opponent.weaponRecoil = data.weaponRecoil || 0;
-                opponent.flip = data.flip;
-                opponent.isDashing = data.isDashing || false;
-                if (data.dashTrail) opponent.dashTrail = data.dashTrail;
+                Object.assign(opponent, data);
             } else if (data.type === 'bullet') {
-                bullets.push({
-                    x: data.x,
-                    y: data.y,
-                    vx: data.vx,
-                    vy: data.vy,
-                    owner: 'opponent',
-                    damage: WEAPONS.PISTOL.damage
-                });
+                bullets.push({...data, owner: 'opponent', damage: WEAPONS.PISTOL.damage});
             } else if (data.type === 'slash') {
                 createSlashEffect(opponent.x, opponent.y, opponent.angle, 'opponent');
                 checkSlashDamage(opponent, player);
             } else if (data.type === 'dash') {
                 opponent.isDashing = true;
                 opponent.dashTrail = data.trail || [];
-                setTimeout(() => { opponent.isDashing = false; }, 200);
+                setTimeout(() => opponent.isDashing = false, 200);
             } else if (data.type === 'respawn') {
                 opponent.isDead = false;
                 opponent.health = 100;
@@ -624,66 +914,50 @@
             if (conn && conn.open) {
                 conn.send({
                     type: 'player',
-                    x: player.x,
-                    y: player.y,
-                    angle: player.angle,
-                    health: player.health,
-                    isDead: player.isDead,
-                    score: player.score,
-                    weapon: player.currentWeapon,
-                    isAttacking: player.isAttacking,
-                    attackAnimation: player.attackAnimation,
-                    weaponRecoil: player.weaponRecoil,
-                    flip: player.flip,
-                    isDashing: player.isDashing,
-                    dashTrail: player.dashTrail
+                    x: player.x, y: player.y, angle: player.angle,
+                    health: player.health, isDead: player.isDead, score: player.score,
+                    weapon: player.currentWeapon, isAttacking: player.isAttacking,
+                    attackAnimation: player.attackAnimation, weaponRecoil: player.weaponRecoil,
+                    flip: player.flip, isDashing: player.isDashing, dashTrail: player.dashTrail
                 });
             }
         }
         
+        // Sistema de juego (igual que antes)
         function switchWeapon(weaponName) {
             if (player.currentWeapon === weaponName || player.isDead) return;
             player.currentWeapon = weaponName;
             player.weaponRecoil = 0;
             updateWeaponUI();
             
-            // Actualizar UI móvil
             if (isMobile) {
                 document.getElementById('btnSword').classList.toggle('active', weaponName === 'SWORD');
                 document.getElementById('btnPistol').classList.toggle('active', weaponName === 'PISTOL');
-                document.getElementById('btnDash').style.display = 
-                    WEAPONS[weaponName].canDash ? 'flex' : 'none';
+                document.getElementById('btnDash').style.display = WEAPONS[weaponName].canDash ? 'flex' : 'none';
                 document.getElementById('btnAttack').textContent = weaponName === 'SWORD' ? '⚔️' : '🔫';
             }
             
-            if (conn && conn.open) {
-                conn.send({ type: 'weaponChange', weapon: weaponName });
-            }
+            if (conn && conn.open) conn.send({type: 'weaponChange', weapon: weaponName});
         }
         
         function updateWeaponUI() {
             const weapon = WEAPONS[player.currentWeapon];
             document.getElementById('currentWeaponImg').src = weapon.image.src;
-            document.getElementById('weaponName').textContent = 
-                `${weapon.name} (${weapon.damage} Dmg)`;
+            document.getElementById('weaponName').textContent = `${weapon.name} (${weapon.damage} DMG)`;
         }
         
         function performDash() {
             if (player.isDead || player.isDashing) return;
-            
             const weapon = WEAPONS[player.currentWeapon];
             const now = Date.now();
-            
             if (!weapon.canDash || now - player.lastDashTime < weapon.dashCooldown) return;
             
             player.lastDashTime = now;
             player.isDashing = true;
             
-            // Calcular dirección del dash (según ángulo del mouse/mira)
             const dashX = Math.cos(player.angle) * weapon.dashDistance;
             const dashY = Math.sin(player.angle) * weapon.dashDistance;
             
-            // Crear estela
             player.dashTrail = [];
             for (let i = 0; i < 5; i++) {
                 player.dashTrail.push({
@@ -693,46 +967,27 @@
                 });
             }
             
-            // Aplicar movimiento con colisión
             const targetX = player.x + dashX;
             const targetY = player.y + dashY;
-            
             if (!checkWallCollision(targetX, player.y, player.width/2)) player.x = targetX;
             if (!checkWallCollision(player.x, targetY, player.height/2)) player.y = targetY;
             
-            // Enviar a red
-            if (conn && conn.open) {
-                conn.send({ 
-                    type: 'dash', 
-                    trail: player.dashTrail 
-                });
-            }
+            if (conn && conn.open) conn.send({type: 'dash', trail: player.dashTrail});
             
-            // Animación de dash
-            setTimeout(() => {
-                player.isDashing = false;
-                player.dashTrail = [];
-            }, 200);
+            setTimeout(() => { player.isDashing = false; player.dashTrail = []; }, 200);
             
-            // Actualizar cooldown UI
-            if (isMobile && weapon.canDash) {
-                updateDashCooldown();
-            }
+            if (isMobile && weapon.canDash) updateDashCooldown();
         }
         
         function updateDashCooldown() {
-            const weapon = WEAPONS.SWORD;
             const btn = document.getElementById('btnDash');
             const overlay = document.getElementById('cooldownOverlay');
-            
             btn.classList.add('cooldown');
-            let remaining = weapon.dashCooldown;
+            let remaining = WEAPONS.SWORD.dashCooldown;
             
             const interval = setInterval(() => {
                 remaining -= 100;
-                const pct = (remaining / weapon.dashCooldown) * 100;
-                overlay.style.height = (100 - pct) + '%';
-                
+                overlay.style.height = (100 - (remaining / WEAPONS.SWORD.dashCooldown * 100)) + '%';
                 if (remaining <= 0) {
                     clearInterval(interval);
                     btn.classList.remove('cooldown');
@@ -743,10 +998,8 @@
         
         function attack() {
             if (player.isDead || player.isAttacking) return;
-            
             const weapon = WEAPONS[player.currentWeapon];
             const now = Date.now();
-            
             if (now - player.lastAttack < weapon.cooldown) return;
             
             player.lastAttack = now;
@@ -756,13 +1009,11 @@
             if (weapon.type === 'melee') {
                 setTimeout(() => {
                     createSlashEffect(player.x, player.y, player.angle, 'player');
-                    
                     const dist = Math.hypot(opponent.x - player.x, opponent.y - player.y);
                     if (dist < weapon.range && !opponent.isDead) {
                         const angleToOpponent = Math.atan2(opponent.y - player.y, opponent.x - player.x);
                         const angleDiff = Math.abs(angleToOpponent - player.angle);
                         const normalizedDiff = Math.min(angleDiff, 2 * Math.PI - angleDiff);
-                        
                         if (normalizedDiff < Math.PI / 3) {
                             opponent.health -= weapon.damage;
                             createParticles(opponent.x, opponent.y, 8, '#8b0000');
@@ -773,46 +1024,26 @@
                             }
                         }
                     }
-                    if (conn && conn.open) conn.send({ type: 'slash' });
+                    if (conn && conn.open) conn.send({type: 'slash'});
                 }, 100);
-                
-                setTimeout(() => { player.isAttacking = false; }, 300);
+                setTimeout(() => player.isAttacking = false, 300);
             } else {
                 player.weaponRecoil = weapon.recoil;
-                
                 const bullet = {
                     x: player.x + Math.cos(player.angle) * 30,
                     y: player.y + Math.sin(player.angle) * 30,
                     vx: Math.cos(player.angle) * weapon.speed,
                     vy: Math.sin(player.angle) * weapon.speed,
-                    owner: 'player',
-                    damage: weapon.damage
+                    owner: 'player', damage: weapon.damage
                 };
                 bullets.push(bullet);
-                
-                if (conn && conn.open) {
-                    conn.send({
-                        type: 'bullet',
-                        x: bullet.x,
-                        y: bullet.y,
-                        vx: bullet.vx,
-                        vy: bullet.vy
-                    });
-                }
-                
-                setTimeout(() => { player.isAttacking = false; }, 100);
+                if (conn && conn.open) conn.send({type: 'bullet', x: bullet.x, y: bullet.y, vx: bullet.vx, vy: bullet.vy});
+                setTimeout(() => player.isAttacking = false, 100);
             }
         }
         
         function createSlashEffect(x, y, angle, owner) {
-            slashEffects.push({
-                x: x,
-                y: y,
-                angle: angle,
-                life: 8,
-                owner: owner,
-                distance: 0
-            });
+            slashEffects.push({x, y, angle, life: 8, owner, distance: 0});
         }
         
         function checkSlashDamage(attacker, target) {
@@ -821,8 +1052,7 @@
             if (dist < weapon.range && !target.isDead) {
                 const angleToTarget = Math.atan2(target.y - attacker.y, target.x - attacker.x);
                 const angleDiff = Math.abs(angleToTarget - attacker.angle);
-                const normalizedDiff = Math.min(angleDiff, 2 * Math.PI - angleDiff);
-                if (normalizedDiff < Math.PI / 3) {
+                if (Math.min(angleDiff, 2 * Math.PI - angleDiff) < Math.PI / 3) {
                     target.health -= weapon.damage;
                     createParticles(target.x, target.y, 8, '#8b0000');
                     if (target.health <= 0) {
@@ -838,13 +1068,11 @@
         function createParticles(x, y, count, color) {
             for (let i = 0; i < count; i++) {
                 particles.push({
-                    x: x,
-                    y: y,
+                    x, y,
                     vx: (Math.random() - 0.5) * 5,
                     vy: (Math.random() - 0.5) * 5,
                     life: 0.8,
-                    color: color,
-                    size: Math.random() * 3 + 1
+                    color, size: Math.random() * 3 + 1
                 });
             }
         }
@@ -852,66 +1080,42 @@
         function checkWallCollision(x, y, radius) {
             for (let wall of walls) {
                 if (x + radius > wall.x && x - radius < wall.x + wall.width &&
-                    y + radius > wall.y && y - radius < wall.y + wall.height) {
-                    return true;
-                }
+                    y + radius > wall.y && y - radius < wall.y + wall.height) return true;
             }
             return false;
         }
         
         function respawn() {
-            if (isHost) {
-                player.x = 200;
-                player.y = 300;
-            } else {
-                player.x = 800;
-                player.y = 300;
-            }
+            if (isHost) { player.x = 200; player.y = 300; }
+            else { player.x = 800; player.y = 300; }
             player.health = 100;
             player.isDead = false;
             player.weaponRecoil = 0;
             player.isDashing = false;
-            
-            if (conn && conn.open) {
-                conn.send({
-                    type: 'respawn',
-                    x: isHost ? 800 : 200,
-                    y: 300
-                });
-            }
+            if (conn && conn.open) conn.send({type: 'respawn', x: isHost ? 800 : 200, y: 300});
         }
         
         // Controles Móviles
-        let joystickActive = false;
-        let joystickCenter = { x: 0, y: 0 };
-        let joystickCurrent = { x: 0, y: 0 };
-        
         function initMobileControls() {
             const joystickZone = document.getElementById('joystickZone');
             const knob = document.getElementById('joystickKnob');
+            let joystickCenter = {x: 0, y: 0};
             
             joystickZone.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 const touch = e.changedTouches[0];
                 const rect = joystickZone.getBoundingClientRect();
-                joystickCenter = {
-                    x: rect.left + rect.width / 2,
-                    y: rect.top + rect.height / 2
-                };
-                joystickActive = true;
+                joystickCenter = {x: rect.left + rect.width/2, y: rect.top + rect.height/2};
                 updateJoystick(touch);
-            }, { passive: false });
+            }, {passive: false});
             
             joystickZone.addEventListener('touchmove', (e) => {
                 e.preventDefault();
-                if (!joystickActive) return;
-                const touch = e.changedTouches[0];
-                updateJoystick(touch);
-            }, { passive: false });
+                if (e.changedTouches[0]) updateJoystick(e.changedTouches[0]);
+            }, {passive: false});
             
             joystickZone.addEventListener('touchend', (e) => {
                 e.preventDefault();
-                joystickActive = false;
                 knob.style.transform = `translate(-50%, -50%)`;
                 keys['w'] = keys['a'] = keys['s'] = keys['d'] = false;
             });
@@ -921,15 +1125,9 @@
                 let dx = touch.clientX - joystickCenter.x;
                 let dy = touch.clientY - joystickCenter.y;
                 const dist = Math.hypot(dx, dy);
-                
-                if (dist > maxDist) {
-                    dx = (dx / dist) * maxDist;
-                    dy = (dy / dist) * maxDist;
-                }
-                
+                if (dist > maxDist) { dx = (dx/dist)*maxDist; dy = (dy/dist)*maxDist; }
                 knob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
                 
-                // Convertir a WASD
                 const threshold = 10;
                 keys['w'] = dy < -threshold;
                 keys['s'] = dy > threshold;
@@ -937,45 +1135,25 @@
                 keys['d'] = dx > threshold;
             }
             
-            // Mira táctil (mitad derecha de pantalla)
             document.addEventListener('touchstart', (e) => {
                 for (let touch of e.changedTouches) {
-                    if (touch.clientX > window.innerWidth / 2 && 
+                    if (touch.clientX > window.innerWidth/2 && 
                         !e.target.closest('#actionButtons') && 
                         !e.target.closest('#weaponSelect')) {
                         const rect = canvas.getBoundingClientRect();
-                        mouse.x = (touch.clientX - rect.left) * (canvas.width / rect.width);
-                        mouse.y = (touch.clientY - rect.top) * (canvas.height / rect.height);
-                        
-                        // Actualizar ángulo
+                        mouse.x = (touch.clientX - rect.left) * (canvas.width/rect.width);
+                        mouse.y = (touch.clientY - rect.top) * (canvas.height/rect.height);
                         const dx = mouse.x - player.x;
                         const dy = mouse.y - player.y;
                         player.angle = Math.atan2(dy, dx);
-                        player.flip = Math.abs(player.angle) > Math.PI / 2;
+                        player.flip = Math.abs(player.angle) > Math.PI/2;
                     }
                 }
-            }, { passive: false });
-            
-            document.addEventListener('touchmove', (e) => {
-                for (let touch of e.changedTouches) {
-                    if (touch.clientX > window.innerWidth / 2 && 
-                        !e.target.closest('#actionButtons') && 
-                        !e.target.closest('#weaponSelect')) {
-                        const rect = canvas.getBoundingClientRect();
-                        mouse.x = (touch.clientX - rect.left) * (canvas.width / rect.width);
-                        mouse.y = (touch.clientY - rect.top) * (canvas.height / rect.height);
-                        
-                        const dx = mouse.x - player.x;
-                        const dy = mouse.y - player.y;
-                        player.angle = Math.atan2(dy, dx);
-                        player.flip = Math.abs(player.angle) > Math.PI / 2;
-                    }
-                }
-            }, { passive: false });
+            }, {passive: false});
         }
         
         function startGame() {
-            document.getElementById('menu').style.display = 'none';
+            document.getElementById('lobbyMenu').style.display = 'none';
             document.getElementById('gameCanvas').style.display = 'block';
             document.getElementById('ui').style.display = 'block';
             
@@ -983,172 +1161,130 @@
                 document.getElementById('mobileControls').style.display = 'block';
                 document.getElementById('btnSword').classList.add('active');
                 initMobileControls();
-                // Forzar espada al inicio en móvil para mostrar dash
-                player.currentWeapon = 'SWORD';
-                updateWeaponUI();
             } else {
                 document.getElementById('crosshair').style.display = 'block';
-            }
-            
-            if (!isHost) {
-                player.x = 800;
-                opponent.x = 200;
-            }
-            
-            updateWeaponUI();
-            
-            // Controles Desktop
-            if (!isMobile) {
                 window.addEventListener('keydown', (e) => {
                     keys[e.key.toLowerCase()] = true;
                     if (e.key === '1') switchWeapon('SWORD');
                     if (e.key === '2') switchWeapon('PISTOL');
                     if (e.key.toLowerCase() === 'q') performDash();
                 });
-                
                 window.addEventListener('keyup', (e) => keys[e.key.toLowerCase()] = false);
                 window.addEventListener('mousemove', (e) => {
                     const rect = canvas.getBoundingClientRect();
                     mouse.x = e.clientX - rect.left;
                     mouse.y = e.clientY - rect.top;
-                    
-                    const crosshair = document.getElementById('crosshair');
-                    crosshair.style.left = e.clientX + 'px';
-                    crosshair.style.top = e.clientY + 'px';
+                    document.getElementById('crosshair').style.left = e.clientX + 'px';
+                    document.getElementById('crosshair').style.top = e.clientY + 'px';
                 });
-                window.addEventListener('mousedown', () => {
-                    mouse.down = true;
-                    attack();
-                });
-                window.addEventListener('mouseup', () => mouse.down = false);
+                window.addEventListener('mousedown', () => attack());
             }
             
-            gameLoop = requestAnimationFrame(update);
-            setInterval(sendGameData, 1000 / 60);
+            if (!isHost) { player.x = 800; opponent.x = 200; }
+            updateWeaponUI();
+            requestAnimationFrame(update);
+            setInterval(sendGameData, 1000/60);
         }
         
-        function drawRotatedImage(image, x, y, width, height, angle, flip = false, alpha = 1) {
+        function drawRotatedImage(image, x, y, width, height, angle, flip, alpha, tint) {
             ctx.save();
             ctx.translate(x, y);
             ctx.rotate(angle);
             if (flip) ctx.scale(1, -1);
             ctx.globalAlpha = alpha;
-            ctx.drawImage(image, -width/2, -height/2, width, height);
+            
+            if (tint && image === assets.player) {
+                // Aplicar color del jugador
+                ctx.drawImage(image, -width/2, -height/2, width, height);
+                ctx.globalCompositeOperation = 'source-atop';
+                ctx.fillStyle = tint;
+                ctx.globalAlpha = 0.3;
+                ctx.fillRect(-width/2, -height/2, width, height);
+            } else {
+                ctx.drawImage(image, -width/2, -height/2, width, height);
+            }
             ctx.restore();
         }
         
-        function drawWeapon(weapon, x, y, angle, isAttacking, attackProgress, recoil, flip = false) {
+        function drawWeapon(weapon, x, y, angle, isAttacking, attackProgress, recoil, flip) {
             ctx.save();
             ctx.translate(x, y);
-            
             let drawAngle = angle;
-            
-            if (weapon.type === 'ranged' && recoil > 0) {
-                drawAngle -= recoil;
-            }
-            
+            if (weapon.type === 'ranged' && recoil > 0) drawAngle -= recoil;
             if (weapon.type === 'melee' && isAttacking) {
-                const swingAngle = Math.sin(attackProgress * Math.PI) * Math.PI / 4;
-                drawAngle += swingAngle;
+                drawAngle += Math.sin(attackProgress * Math.PI) * Math.PI/4;
             }
-            
             ctx.rotate(drawAngle);
             if (flip) ctx.scale(1, -1);
-            
-            let offsetX = weapon.offsetX;
-            let offsetY = weapon.offsetY;
-            
-            if (weapon.type === 'ranged' && recoil > 0) {
-                offsetX -= recoil * 10;
-            }
-            
-            ctx.drawImage(weapon.image, offsetX - 20, offsetY - 20, 40, 40);
+            let offsetX = weapon.offsetX - (weapon.type === 'ranged' && recoil > 0 ? recoil*10 : 0);
+            ctx.drawImage(weapon.image, offsetX - 20, weapon.offsetY - 20, 40, 40);
             ctx.restore();
         }
         
         function update() {
-            // Fondo arena
             ctx.fillStyle = '#3d3429';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
             // Textura arena
             ctx.fillStyle = '#332d26';
             for (let i = 0; i < 30; i++) {
-                const x = ((i * 137) + Math.floor(Date.now() / 1000)) % WORLD_WIDTH;
-                const y = (i * 253) % WORLD_HEIGHT;
+                const x = ((i * 137) + Math.floor(Date.now()/1000)) % 1000;
+                const y = (i * 253) % 600;
                 ctx.fillRect(x, y, 2, 2);
             }
             
             // Lógica jugador
             if (!player.isDead) {
-                // Movimiento normal o dash
-                if (player.isDashing) {
-                    // Efecto de estela durante dash
-                } else {
-                    let newX = player.x;
-                    let newY = player.y;
-                    
+                if (!player.isDashing) {
+                    let newX = player.x, newY = player.y;
                     if (keys['w']) newY -= player.speed;
                     if (keys['s']) newY += player.speed;
                     if (keys['a']) newX -= player.speed;
                     if (keys['d']) newX += player.speed;
-                    
                     if (!checkWallCollision(newX, player.y, player.width/2)) player.x = newX;
                     if (!checkWallCollision(player.x, newY, player.height/2)) player.y = newY;
                 }
                 
                 if (!isMobile) {
-                    const dx = mouse.x - player.x;
-                    const dy = mouse.y - player.y;
-                    player.angle = Math.atan2(dy, dx);
-                    player.flip = Math.abs(player.angle) > Math.PI / 2;
+                    player.angle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
+                    player.flip = Math.abs(player.angle) > Math.PI/2;
                 }
                 
                 if (player.isAttacking) {
                     player.attackAnimation += 0.15;
                     if (player.attackAnimation >= 1) player.isAttacking = false;
                 }
-                
                 if (player.weaponRecoil > 0) {
                     player.weaponRecoil -= WEAPONS.PISTOL.recoilRecovery;
                     if (player.weaponRecoil < 0) player.weaponRecoil = 0;
                 }
             } else {
-                if (!player.respawnTimer) {
-                    player.respawnTimer = Date.now();
-                } else if (Date.now() - player.respawnTimer > 3000) {
+                if (!player.respawnTimer) player.respawnTimer = Date.now();
+                else if (Date.now() - player.respawnTimer > 3000) {
                     player.respawnTimer = null;
                     respawn();
                 }
             }
             
-            // Dibujar paredes grisáceas
+            // Paredes
             ctx.fillStyle = '#b8b8b8';
             ctx.strokeStyle = '#909090';
-            ctx.lineWidth = 2;
             walls.forEach(wall => {
                 ctx.fillRect(wall.x, wall.y, wall.width, wall.height);
                 ctx.strokeRect(wall.x, wall.y, wall.width, wall.height);
-                ctx.fillStyle = 'rgba(0,0,0,0.1)';
-                ctx.fillRect(wall.x + 2, wall.y + wall.height - 4, wall.width - 2, 4);
-                ctx.fillStyle = '#b8b8b8';
             });
             
-            // Actualizar balas
+            // Balas
             for (let i = bullets.length - 1; i >= 0; i--) {
                 let b = bullets[i];
-                b.x += b.vx;
-                b.y += b.vy;
-                
+                b.x += b.vx; b.y += b.vy;
                 if (checkWallCollision(b.x, b.y, 3)) {
                     createParticles(b.x, b.y, 3, '#555');
                     bullets.splice(i, 1);
                     continue;
                 }
-                
                 const target = b.owner === 'player' ? opponent : player;
                 const dist = Math.hypot(b.x - target.x, b.y - target.y);
-                
                 if (dist < target.width/2 + 5 && !target.isDead) {
                     target.health -= b.damage;
                     createParticles(target.x, target.y, 6, '#8b0000');
@@ -1161,60 +1297,48 @@
                     bullets.splice(i, 1);
                     continue;
                 }
-                
-                if (b.x < 0 || b.x > WORLD_WIDTH || b.y < 0 || b.y > WORLD_HEIGHT) {
+                if (b.x < 0 || b.x > 1000 || b.y < 0 || b.y > 600) {
                     bullets.splice(i, 1);
                     continue;
                 }
-                
                 ctx.beginPath();
-                ctx.arc(b.x, b.y, 3, 0, Math.PI * 2);
+                ctx.arc(b.x, b.y, 3, 0, Math.PI*2);
                 ctx.fillStyle = '#d4af37';
                 ctx.fill();
             }
             
-            // Efectos slash
-            for (let i = slashEffects.length - 1; i >= 0; i--) {
-                let s = slashEffects[i];
-                s.life--;
-                s.distance += 3;
-                if (s.life <= 0) {
-                    slashEffects.splice(i, 1);
-                    continue;
+            // Efectos y partículas
+            slashEffects.forEach((s, i) => {
+                s.life--; s.distance += 3;
+                if (s.life <= 0) slashEffects.splice(i, 1);
+                else {
+                    ctx.save();
+                    ctx.translate(s.x, s.y);
+                    ctx.rotate(s.angle);
+                    ctx.strokeStyle = `rgba(200,200,200,${s.life/8*0.5})`;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 35 + s.distance, -Math.PI/3, Math.PI/3);
+                    ctx.stroke();
+                    ctx.restore();
                 }
-                ctx.save();
-                ctx.translate(s.x, s.y);
-                ctx.rotate(s.angle);
-                const alpha = s.life / 8;
-                ctx.strokeStyle = `rgba(200, 200, 200, ${alpha * 0.5})`;
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.arc(0, 0, 35 + s.distance, -Math.PI/3, Math.PI/3);
-                ctx.stroke();
-                ctx.restore();
-            }
+            });
             
-            // Partículas
-            for (let i = particles.length - 1; i >= 0; i--) {
-                let p = particles[i];
-                p.x += p.vx;
-                p.y += p.vy;
-                p.life -= 0.03;
-                p.vy += 0.05;
-                if (p.life <= 0) {
-                    particles.splice(i, 1);
-                    continue;
+            particles.forEach((p, i) => {
+                p.x += p.vx; p.y += p.vy; p.life -= 0.03; p.vy += 0.05;
+                if (p.life <= 0) particles.splice(i, 1);
+                else {
+                    ctx.globalAlpha = p.life;
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(p.x, p.y, p.size, p.size);
                 }
-                ctx.globalAlpha = p.life;
-                ctx.fillStyle = p.color;
-                ctx.fillRect(p.x, p.y, p.size, p.size);
-                ctx.globalAlpha = 1;
-            }
+            });
+            ctx.globalAlpha = 1;
             
-            // Dibujar estelas de dash
-            [opponent, player].forEach(p => {
-                if (p.dashTrail && p.dashTrail.length > 0) {
-                    p.dashTrail.forEach((pos, i) => {
+            // Estelas dash
+            [player, opponent].forEach(p => {
+                if (p.dashTrail) {
+                    p.dashTrail.forEach(pos => {
                         ctx.fillStyle = `rgba(212, 175, 55, ${pos.alpha * 0.3})`;
                         ctx.fillRect(pos.x - 10, pos.y - 10, 20, 20);
                     });
@@ -1229,20 +1353,17 @@
                 ctx.fill();
                 
                 drawRotatedImage(assets.player, opponent.x, opponent.y, 
-                               opponent.width, opponent.height, opponent.angle, opponent.flip);
+                    opponent.width, opponent.height, opponent.angle, opponent.flip, 1);
                 
-                const oppWeapon = WEAPONS[opponent.currentWeapon];
-                drawWeapon(oppWeapon, opponent.x, opponent.y, opponent.angle,
-                          opponent.isAttacking, opponent.attackAnimation, 
-                          opponent.weaponRecoil || 0, opponent.flip);
+                const oppW = WEAPONS[opponent.currentWeapon];
+                drawWeapon(oppW, opponent.x, opponent.y, opponent.angle,
+                    opponent.isAttacking, opponent.attackAnimation, opponent.weaponRecoil, opponent.flip);
                 
-                // Barra vida 100/100
-                const barWidth = 50;
+                // Barra vida
                 ctx.fillStyle = '#333';
-                ctx.fillRect(opponent.x - barWidth/2, opponent.y - 45, barWidth, 4);
-                ctx.fillStyle = opponent.health > 50 ? '#666' : '#8b0000';
-                ctx.fillRect(opponent.x - barWidth/2, opponent.y - 45, 
-                          barWidth * (opponent.health/100), 4);
+                ctx.fillRect(opponent.x - 25, opponent.y - 45, 50, 4);
+                ctx.fillStyle = opponent.health > 50 ? '#d4af37' : '#8b0000';
+                ctx.fillRect(opponent.x - 25, opponent.y - 45, 50 * (opponent.health/100), 4);
             }
             
             // Dibujar jugador
@@ -1252,42 +1373,38 @@
                 ctx.ellipse(player.x, player.y + 20, 18, 6, 0, 0, Math.PI*2);
                 ctx.fill();
                 
-                // Indicador de dash disponible
+                // Indicador dash listo
                 if (WEAPONS[player.currentWeapon].canDash && !player.isDashing && 
                     Date.now() - player.lastDashTime > WEAPONS.SWORD.dashCooldown) {
                     ctx.strokeStyle = 'rgba(212, 175, 55, 0.5)';
-                    ctx.lineWidth = 1;
                     ctx.beginPath();
                     ctx.arc(player.x, player.y, 25, 0, Math.PI*2);
                     ctx.stroke();
                 }
                 
                 drawRotatedImage(assets.player, player.x, player.y, 
-                               player.width, player.height, player.angle, player.flip);
+                    player.width, player.height, player.angle, player.flip, 1, playerColor);
                 
-                const currentWpn = WEAPONS[player.currentWeapon];
-                drawWeapon(currentWpn, player.x, player.y, player.angle,
-                          player.isAttacking, player.attackAnimation, 
-                          player.weaponRecoil, player.flip);
+                const curW = WEAPONS[player.currentWeapon];
+                drawWeapon(curW, player.x, player.y, player.angle,
+                    player.isAttacking, player.attackAnimation, player.weaponRecoil, player.flip);
             } else {
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillStyle = 'rgba(0,0,0,0.7)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 ctx.fillStyle = '#666';
                 ctx.font = 'bold 40px Arial';
                 ctx.textAlign = 'center';
                 ctx.fillText('CAÍDO', canvas.width/2, canvas.height/2 - 40);
-                const timeLeft = Math.max(0, Math.ceil((3000 - (Date.now() - player.respawnTimer)) / 1000));
+                const tl = Math.max(0, Math.ceil((3000 - (Date.now() - player.respawnTimer))/1000));
                 ctx.font = '16px Arial';
                 ctx.fillStyle = '#888';
-                ctx.fillText(`Reapareciendo... ${timeLeft}`, canvas.width/2, canvas.height/2 + 20);
+                ctx.fillText(`Reapareciendo... ${tl}`, canvas.width/2, canvas.height/2 + 20);
             }
             
-            // UI actualizada
+            // UI
             document.getElementById('health').style.width = player.health + '%';
-            
-            // Score
             ctx.fillStyle = '#d0d0d0';
-            ctx.font = 'bold 24px Courier New';
+            ctx.font = 'bold 24px Orbitron';
             ctx.textAlign = 'center';
             ctx.fillText(`${player.score} : ${opponent.score}`, canvas.width/2, 35);
             

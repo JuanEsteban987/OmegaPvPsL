@@ -3,1013 +3,839 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unity RPG Arena</title>
+    <title>P2P RPG Arena Simple</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
-        
-        :root {
-            --bg-dark: #1a1a1a;
-            --bg-panel: #252526;
-            --bg-input: #3c3c3c;
-            --accent: #007acc;
-            --accent-hover: #0098ff;
-            --text: #cccccc;
-            --text-muted: #808080;
-            --border: #3e3e42;
-            --success: #4ec9b0;
-            --danger: #f48771;
-            --warning: #dcdcaa;
-        }
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
+        
         body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg-dark);
-            color: var(--text);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            color: white;
             overflow: hidden;
             height: 100vh;
-            display: flex;
-            flex-direction: column;
         }
 
-        /* Top Bar estilo Unity */
-        .top-bar {
-            height: 30px;
-            background: #2d2d30;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            padding: 0 15px;
-            font-size: 12px;
-            -webkit-app-region: drag;
-        }
-
-        .top-bar span { margin-right: 20px; color: var(--text-muted); }
-        .top-bar .active { color: var(--text); border-bottom: 2px solid var(--accent); height: 100%; display: flex; align-items: center; }
-
-        /* Layout principal */
-        #app {
-            flex: 1;
-            display: flex;
+        #gameContainer {
             position: relative;
-        }
-
-        /* Canvas Container */
-        #game-view {
-            flex: 1;
-            background: #0f0f0f;
+            width: 100vw;
+            height: 100vh;
             display: flex;
-            align-items: center;
             justify-content: center;
-            position: relative;
+            align-items: center;
         }
 
         canvas {
-            background: #1e3a2f;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            border: 3px solid #4a4a6a;
+            border-radius: 8px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
             image-rendering: pixelated;
         }
 
-        /* Side Panel estilo Inspector */
-        .inspector {
-            width: 300px;
-            background: var(--bg-panel);
-            border-left: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
+        #connectionPanel {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(30, 30, 46, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid #4a4a6a;
+            max-width: 500px;
+            width: 90%;
+            z-index: 20;
         }
 
-        .panel-header {
-            padding: 10px 15px;
-            background: #2d2d30;
-            border-bottom: 1px solid var(--border);
-            font-weight: 600;
-            font-size: 13px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+        h1 { color: #FFD700; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 5px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
-        .component {
-            border-bottom: 1px solid var(--border);
-            padding: 15px;
+        button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
+        button:disabled { background: #555; cursor: not-allowed; }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #4a4a6a;
+            background: #2d2d44;
+            color: white;
+            font-family: monospace;
+            resize: none;
         }
 
-        .component-title {
-            color: var(--text-muted);
-            font-size: 11px;
-            text-transform: uppercase;
-            margin-bottom: 10px;
-            font-weight: 700;
-        }
+        .hidden { display: none !important; }
 
-        /* Stats Grid */
-        .stat-row {
+        #rpgHud {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
             display: flex;
             justify-content: space-between;
-            margin: 8px 0;
-            font-size: 13px;
+            pointer-events: none;
+            z-index: 10;
         }
 
-        .stat-label { color: var(--text-muted); }
-        .stat-value { 
-            color: var(--text); 
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 700;
+        .characterPanel {
+            background: rgba(0,0,0,0.8);
+            border: 2px solid;
+            border-radius: 10px;
+            padding: 15px;
+            min-width: 220px;
         }
 
-        .stat-value.kill { color: var(--success); }
-        .stat-value.damage { color: var(--warning); }
+        .player1Panel { border-color: #ff6b6b; }
+        .player2Panel { border-color: #4ecdc4; }
 
-        /* Progress Bars estilo Unity */
-        .unity-bar {
-            height: 20px;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
+        .statBar {
             margin: 5px 0;
-            position: relative;
+            height: 18px;
+            background: #333;
+            border-radius: 9px;
             overflow: hidden;
-        }
-
-        .unity-bar-fill {
-            height: 100%;
-            transition: width 0.2s;
             position: relative;
         }
 
-        .unity-bar-text {
+        .hpFill { height: 100%; background: linear-gradient(90deg, #ff4444, #ff6666); transition: width 0.3s; }
+        .mpFill { height: 100%; background: linear-gradient(90deg, #4444ff, #6666ff); transition: width 0.3s; }
+        .expFill { height: 100%; background: linear-gradient(90deg, #ffd700, #ffed4e); transition: width 0.3s; }
+
+        .statText {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             font-size: 11px;
-            font-weight: 600;
-            z-index: 2;
-            text-shadow: 0 1px 2px black;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px black;
         }
 
-        .hp-fill { background: #e81123; }
-        .mp-fill { background: var(--accent); }
-
-        /* Modal estilo Editor Unity */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.85);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            backdrop-filter: blur(5px);
-        }
-
-        .modal {
-            background: var(--bg-panel);
-            border: 1px solid var(--border);
-            width: 500px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
-        }
-
-        .modal-header {
-            background: #2d2d30;
-            padding: 15px 20px;
-            border-bottom: 1px solid var(--border);
-            font-size: 18px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .modal-body {
-            padding: 20px;
-        }
-
-        .modal-footer {
-            padding: 15px 20px;
-            border-top: 1px solid var(--border);
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-        }
-
-        /* Unity Buttons */
-        .btn {
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 6px 20px;
-            font-family: inherit;
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn:hover {
-            background: #404040;
-            border-color: #555;
-        }
-
-        .btn-primary {
-            background: var(--accent);
-            border-color: var(--accent);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: var(--accent-hover);
-        }
-
-        .btn-success {
-            background: #2d5a3d;
-            border-color: var(--success);
-            color: var(--success);
-        }
-
-        /* Inputs estilo Unity */
-        .unity-input {
-            width: 100%;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 8px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
-            resize: none;
-            margin: 10px 0;
-        }
-
-        .unity-input:focus {
-            outline: 1px solid var(--accent);
-            border-color: var(--accent);
-        }
-
-        .input-group {
-            margin: 15px 0;
-        }
-
-        .input-label {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-bottom: 5px;
-            display: block;
-        }
-
-        /* Tooltips */
-        .tooltip {
-            position: absolute;
-            background: #ffffcc;
-            color: black;
-            padding: 5px 10px;
-            font-size: 12px;
-            border-radius: 3px;
-            pointer-events: none;
-            z-index: 100;
-            display: none;
-        }
-
-        /* Gameplay HUD Overlay */
-        #game-hud {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            right: 320px;
-            pointer-events: none;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .player-card {
-            background: rgba(37, 37, 38, 0.9);
-            border: 1px solid var(--border);
-            padding: 15px;
-            min-width: 200px;
-            backdrop-filter: blur(10px);
-        }
-
-        .player-name {
-            font-weight: 700;
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-
-        .p1-name { color: #4ec9b0; }
-        .p2-name { color: #569cd6; }
-
-        /* Floating Combat Text */
-        .combat-text {
-            position: absolute;
-            font-weight: 700;
-            font-size: 16px;
-            pointer-events: none;
-            text-shadow: 0 2px 4px black;
-            animation: floatUp 1.5s ease-out forwards;
-        }
-
-        @keyframes floatUp {
-            0% { transform: translateY(0); opacity: 1; }
-            100% { transform: translateY(-40px); opacity: 0; }
-        }
-
-        .damage-text { color: #ff6b6b; }
-        .heal-text { color: #4ec9b0; }
-        .level-text { color: #ffd700; }
-
-        /* Status indicators */
-        .status-connected {
-            display: inline-flex;
-            align-items: center;
+        .statsGrid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 5px;
-            color: var(--success);
+            margin-top: 8px;
+            font-size: 11px;
+        }
+
+        .statItem {
+            background: rgba(255,255,255,0.1);
+            padding: 3px 8px;
+            border-radius: 5px;
+        }
+
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 13px;
+            text-align: center;
+            border: 1px solid #666;
+        }
+
+        .key {
+            display: inline-block;
+            background: #444;
+            padding: 4px 10px;
+            border-radius: 4px;
+            margin: 0 3px;
+            border: 1px solid #666;
+            font-weight: bold;
+        }
+
+        .sprite-info {
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
             font-size: 12px;
+            text-align: left;
         }
 
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            background: var(--success);
-            border-radius: 50%;
-            animation: pulse 2s infinite;
+        .sprite-info code {
+            color: #FFD700;
+            background: rgba(0,0,0,0.3);
+            padding: 2px 5px;
+            border-radius: 3px;
         }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        /* Scrollbar estilo Unity */
-        ::-webkit-scrollbar {
-            width: 10px;
-            height: 10px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: var(--bg-panel);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #424242;
-            border: 1px solid var(--border);
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #4f4f4f;
-        }
-
-        .hidden { display: none !important; }
+        #loadingStatus { color: #ffd700; margin: 10px 0; }
     </style>
 </head>
 <body>
-    <div class="top-bar">
-        <span class="active">Game</span>
-        <span>Scene</span>
-        <span>Project</span>
-        <span>Console</span>
-        <span style="margin-left: auto;">Unity RPG Arena v1.0</span>
-    </div>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div id="rpgHud" class="hidden">
+            <div class="characterPanel player1Panel">
+                <div style="font-weight: bold; margin-bottom: 5px; color: #ff6b6b;">🗡️ Tú (Nv <span id="level1">1</span>)</div>
+                <div class="statBar">
+                    <div class="hpFill" id="hp1" style="width: 100%"></div>
+                    <div class="statText">HP: <span id="hpText1">100/100</span></div>
+                </div>
+                <div class="statBar">
+                    <div class="mpFill" id="mp1" style="width: 100%"></div>
+                    <div class="statText">MP: <span id="mpText1">50/50</span></div>
+                </div>
+                <div class="statsGrid">
+                    <div class="statItem">ATK: <span id="atk1">10</span></div>
+                    <div class="statItem">DEF: <span id="def1">5</span></div>
+                </div>
+            </div>
 
-    <div id="app">
-        <!-- Game View -->
-        <div id="game-view">
-            <canvas id="gameCanvas" width="800" height="600"></canvas>
+            <div class="characterPanel player2Panel">
+                <div style="font-weight: bold; margin-bottom: 5px; color: #4ecdc4;">🛡️ Rival (Nv <span id="level2">1</span>)</div>
+                <div class="statBar">
+                    <div class="hpFill" id="hp2" style="width: 100%"></div>
+                    <div class="statText">HP: <span id="hpText2">100/100</span></div>
+                </div>
+                <div class="statBar">
+                    <div class="mpFill" id="mp2" style="width: 100%"></div>
+                    <div class="statText">MP: <span id="mpText2">50/50</span></div>
+                </div>
+                <div class="statsGrid">
+                    <div class="statItem">ATK: <span id="atk2">10</span></div>
+                    <div class="statItem">DEF: <span id="def2">5</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="connectionPanel">
+            <h1>⚔️ RPG P2P Arena</h1>
             
-            <!-- In-Game HUD -->
-            <div id="game-hud" class="hidden">
-                <div class="player-card">
-                    <div class="player-name p1-name">● Player 1 (You)</div>
-                    <div class="unity-bar">
-                        <div class="unity-bar-fill hp-fill" id="hp-bar-1" style="width: 100%"></div>
-                        <div class="unity-bar-text" id="hp-text-1">100/100</div>
-                    </div>
-                    <div class="unity-bar">
-                        <div class="unity-bar-fill mp-fill" id="mp-bar-1" style="width: 100%"></div>
-                        <div class="unity-bar-text" id="mp-text-1">100/100</div>
-                    </div>
-                </div>
-                
-                <div class="player-card">
-                    <div class="player-name p2-name">● Player 2 (Opponent)</div>
-                    <div class="unity-bar">
-                        <div class="unity-bar-fill hp-fill" id="hp-bar-2" style="width: 100%"></div>
-                        <div class="unity-bar-text" id="hp-text-2">100/100</div>
-                    </div>
-                </div>
+            <div class="sprite-info">
+                <strong>Archivos necesarios:</strong><br>
+                • <code>pla1.png</code> - Personaje (64x64px)<br>
+                • <code>esp1.png</code> - Espada/Arma (32x32px o 64x64px)<br>
+                <small>El mismo sprite para ambos jugadores. El terreno es automático.</small>
             </div>
 
-            <!-- Combat text container -->
-            <div id="combat-container" style="position: absolute; width: 800px; height: 600px; pointer-events: none;"></div>
+            <div id="step1">
+                <p>Duelo RPG 1v1 - Top Down</p>
+                <div id="loadingStatus">Cargando recursos...</div>
+                <button onclick="createRoom()" id="btnCreate" disabled>Crear Sala</button>
+                <button onclick="showJoin()" id="btnJoin" disabled>Unirse</button>
+            </div>
+            
+            <div id="step2" class="hidden">
+                <p>Código de invitación:</p>
+                <textarea id="sdpOffer" readonly></textarea>
+                <button onclick="copySDP()">Copiar</button>
+                <button onclick="reset()">Volver</button>
+            </div>
+
+            <div id="step3" class="hidden">
+                <p>Pega el código:</p>
+                <textarea id="sdpAnswer" placeholder="Código aquí..."></textarea>
+                <button onclick="acceptAnswer()">Conectar</button>
+                <button onclick="reset()">Volver</button>
+            </div>
+
+            <div id="step4" class="hidden">
+                <p>Respuesta:</p>
+                <textarea id="sdpFinal" readonly></textarea>
+                <button onclick="copyFinal()">Copiar Respuesta</button>
+            </div>
         </div>
 
-        <!-- Inspector Panel -->
-        <div class="inspector">
-            <div class="panel-header">
-                <span style="color: var(--accent);">❖</span> Inspector
-            </div>
-
-            <!-- Connection Status -->
-            <div class="component">
-                <div class="component-title">Network Manager</div>
-                <div id="connection-status" style="font-size: 12px; color: var(--text-muted);">
-                    Status: <span style="color: var(--danger);">Disconnected</span>
-                </div>
-                <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" onclick="showModal('host')" id="btn-host">
-                    Create Room
-                </button>
-                <button class="btn" style="width: 100%; margin-top: 5px;" onclick="showModal('join')" id="btn-join">
-                    Join Room
-                </button>
-            </div>
-
-            <!-- Match Statistics -->
-            <div class="component">
-                <div class="component-title">Match Statistics</div>
-                
-                <div class="stat-row">
-                    <span class="stat-label">Kills</span>
-                    <span class="stat-value kill" id="stat-kills">0</span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-label">Deaths</span>
-                    <span class="stat-value" id="stat-deaths">0</span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-label">Damage Dealt</span>
-                    <span class="stat-value damage" id="stat-damage">0</span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-label">Current Streak</span>
-                    <span class="stat-value" id="stat-streak">0</span>
-                </div>
-                
-                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border);">
-                    <div class="stat-row">
-                        <span class="stat-label">Session Time</span>
-                        <span class="stat-value" id="session-time">00:00</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Controls -->
-            <div class="component">
-                <div class="component-title">Input Manager</div>
-                <div style="font-size: 12px; line-height: 1.6; color: var(--text-muted);">
-                    <div style="margin: 5px 0;"><kbd style="background: #333; padding: 2px 6px; border-radius: 3px;">WASD</kbd> Move</div>
-                    <div style="margin: 5px 0;"><kbd style="background: #333; padding: 2px 6px; border-radius: 3px;">SPACE</kbd> Attack</div>
-                    <div style="margin: 5px 0;"><kbd style="background: #333; padding: 2px 6px; border-radius: 3px;">ESC</kbd> Reset</div>
-                </div>
-            </div>
-
-            <!-- Console -->
-            <div class="component" style="flex: 1; display: flex; flex-direction: column;">
-                <div class="component-title">Console</div>
-                <div id="console-log" style="flex: 1; background: #0f0f0f; border: 1px solid var(--border); padding: 10px; font-family: 'JetBrains Mono', monospace; font-size: 11px; overflow-y: auto; color: #888;">
-                    > System initialized...<br>
-                    > Waiting for connection...
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modals -->
-    
-    <!-- Host Modal -->
-    <div id="modal-host" class="modal-overlay hidden">
-        <div class="modal">
-            <div class="modal-header">
-                <span style="color: var(--accent);">🖧</span> Create Room
-            </div>
-            <div class="modal-body">
-                <div class="input-group">
-                    <label class="input-label">Room Code (Share this)</label>
-                    <textarea class="unity-input" id="host-code" rows="4" readonly style="background: #1a1a1a;"></textarea>
-                    <button class="btn" onclick="copyToClipboard('host-code')" style="margin-top: 5px; width: 100%;">
-                        📋 Copy to Clipboard
-                    </button>
-                </div>
-                
-                <div class="input-group" id="host-step-2" style="display: none;">
-                    <label class="input-label">Opponent Response Code (Paste here)</label>
-                    <textarea class="unity-input" id="host-answer" rows="4" placeholder="Paste opponent's code here..."></textarea>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn" onclick="hideModal('host')">Cancel</button>
-                <button class="btn btn-success" onclick="completeHostConnection()" id="btn-connect-host">
-                    Connect
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Join Modal -->
-    <div id="modal-join" class="modal-overlay hidden">
-        <div class="modal">
-            <div class="modal-header">
-                <span style="color: var(--success);">⚔</span> Join Room
-            </div>
-            <div class="modal-body">
-                <div class="input-group" id="join-step-1">
-                    <label class="input-label">Enter Room Code</label>
-                    <textarea class="unity-input" id="join-code" rows="4" placeholder="Paste room code from host..."></textarea>
-                    <button class="btn btn-primary" onclick="generateJoinResponse()" style="width: 100%; margin-top: 10px;">
-                        Generate Response
-                    </button>
-                </div>
-                
-                <div class="input-group" id="join-step-2" style="display: none;">
-                    <label class="input-label">Your Response Code (Give this to host)</label>
-                    <textarea class="unity-input" id="join-response" rows="4" readonly style="background: #1a1a1a; color: var(--success);"></textarea>
-                    <button class="btn" onclick="copyToClipboard('join-response')" style="width: 100%; margin-top: 5px;">
-                        📋 Copy Response
-                    </button>
-                    <div style="margin-top: 10px; padding: 10px; background: rgba(78, 201, 176, 0.1); border: 1px solid var(--success); border-radius: 3px; font-size: 12px; color: var(--success);">
-                        ✓ Waiting for host to connect...
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn" onclick="hideModal('join')">Cancel</button>
-            </div>
+        <div id="controls" class="hidden">
+            <span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span> Mover | 
+            <span class="key">ESPACIO</span> Atacar
         </div>
     </div>
 
     <script>
-        // Game State
-        const STATE = {
-            peer: null,
-            channel: null,
-            isHost: false,
+        // Configuración
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const TILE_SIZE = 64;
+        const MAP_WIDTH = 30;
+        const MAP_HEIGHT = 25;
+        
+        let camera = { x: 0, y: 0 };
+        let keys = {};
+        
+        // Solo 2 imágenes necesarias
+        const images = {
+            player: null,
+            sword: null
+        };
+        
+        // Game state
+        let game = {
             player: null,
             opponent: null,
-            stats: { kills: 0, deaths: 0, damage: 0, streak: 0 },
-            sessionStart: null,
-            camera: { x: 0, y: 0 },
-            keys: {},
+            map: [],
             particles: [],
-            images: {}
+            projectiles: []
         };
+        
+        let peerConnection, dataChannel, isHost = false;
 
-        // Assets
-        function loadAssets() {
-            const loadImg = (src, fallback) => {
-                return new Promise(resolve => {
-                    const img = new Image();
-                    img.onload = () => resolve(img);
-                    img.onerror = () => {
-                        const c = document.createElement('canvas');
-                        c.width = c.height = 64;
-                        const x = c.getContext('2d');
-                        x.fillStyle = fallback;
-                        x.fillRect(16, 16, 32, 32);
-                        const i = new Image();
-                        i.src = c.toDataURL();
-                        resolve(i);
-                    };
-                    img.src = src;
-                });
-            };
-
-            Promise.all([
-                loadImg('pla1.png', '#888'),
-                loadImg('esp1.png', '#silver')
-            ]).then(([p, s]) => {
-                STATE.images.player = p;
-                STATE.images.sword = s;
-                log('Assets loaded');
-            });
-        }
-
-        // UI Functions
-        function showModal(type) {
-            document.getElementById(`modal-${type}`).classList.remove('hidden');
-            if (type === 'host') generateHostOffer();
-        }
-
-        function hideModal(type) {
-            document.getElementById(`modal-${type}`).classList.add('hidden');
-        }
-
-        function log(msg) {
-            const console = document.getElementById('console-log');
-            console.innerHTML += `> ${msg}<br>`;
-            console.scrollTop = console.scrollHeight;
-        }
-
-        function copyToClipboard(id) {
-            const el = document.getElementById(id);
-            el.select();
-            document.execCommand('copy');
-            log('Copied to clipboard');
-        }
-
-        // WebRTC P2P - Simplified Flow
-        async function generateHostOffer() {
-            STATE.isHost = true;
-            const config = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
-            STATE.peer = new RTCPeerConnection(config);
+        // Cargar solo los 2 archivos necesarios
+        function loadImages() {
+            let loaded = 0;
+            const total = 2;
             
-            STATE.channel = STATE.peer.createDataChannel('game');
-            setupDataChannel();
-
-            STATE.peer.onicecandidate = (e) => {
-                if (!e.candidate) {
-                    const code = btoa(JSON.stringify(STATE.peer.localDescription));
-                    document.getElementById('host-code').value = code;
-                    document.getElementById('host-step-2').style.display = 'block';
-                    log('Host offer generated');
+            function checkLoaded() {
+                loaded++;
+                if (loaded >= total) {
+                    document.getElementById('loadingStatus').textContent = '✅ Listo';
+                    document.getElementById('btnCreate').disabled = false;
+                    document.getElementById('btnJoin').disabled = false;
                 }
-            };
-
-            const offer = await STATE.peer.createOffer();
-            await STATE.peer.setLocalDescription(offer);
-        }
-
-        async function generateJoinResponse() {
-            const code = document.getElementById('join-code').value.trim();
-            if (!code) return log('Error: No code provided');
-
-            try {
-                const config = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
-                STATE.peer = new RTCPeerConnection(config);
-                
-                STATE.peer.ondatachannel = (e) => {
-                    STATE.channel = e.channel;
-                    setupDataChannel();
-                };
-
-                STATE.peer.onicecandidate = (e) => {
-                    if (!e.candidate) {
-                        const resp = btoa(JSON.stringify(STATE.peer.localDescription));
-                        document.getElementById('join-response').value = resp;
-                        document.getElementById('join-step-1').style.display = 'none';
-                        document.getElementById('join-step-2').style.display = 'block';
-                        log('Join response generated - waiting for host');
-                    }
-                };
-
-                await STATE.peer.setRemoteDescription(JSON.parse(atob(code)));
-                const answer = await STATE.peer.createAnswer();
-                await STATE.peer.setLocalDescription(answer);
-            } catch (e) {
-                log('Error: Invalid code');
-                console.error(e);
             }
-        }
-
-        async function completeHostConnection() {
-            const answer = document.getElementById('host-answer').value.trim();
-            if (!answer) return log('Error: Paste response code first');
-
-            try {
-                await STATE.peer.setRemoteDescription(JSON.parse(atob(answer)));
-                startGame();
-                hideModal('host');
-            } catch (e) {
-                log('Error: Invalid response code');
-            }
-        }
-
-        function setupDataChannel() {
-            STATE.channel.onopen = () => {
-                log('Connection established');
-                document.getElementById('connection-status').innerHTML = 
-                    '<span class="status-connected"><span class="status-dot"></span> Connected</span>';
-                document.getElementById('btn-host').style.display = 'none';
-                document.getElementById('btn-join').style.display = 'none';
-                
-                if (!STATE.isHost) startGame();
+            
+            // Cargar pla1.png
+            images.player = new Image();
+            images.player.onload = checkLoaded;
+            images.player.onerror = () => {
+                // Placeholder si no existe
+                const c = document.createElement('canvas');
+                c.width = c.height = 64;
+                const x = c.getContext('2d');
+                x.fillStyle = '#888';
+                x.fillRect(16, 16, 32, 32);
+                x.fillStyle = '#333';
+                x.fillText('P', 28, 40);
+                images.player.src = c.toDataURL();
+                checkLoaded();
             };
-
-            STATE.channel.onmessage = (e) => {
-                const data = JSON.parse(e.data);
-                if (!STATE.opponent) return;
-                
-                if (data.t === 's') STATE.opponent.setState(data);
-                if (data.t === 'h') {
-                    STATE.player.takeDamage(data.d, false);
-                    STATE.stats.damage += data.d;
-                    updateStats();
-                }
-                if (data.t === 'a') STATE.opponent.attacking = true;
+            images.player.src = 'pla1.png';
+            
+            // Cargar esp1.png
+            images.sword = new Image();
+            images.sword.onload = checkLoaded;
+            images.sword.onerror = () => {
+                // Placeholder espada
+                const c = document.createElement('canvas');
+                c.width = c.height = 32;
+                const x = c.getContext('2d');
+                x.fillStyle = '#silver';
+                x.fillRect(14, 0, 4, 24);
+                x.fillStyle = '#8B4513';
+                x.fillRect(10, 24, 12, 8);
+                images.sword.src = c.toDataURL();
+                checkLoaded();
             };
+            images.sword.src = 'esp1.png';
         }
 
-        function send(data) {
-            if (STATE.channel?.readyState === 'open') {
-                STATE.channel.send(JSON.stringify(data));
-            }
-        }
-
-        // Game Logic
-        class Entity {
+        class Character {
             constructor(x, y, isLocal) {
-                this.x = x; this.y = y;
-                this.vx = 0; this.vy = 0;
+                this.x = x;
+                this.y = y;
+                this.width = 48;
+                this.height = 48;
                 this.isLocal = isLocal;
-                this.dir = 2;
+                
+                // Stats RPG
+                this.level = 1;
+                this.hp = 100;
+                this.maxHp = 100;
+                this.mp = 50;
+                this.maxMp = 50;
+                this.atk = 10;
+                this.def = 5;
+                this.spd = 4;
+                
+                // Movimiento
+                this.vx = 0;
+                this.vy = 0;
+                this.direction = 2; // 0:up, 1:right, 2:down, 3:left
                 this.moving = false;
-                this.anim = 0;
-                this.hp = 100; this.maxHp = 100;
-                this.mp = 50; this.maxMp = 50;
-                this.atk = 12; this.def = 5;
+                this.animFrame = 0;
+                
+                // Combate
                 this.attacking = false;
-                this.atkCd = 0;
-                this.speed = 5;
-                this.respawnTimer = 0;
-                this.isDead = false;
+                this.attackCooldown = 0;
+                this.attackRange = 60;
+                
+                // Para diferenciar visualmente
+                this.isPlayer1 = isLocal; // El local es "jugador 1" visualmente
             }
 
             update() {
-                if (this.isDead) {
-                    if (this.respawnTimer > 0) {
-                        this.respawnTimer--;
-                        if (this.respawnTimer === 0) this.respawn();
-                    }
-                    return;
-                }
-
                 if (this.isLocal) {
-                    this.vx = this.vy = 0;
+                    this.vx = 0;
+                    this.vy = 0;
                     this.moving = false;
-
-                    if (STATE.keys['w']) { this.vy = -this.speed; this.dir = 0; this.moving = true; }
-                    if (STATE.keys['s']) { this.vy = this.speed; this.dir = 2; this.moving = true; }
-                    if (STATE.keys['a']) { this.vx = -this.speed; this.dir = 3; this.moving = true; }
-                    if (STATE.keys['d']) { this.vx = this.speed; this.dir = 1; this.moving = true; }
-                    if (STATE.keys[' '] && this.atkCd <= 0) this.attack();
+                    
+                    if (keys['w'] || keys['W']) { this.vy = -this.spd; this.direction = 0; this.moving = true; }
+                    if (keys['s'] || keys['S']) { this.vy = this.spd; this.direction = 2; this.moving = true; }
+                    if (keys['a'] || keys['A']) { this.vx = -this.spd; this.direction = 3; this.moving = true; }
+                    if (keys['d'] || keys['D']) { this.vx = this.spd; this.direction = 1; this.moving = true; }
+                    
+                    if (keys[' '] && this.attackCooldown <= 0) {
+                        this.attack();
+                    }
                 }
 
-                // Movement with collision
-                const nx = this.x + this.vx;
-                const ny = this.y + this.vy;
+                // Colisiones con mapa
+                let nextX = this.x + this.vx;
+                let nextY = this.y + this.vy;
                 
-                if (!this.collide(nx + 12, this.y + 40) && !this.collide(nx + 36, this.y + 40)) this.x = nx;
-                if (!this.collide(this.x + 12, ny + 40) && !this.collide(this.x + 36, ny + 40)) this.y = ny;
+                if (!checkCollision(nextX + 12, this.y + 24) && !checkCollision(nextX + 36, this.y + 24)) {
+                    this.x = nextX;
+                }
+                if (!checkCollision(this.x + 12, nextY + 24) && !checkCollision(this.x + 36, nextY + 36)) {
+                    this.y = nextY;
+                }
 
-                this.x = Math.max(0, Math.min(this.x, 1600 - 48));
-                this.y = Math.max(0, this.y, 1200 - 48);
+                // Limites
+                this.x = Math.max(0, Math.min(this.x, MAP_WIDTH * TILE_SIZE - this.width));
+                this.y = Math.max(0, Math.min(this.y, MAP_HEIGHT * TILE_SIZE - this.height));
 
-                if (this.atkCd > 0) this.atkCd--;
-                if (this.moving) this.anim += 0.2;
-                if (this.mp < this.maxMp) this.mp += 0.05;
-
-                if (this.isLocal) updateHUD();
-            }
-
-            collide(x, y) {
-                // Simple boundary check for infinite arena
-                return x < 0 || x > 1600 || y < 0 || y > 1200;
+                if (this.attackCooldown > 0) this.attackCooldown--;
+                if (this.moving) this.animFrame += 0.15;
+                
+                // Regen MP
+                if (this.mp < this.maxMp && Math.random() < 0.01) this.mp++;
+                
+                updateHUD();
             }
 
             attack() {
                 this.attacking = true;
-                this.atkCd = 20;
-                send({t: 'a'});
-
-                if (STATE.opponent && !STATE.opponent.isDead) {
-                    const dx = STATE.opponent.x - this.x;
-                    const dy = STATE.opponent.y - this.y;
-                    const dist = Math.hypot(dx, dy);
-
-                    if (dist < 60) {
-                        // Directional check
-                        let hit = false;
-                        if (this.dir === 0 && dy < 0 && Math.abs(dx) < 30) hit = true;
-                        if (this.dir === 2 && dy > 0 && Math.abs(dx) < 30) hit = true;
-                        if (this.dir === 1 && dx > 0 && Math.abs(dy) < 30) hit = true;
-                        if (this.dir === 3 && dx < 0 && Math.abs(dy) < 30) hit = true;
-
-                        if (hit) {
-                            const dmg = Math.max(1, Math.floor(this.atk * (0.8 + Math.random() * 0.4)));
-                            STATE.opponent.takeDamage(dmg, true);
-                            send({t: 'h', d: dmg});
-                            
-                            if (this.isLocal) {
-                                STATE.stats.damage += dmg;
-                                updateStats();
-                            }
+                this.attackCooldown = 25;
+                
+                // Calcular posición del "hit" según dirección
+                let hitX = this.x + 24;
+                let hitY = this.y + 24;
+                let range = this.attackRange;
+                
+                switch(this.direction) {
+                    case 0: hitY -= range; break;
+                    case 1: hitX += range; break;
+                    case 2: hitY += range; break;
+                    case 3: hitX -= range; break;
+                }
+                
+                // Verificar hit
+                if (game.opponent) {
+                    const dx = game.opponent.x + 24 - hitX;
+                    const dy = game.opponent.y + 24 - hitY;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    
+                    if (dist < 40) { // Radio de hit
+                        let dmg = Math.max(1, this.atk - Math.floor(game.opponent.def * 0.3));
+                        game.opponent.takeDamage(dmg);
+                        
+                        if (this.isLocal) {
+                            sendData({type: 'hit', dmg: dmg});
                         }
+                        
+                        // Efecto visual
+                        createParticle(hitX, hitY, 'hit');
                     }
                 }
-                setTimeout(() => this.attacking = false, 150);
+                
+                setTimeout(() => this.attacking = false, 200);
             }
 
-            takeDamage(amount, isLocalDealer) {
-                if (this.isDead) return;
-                
+            takeDamage(amount) {
                 this.hp -= amount;
-                showCombatText(this.x, this.y, `-${amount}`, 'damage');
+                createFloatingText(this.x, this.y - 10, `-${amount}`, '#ff4444');
                 
                 if (this.hp <= 0) {
-                    this.die(isLocalDealer);
+                    this.hp = 0;
+                    if (this.isLocal) {
+                        setTimeout(() => alert('¡Derrotado!'), 500);
+                    } else {
+                        // Ganar EXP
+                        game.player.level++;
+                        game.player.maxHp += 20;
+                        game.player.hp = game.player.maxHp;
+                        game.player.atk += 3;
+                        createFloatingText(game.player.x, game.player.y - 40, '¡SUBES DE NIVEL!', '#ffd700');
+                        
+                        // Respawn oponente
+                        setTimeout(() => {
+                            this.hp = this.maxHp;
+                            this.x = Math.random() * MAP_WIDTH * TILE_SIZE;
+                            this.y = Math.random() * MAP_HEIGHT * TILE_SIZE;
+                        }, 1000);
+                    }
                 }
-            }
-
-            die(killedByLocal) {
-                this.isDead = true;
-                this.hp = 0;
-                this.respawnTimer = 180; // 3 seconds at 60fps
-                
-                if (!this.isLocal && killedByLocal) {
-                    STATE.stats.kills++;
-                    STATE.stats.streak++;
-                    STATE.sessionStart = STATE.sessionStart || Date.now();
-                    showCombatText(this.x, this.y, 'KILL!', 'level');
-                    log('You scored a kill!');
-                } else if (this.isLocal) {
-                    STATE.stats.deaths++;
-                    STATE.stats.streak = 0;
-                    log('You died - Respawning...');
-                }
-                updateStats();
                 updateHUD();
             }
 
-            respawn() {
-                this.isDead = false;
-                this.hp = this.maxHp;
-                this.mp = this.maxMp;
-                // Random spawn away from center
-                this.x = 200 + Math.random() * 1200;
-                this.y = 200 + Math.random() * 800;
-                if (this.isLocal) {
-                    showCombatText(this.x, this.y, 'RESPAWN', 'heal');
-                    log('Respawned');
-                }
-            }
-
-            draw(ctx) {
-                const sx = this.x - STATE.camera.x;
-                const sy = this.y - STATE.camera.y;
-
-                if (this.isDead) return;
-
-                // Shadow
-                ctx.fillStyle = 'rgba(0,0,0,0.3)';
-                ctx.beginPath();
-                ctx.ellipse(sx + 24, sy + 44, 16, 6, 0, 0, Math.PI * 2);
-                ctx.fill();
-
-                // Player
-                ctx.save();
-                ctx.translate(sx + 24, sy + 24);
-                if (!this.isLocal) ctx.filter = 'hue-rotate(200deg) saturate(1.2)';
+            draw() {
+                const screenX = this.x - camera.x;
+                const screenY = this.y - camera.y;
                 
-                const bounce = this.moving ? Math.sin(this.anim * 2) * 2 : 0;
-                if (STATE.images.player?.complete) {
-                    ctx.drawImage(STATE.images.player, -24, -24 + bounce, 48, 48);
-                } else {
-                    ctx.fillStyle = this.isLocal ? '#4ec9b0' : '#569cd6';
-                    ctx.fillRect(-20, -20 + bounce, 40, 40);
+                // Sombra
+                ctx.fillStyle = 'rgba(0,0,0,0.2)';
+                ctx.beginPath();
+                ctx.ellipse(screenX + 24, screenY + 44, 18, 6, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.save();
+                ctx.translate(screenX + 24, screenY + 24);
+                
+                // Si es el oponente, tinte azulado (efecto simple)
+                if (!this.isPlayer1) {
+                    ctx.globalCompositeOperation = 'source-atop';
                 }
+                
+                // Dibujar personaje pla1.png
+                if (images.player && images.player.complete) {
+                    // Animación simple (cambio de escala al caminar)
+                    const bounce = this.moving ? Math.sin(this.animFrame * 2) * 2 : 0;
+                    ctx.drawImage(images.player, -24, -24 + bounce, 48, 48);
+                } else {
+                    // Placeholder
+                    ctx.fillStyle = this.isPlayer1 ? '#ff6b6b' : '#4ecdc4';
+                    ctx.fillRect(-20, -20, 40, 40);
+                }
+                
                 ctx.restore();
-
-                // Sword
-                if (STATE.images.sword?.complete) {
+                
+                // Dibujar espada esp1.png
+                if (images.sword && images.sword.complete) {
                     ctx.save();
-                    ctx.translate(sx + 24, sy + 24);
-                    const angles = [-Math.PI/2, 0, Math.PI/2, Math.PI];
-                    let angle = angles[this.dir];
-                    if (this.attacking) angle += Math.sin(Date.now() / 30) * 0.6;
+                    ctx.translate(screenX + 24, screenY + 24);
+                    
+                    // Rotar según dirección
+                    const angles = [-Math.PI/2, 0, Math.PI/2, Math.PI]; // up, right, down, left
+                    let angle = angles[this.direction];
+                    
+                    // Animación de ataque
+                    if (this.attacking) {
+                        angle += Math.sin(Date.now() / 50) * 0.5;
+                    }
+                    
                     ctx.rotate(angle);
-                    ctx.drawImage(STATE.images.sword, 8, -16, 32, 32);
+                    ctx.drawImage(images.sword, 10, -16, 32, 32);
                     ctx.restore();
                 }
-
-                // HP Bar above head
-                const hpPct = this.hp / this.maxHp;
-                ctx.fillStyle = '#000';
-                ctx.fillRect(sx + 8, sy - 10, 32, 4);
-                ctx.fillStyle = hpPct > 0.5 ? '#4ec9b0' : hpPct > 0.25 ? '#dcdcaa' : '#f48771';
-                ctx.fillRect(sx + 8, sy - 10, 32 * hpPct, 4);
+                
+                // Barra vida arriba
+                const hpPercent = this.hp / this.maxHp;
+                ctx.fillStyle = 'red';
+                ctx.fillRect(screenX + 8, screenY - 8, 32, 4);
+                ctx.fillStyle = '#00ff00';
+                ctx.fillRect(screenX + 8, screenY - 8, 32 * hpPercent, 4);
             }
 
             getState() {
                 return {
-                    x: this.x, y: this.y, d: this.dir,
-                    h: this.hp, m: this.mp,
-                    a: this.attacking, dead: this.isDead
+                    x: this.x, y: this.y,
+                    direction: this.direction,
+                    moving: this.moving,
+                    animFrame: this.animFrame,
+                    hp: this.hp, mp: this.mp,
+                    level: this.level,
+                    attacking: this.attacking
                 };
             }
 
-            setState(s) {
-                this.x = s.x; this.y = s.y; this.dir = s.d;
-                this.hp = s.h; this.mp = s.m;
-                this.attacking = s.a; this.isDead = s.dead;
+            setState(data) {
+                this.x = data.x;
+                this.y = data.y;
+                this.direction = data.direction;
+                this.moving = data.moving;
+                this.animFrame = data.animFrame;
+                this.hp = data.hp;
+                this.mp = data.mp;
+                this.level = data.level;
+                this.attacking = data.attacking;
             }
         }
 
-        function showCombatText(x, y, text, type) {
-            const el = document.createElement('div');
-            el.className = `combat-text ${type}-text`;
-            el.textContent = text;
-            
-            const sx = x - STATE.camera.x + document.getElementById('gameCanvas').offsetLeft;
-            const sy = y - STATE.camera.y + document.getElementById('gameCanvas').offsetTop;
-            
-            el.style.left = sx + 'px';
-            el.style.top = sy + 'px';
-            document.getElementById('combat-container').appendChild(el);
-            setTimeout(() => el.remove(), 1500);
+        function checkCollision(x, y) {
+            const tx = Math.floor(x / TILE_SIZE);
+            const ty = Math.floor(y / TILE_SIZE);
+            if (tx < 0 || tx >= MAP_WIDTH || ty < 0 || ty >= MAP_HEIGHT) return true;
+            return game.map[ty] && game.map[ty][tx] === 1;
+        }
+
+        function createParticle(x, y, type) {
+            for (let i = 0; i < 5; i++) {
+                game.particles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.5) * 6,
+                    life: 20,
+                    color: type === 'hit' ? '#ff0000' : '#ffff00'
+                });
+            }
+        }
+
+        function createFloatingText(x, y, text, color) {
+            game.particles.push({
+                x: x, y: y,
+                text: text,
+                color: color,
+                life: 40,
+                vy: -1
+            });
         }
 
         function updateHUD() {
-            if (!STATE.player) return;
+            if (!game.player || !game.opponent) return;
             
-            const p1 = STATE.player;
-            const p2 = STATE.opponent;
+            // Jugador local
+            document.getElementById('level1').textContent = game.player.level;
+            document.getElementById('hp1').style.width = (game.player.hp / game.player.maxHp * 100) + '%';
+            document.getElementById('mp1').style.width = (game.player.mp / game.player.maxMp * 100) + '%';
+            document.getElementById('hpText1').textContent = `${game.player.hp}/${game.player.maxHp}`;
+            document.getElementById('atk1').textContent = game.player.atk;
+            document.getElementById('def1').textContent = game.player.def;
             
-            document.getElementById('hp-bar-1').style.width = (p1.hp / p1.maxHp * 100) + '%';
-            document.getElementById('hp-text-1').textContent = `${Math.ceil(p1.hp)}/${p1.maxHp}`;
-            document.getElementById('mp-bar-1').style.width = (p1.mp / p1.maxMp * 100) + '%';
-            document.getElementById('mp-text-1').textContent = `${Math.ceil(p1.mp)}/${p1.maxMp}`;
-            
-            if (p2) {
-                document.getElementById('hp-bar-2').style.width = (p2.hp / p2.maxHp * 100) + '%';
-                document.getElementById('hp-text-2').textContent = `${Math.ceil(p2.hp)}/${p2.maxHp}`;
+            // Oponente
+            document.getElementById('level2').textContent = game.opponent.level;
+            document.getElementById('hp2').style.width = (game.opponent.hp / game.opponent.maxHp * 100) + '%';
+            document.getElementById('mp2').style.width = (game.opponent.mp / game.opponent.maxMp * 100) + '%';
+            document.getElementById('hpText2').textContent = `${game.opponent.hp}/${game.opponent.maxHp}`;
+            document.getElementById('atk2').textContent = game.opponent.atk;
+            document.getElementById('def2').textContent = game.opponent.def;
+        }
+
+        function generateMap() {
+            game.map = [];
+            for (let y = 0; y < MAP_HEIGHT; y++) {
+                const row = [];
+                for (let x = 0; x < MAP_WIDTH; x++) {
+                    // Bordes y algunas rocas aleatorias
+                    if (x === 0 || x === MAP_WIDTH - 1 || y === 0 || y === MAP_HEIGHT - 1) {
+                        row.push(1);
+                    } else {
+                        row.push(Math.random() < 0.05 ? 1 : 0);
+                    }
+                }
+                game.map.push(row);
             }
         }
 
-        function updateStats() {
-            document.getElementById('stat-kills').textContent = STATE.stats.kills;
-            document.getElementById('stat-deaths').textContent = STATE.stats.deaths;
-            document.getElementById('stat-damage').textContent = STATE.stats.damage;
-            document.getElementById('stat-streak').textContent = STATE.stats.streak;
+        // WebRTC P2P
+        async function createRoom() {
+            isHost = true;
+            document.getElementById('step1').classList.add('hidden');
+            document.getElementById('step2').classList.remove('hidden');
+
+            const config = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+            peerConnection = new RTCPeerConnection(config);
+            dataChannel = peerConnection.createDataChannel('game');
             
-            if (STATE.sessionStart) {
-                const elapsed = Math.floor((Date.now() - STATE.sessionStart) / 1000);
-                const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
-                const secs = (elapsed % 60).toString().padStart(2, '0');
-                document.getElementById('session-time').textContent = `${mins}:${secs}`;
+            setupDataChannel();
+            
+            peerConnection.onicecandidate = (e) => {
+                if (!e.candidate) {
+                    document.getElementById('sdpOffer').value = btoa(JSON.stringify(peerConnection.localDescription));
+                }
+            };
+
+            const offer = await peerConnection.createOffer();
+            await peerConnection.setLocalDescription(offer);
+        }
+
+        function showJoin() {
+            document.getElementById('step1').classList.add('hidden');
+            document.getElementById('step3').classList.remove('hidden');
+        }
+
+        async function acceptAnswer() {
+            const sdp = document.getElementById('sdpAnswer').value.trim();
+            if (!sdp) return;
+            
+            try {
+                if (isHost) {
+                    await peerConnection.setRemoteDescription(JSON.parse(atob(sdp)));
+                    document.getElementById('step2').classList.add('hidden');
+                    startGame();
+                } else {
+                    const config = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+                    peerConnection = new RTCPeerConnection(config);
+                    peerConnection.ondatachannel = (e) => {
+                        dataChannel = e.channel;
+                        setupDataChannel();
+                    };
+                    peerConnection.onicecandidate = (e) => {
+                        if (!e.candidate) {
+                            document.getElementById('sdpAnswer').value = btoa(JSON.stringify(peerConnection.localDescription));
+                            document.getElementById('step3').classList.add('hidden');
+                            document.getElementById('step4').classList.remove('hidden');
+                        }
+                    };
+                    
+                    await peerConnection.setRemoteDescription(JSON.parse(atob(sdp)));
+                    const answer = await peerConnection.createAnswer();
+                    await peerConnection.setLocalDescription(answer);
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        function setupDataChannel() {
+            dataChannel.onopen = () => { if (isHost) startGame(); };
+            dataChannel.onmessage = (e) => {
+                const data = JSON.parse(e.data);
+                if (data.type === 'state' && game.opponent) {
+                    game.opponent.setState(data);
+                } else if (data.type === 'hit') {
+                    game.player.takeDamage(data.dmg);
+                }
+            };
+        }
+
+        function sendData(data) {
+            if (dataChannel && dataChannel.readyState === 'open') {
+                dataChannel.send(JSON.stringify(data));
             }
         }
 
         function startGame() {
-            document.getElementById('game-hud').classList.remove('hidden');
-            STATE.sessionStart = Date.now();
+            document.getElementById('connectionPanel').classList.add('hidden');
+            document.getElementById('rpgHud').classList.remove('hidden');
+            document.getElementById('controls').classList.remove('hidden');
             
-            const x1 = STATE.isHost ? 600 : 1000;
-            STATE.player = new Entity(x1, 600, true);
-            STATE.opponent = new Entity(x1 + 200, 600, false);
+            generateMap();
             
-            log('Game started - Infinite mode active');
+            const startX = isHost ? 400 : 1200;
+            const startY = 600;
+            
+            game.player = new Character(startX, startY, true);
+            game.opponent = new Character(startX + 200, startY, false);
+            
             gameLoop();
             
             setInterval(() => {
-                send({t: 's', ...STATE.player.getState()});
+                if (game.player) sendData({type: 'state', ...game.player.getState()});
             }, 50);
-            
-            setInterval(updateStats, 1000);
         }
 
         function gameLoop() {
-            if (!STATE.player) return;
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function update() {
+            if (game.player) {
+                game.player.update();
+                
+                // Cámara sigue al jugador
+                camera.x = game.player.x - canvas.width / 2;
+                camera.y = game.player.y - canvas.height / 2;
+                camera.x = Math.max(0, Math.min(camera.x, MAP_WIDTH * TILE_SIZE - canvas.width));
+                camera.y = Math.max(0, Math.min(camera.y, MAP_HEIGHT * TILE_SIZE - canvas.height));
+            }
+            if (game.opponent) game.opponent.update();
             
-            const ctx = document.getElementById('gameCanvas').getContext('2d');
+            // Partículas
+            game.particles = game.particles.filter(p => {
+                if (p.text) {
+                    p.y += p.vy || 0;
+                } else {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                }
+                p.life--;
+                return p.life > 0;
+            });
+        }
+
+        function draw() {
+            // Fondo verde (terreno)
+            ctx.fillStyle = '#2d5016';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Update
-            STATE.player.update();
-            if (STATE.opponent) STATE.opponent.update();
-            
-            // Camera follow
-            STATE.camera.x = STATE.player.x - 400;
-            STATE.camera.y = STATE.player.y - 300;
-            STATE.camera.x = Math.max(0, Math.min(STATE.camera.x, 1600 - 800));
-            STATE.camera.y = Math.max(0, Math.min(STATE.camera.y, 1200 - 600));
-            
-            // Render Background (Procedural grass)
-            ctx.fillStyle = '#1e3a2f';
-            ctx.fillRect(0, 0, 800, 600);
-            
-            // Grid pattern
-            ctx.fillStyle = '#264a34';
-            for (let i = 0; i < 800; i += 40) {
-                for (let j = 0; j < 600; j += 40) {
-                    if ((i + j) % 80 === 0) ctx.fillRect(i, j, 2, 2);
+            // Pasto detalle
+            ctx.fillStyle = '#3a6b1f';
+            for (let y = 0; y < canvas.height; y += 40) {
+                for (let x = 0; x < canvas.width; x += 40) {
+                    if ((x + y) % 80 === 0) {
+                        ctx.fillRect(x - (camera.x % 40), y - (camera.y % 40), 2, 2);
+                    }
                 }
             }
             
-            // Draw entities
-            if (STATE.opponent) STATE.opponent.draw(ctx);
-            STATE.player.draw(ctx);
+            // Dibujar solo lo visible del mapa
+            const startCol = Math.floor(camera.x / TILE_SIZE);
+            const endCol = startCol + (canvas.width / TILE_SIZE) + 1;
+            const startRow = Math.floor(camera.y / TILE_SIZE);
+            const endRow = startRow + (canvas.height / TILE_SIZE) + 1;
             
-            requestAnimationFrame(gameLoop);
+            for (let y = startRow; y <= endRow; y++) {
+                for (let x = startCol; x <= endCol; x++) {
+                    if (y < 0 || y >= MAP_HEIGHT || x < 0 || x >= MAP_WIDTH) continue;
+                    
+                    const screenX = x * TILE_SIZE - camera.x;
+                    const screenY = y * TILE_SIZE - camera.y;
+                    
+                    if (game.map[y] && game.map[y][x] === 1) {
+                        // Roca/Obstáculo - dibujo simple
+                        ctx.fillStyle = '#555';
+                        ctx.fillRect(screenX + 2, screenY + 2, 60, 60);
+                        ctx.fillStyle = '#777';
+                        ctx.fillRect(screenX + 5, screenY + 5, 54, 54);
+                    }
+                }
+            }
+            
+            // Partículas
+            game.particles.forEach(p => {
+                const sx = p.x - camera.x;
+                const sy = p.y - camera.y;
+                
+                if (p.text) {
+                    ctx.fillStyle = p.color;
+                    ctx.font = 'bold 16px Arial';
+                    ctx.fillText(p.text, sx, sy);
+                } else {
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(sx, sy, 4, 4);
+                }
+            });
+            
+            // Jugadores
+            if (game.opponent) game.opponent.draw();
+            if (game.player) game.player.draw();
+        }
+
+        function copySDP() {
+            document.getElementById('sdpOffer').select();
+            document.execCommand('copy');
+        }
+
+        function copyFinal() {
+            document.getElementById('sdpFinal').select();
+            document.execCommand('copy');
+            startGame();
+        }
+
+        function reset() {
+            location.reload();
         }
 
         // Input
         window.addEventListener('keydown', e => {
-            STATE.keys[e.key] = true;
-            if (e.code === 'Space' && e.target.tagName !== 'TEXTAREA') e.preventDefault();
-            if (e.key === 'Escape') location.reload();
+            keys[e.key] = true;
+            if (e.code === 'Space' && e.target === document.body) e.preventDefault();
         });
-        window.addEventListener('keyup', e => STATE.keys[e.key] = false);
+        window.addEventListener('keyup', e => keys[e.key] = false);
 
-        // Init
-        loadAssets();
+        // Iniciar
+        loadImages();
     </script>
 </body>
 </html>

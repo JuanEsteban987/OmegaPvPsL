@@ -3,839 +3,637 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P2P RPG Arena Simple</title>
+    <title>P2P Arena Shooter</title>
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #1a1a2e;
-            color: white;
+            color: #eee;
             overflow: hidden;
-            height: 100vh;
         }
-
-        #gameContainer {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        canvas {
-            border: 3px solid #4a4a6a;
-            border-radius: 8px;
-            box-shadow: 0 0 30px rgba(0,0,0,0.8);
-            image-rendering: pixelated;
-        }
-
-        #connectionPanel {
+        
+        #menu {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(30, 30, 46, 0.95);
-            padding: 30px;
-            border-radius: 15px;
-            border: 2px solid #4a4a6a;
-            max-width: 500px;
-            width: 90%;
-            z-index: 20;
+            text-align: center;
+            background: #16213e;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+            z-index: 100;
         }
-
-        h1 { color: #FFD700; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
-
-        button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+        
+        h1 {
+            color: #00fff2;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #00fff2;
+        }
+        
+        input {
+            padding: 10px;
+            margin: 10px;
             border: none;
-            padding: 12px 24px;
-            margin: 5px;
-            border-radius: 25px;
+            border-radius: 5px;
+            background: #0f3460;
+            color: white;
+            width: 200px;
+        }
+        
+        button {
+            padding: 12px 30px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            background: #e94560;
+            color: white;
             cursor: pointer;
             font-size: 16px;
-            font-weight: bold;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: all 0.3s;
         }
-
-        button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
-        button:disabled { background: #555; cursor: not-allowed; }
-
-        textarea {
-            width: 100%;
-            height: 100px;
-            margin: 10px 0;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #4a4a6a;
-            background: #2d2d44;
-            color: white;
-            font-family: monospace;
-            resize: none;
+        
+        button:hover {
+            background: #ff6b6b;
+            transform: scale(1.05);
         }
-
-        .hidden { display: none !important; }
-
-        #rpgHud {
+        
+        #gameCanvas {
+            display: none;
+            background: #0a0a0a;
+            border: 2px solid #00fff2;
+        }
+        
+        #ui {
             position: absolute;
             top: 10px;
             left: 10px;
-            right: 10px;
-            display: flex;
-            justify-content: space-between;
-            pointer-events: none;
-            z-index: 10;
+            display: none;
         }
-
-        .characterPanel {
-            background: rgba(0,0,0,0.8);
-            border: 2px solid;
-            border-radius: 10px;
-            padding: 15px;
-            min-width: 220px;
-        }
-
-        .player1Panel { border-color: #ff6b6b; }
-        .player2Panel { border-color: #4ecdc4; }
-
-        .statBar {
-            margin: 5px 0;
-            height: 18px;
+        
+        .health-bar {
+            width: 200px;
+            height: 30px;
             background: #333;
-            border-radius: 9px;
+            border: 2px solid #fff;
+            border-radius: 15px;
             overflow: hidden;
-            position: relative;
         }
-
-        .hpFill { height: 100%; background: linear-gradient(90deg, #ff4444, #ff6666); transition: width 0.3s; }
-        .mpFill { height: 100%; background: linear-gradient(90deg, #4444ff, #6666ff); transition: width 0.3s; }
-        .expFill { height: 100%; background: linear-gradient(90deg, #ffd700, #ffed4e); transition: width 0.3s; }
-
-        .statText {
+        
+        #health {
+            height: 100%;
+            background: linear-gradient(90deg, #ff3333, #ff6666);
+            width: 100%;
+            transition: width 0.3s;
+        }
+        
+        #ammo {
+            margin-top: 10px;
+            font-size: 20px;
+            color: #ffd700;
+        }
+        
+        #connectionStatus {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 11px;
-            font-weight: bold;
-            text-shadow: 1px 1px 2px black;
-        }
-
-        .statsGrid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 5px;
-            margin-top: 8px;
-            font-size: 11px;
-        }
-
-        .statItem {
-            background: rgba(255,255,255,0.1);
-            padding: 3px 8px;
-            border-radius: 5px;
-        }
-
-        #controls {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.8);
-            padding: 15px;
-            border-radius: 10px;
-            font-size: 13px;
-            text-align: center;
-            border: 1px solid #666;
-        }
-
-        .key {
-            display: inline-block;
-            background: #444;
-            padding: 4px 10px;
-            border-radius: 4px;
-            margin: 0 3px;
-            border: 1px solid #666;
-            font-weight: bold;
-        }
-
-        .sprite-info {
-            background: rgba(255,255,255,0.1);
+            top: 10px;
+            right: 10px;
             padding: 10px;
+            background: rgba(0, 0, 0, 0.7);
             border-radius: 5px;
-            margin: 10px 0;
-            font-size: 12px;
-            text-align: left;
         }
-
-        .sprite-info code {
-            color: #FFD700;
-            background: rgba(0,0,0,0.3);
-            padding: 2px 5px;
-            border-radius: 3px;
+        
+        .connected { color: #00ff00; }
+        .disconnected { color: #ff0000; }
+        
+        #instructions {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #aaa;
         }
-
-        #loadingStatus { color: #ffd700; margin: 10px 0; }
+        
+        .bullet {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #ffff00;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #ffff00;
+        }
     </style>
 </head>
 <body>
-    <div id="gameContainer">
-        <canvas id="gameCanvas" width="800" height="600"></canvas>
-        
-        <div id="rpgHud" class="hidden">
-            <div class="characterPanel player1Panel">
-                <div style="font-weight: bold; margin-bottom: 5px; color: #ff6b6b;">🗡️ Tú (Nv <span id="level1">1</span>)</div>
-                <div class="statBar">
-                    <div class="hpFill" id="hp1" style="width: 100%"></div>
-                    <div class="statText">HP: <span id="hpText1">100/100</span></div>
-                </div>
-                <div class="statBar">
-                    <div class="mpFill" id="mp1" style="width: 100%"></div>
-                    <div class="statText">MP: <span id="mpText1">50/50</span></div>
-                </div>
-                <div class="statsGrid">
-                    <div class="statItem">ATK: <span id="atk1">10</span></div>
-                    <div class="statItem">DEF: <span id="def1">5</span></div>
-                </div>
-            </div>
-
-            <div class="characterPanel player2Panel">
-                <div style="font-weight: bold; margin-bottom: 5px; color: #4ecdc4;">🛡️ Rival (Nv <span id="level2">1</span>)</div>
-                <div class="statBar">
-                    <div class="hpFill" id="hp2" style="width: 100%"></div>
-                    <div class="statText">HP: <span id="hpText2">100/100</span></div>
-                </div>
-                <div class="statBar">
-                    <div class="mpFill" id="mp2" style="width: 100%"></div>
-                    <div class="statText">MP: <span id="mpText2">50/50</span></div>
-                </div>
-                <div class="statsGrid">
-                    <div class="statItem">ATK: <span id="atk2">10</span></div>
-                    <div class="statItem">DEF: <span id="def2">5</span></div>
-                </div>
-            </div>
+    <div id="menu">
+        <h1>🔫 P2P ARENA SHOOTER</h1>
+        <div id="setup">
+            <p>Tu ID: <span id="myId" style="color: #00fff2;">Generando...</span></p>
+            <input type="text" id="peerId" placeholder="ID del oponente">
+            <br>
+            <button onclick="hostGame()">CREAR SALA</button>
+            <button onclick="joinGame()">UNIRSE</button>
         </div>
-
-        <div id="connectionPanel">
-            <h1>⚔️ RPG P2P Arena</h1>
-            
-            <div class="sprite-info">
-                <strong>Archivos necesarios:</strong><br>
-                • <code>pla1.png</code> - Personaje (64x64px)<br>
-                • <code>esp1.png</code> - Espada/Arma (32x32px o 64x64px)<br>
-                <small>El mismo sprite para ambos jugadores. El terreno es automático.</small>
-            </div>
-
-            <div id="step1">
-                <p>Duelo RPG 1v1 - Top Down</p>
-                <div id="loadingStatus">Cargando recursos...</div>
-                <button onclick="createRoom()" id="btnCreate" disabled>Crear Sala</button>
-                <button onclick="showJoin()" id="btnJoin" disabled>Unirse</button>
-            </div>
-            
-            <div id="step2" class="hidden">
-                <p>Código de invitación:</p>
-                <textarea id="sdpOffer" readonly></textarea>
-                <button onclick="copySDP()">Copiar</button>
-                <button onclick="reset()">Volver</button>
-            </div>
-
-            <div id="step3" class="hidden">
-                <p>Pega el código:</p>
-                <textarea id="sdpAnswer" placeholder="Código aquí..."></textarea>
-                <button onclick="acceptAnswer()">Conectar</button>
-                <button onclick="reset()">Volver</button>
-            </div>
-
-            <div id="step4" class="hidden">
-                <p>Respuesta:</p>
-                <textarea id="sdpFinal" readonly></textarea>
-                <button onclick="copyFinal()">Copiar Respuesta</button>
-            </div>
+        <div id="waiting" style="display: none;">
+            <p>Esperando oponente...</p>
+            <p style="color: #00fff2; margin-top: 10px;">Comparte tu ID: <b id="shareId"></b></p>
         </div>
-
-        <div id="controls" class="hidden">
-            <span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span> Mover | 
-            <span class="key">ESPACIO</span> Atacar
+        <div id="instructions">
+            <p>WASD - Moverse | Ratón - Apuntar | Click - Disparar</p>
         </div>
     </div>
 
+    <div id="ui">
+        <div class="health-bar">
+            <div id="health"></div>
+        </div>
+        <div id="ammo">🔫 30 / ∞</div>
+    </div>
+
+    <div id="connectionStatus">
+        Estado: <span id="status" class="disconnected">Desconectado</span>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
     <script>
-        // Configuración
+        // Configuración del juego
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        const TILE_SIZE = 64;
-        const MAP_WIDTH = 30;
-        const MAP_HEIGHT = 25;
         
-        let camera = { x: 0, y: 0 };
-        let keys = {};
+        // Dimensiones del escenario cerrado
+        const WORLD_WIDTH = 1000;
+        const WORLD_HEIGHT = 600;
         
-        // Solo 2 imágenes necesarias
-        const images = {
-            player: null,
-            sword: null
+        canvas.width = WORLD_WIDTH;
+        canvas.height = WORLD_HEIGHT;
+        
+        // Variables del juego
+        let peer = null;
+        let conn = null;
+        let isHost = false;
+        let gameLoop = null;
+        let playerId = Math.random().toString(36).substr(2, 9);
+        
+        // Estado del jugador local
+        const player = {
+            x: 200,
+            y: 300,
+            radius: 15,
+            angle: 0,
+            health: 100,
+            maxHealth: 100,
+            speed: 4,
+            color: '#00fff2',
+            lastShot: 0,
+            shotDelay: 150,
+            isDead: false,
+            score: 0
         };
         
-        // Game state
-        let game = {
-            player: null,
-            opponent: null,
-            map: [],
-            particles: [],
-            projectiles: []
+        // Estado del oponente
+        const opponent = {
+            x: 800,
+            y: 300,
+            radius: 15,
+            angle: 0,
+            health: 100,
+            color: '#e94560',
+            isDead: false,
+            score: 0
         };
         
-        let peerConnection, dataChannel, isHost = false;
-
-        // Cargar solo los 2 archivos necesarios
-        function loadImages() {
-            let loaded = 0;
-            const total = 2;
+        // Controles
+        const keys = {};
+        const mouse = { x: 0, y: 0 };
+        
+        // Balas
+        let bullets = [];
+        let particles = [];
+        
+        // Paredes del escenario (arena cerrada con obstáculos)
+        const walls = [
+            // Bordes
+            { x: 0, y: 0, width: WORLD_WIDTH, height: 20 },
+            { x: 0, y: WORLD_HEIGHT - 20, width: WORLD_WIDTH, height: 20 },
+            { x: 0, y: 0, width: 20, height: WORLD_HEIGHT },
+            { x: WORLD_WIDTH - 20, y: 0, width: 20, height: WORLD_HEIGHT },
             
-            function checkLoaded() {
-                loaded++;
-                if (loaded >= total) {
-                    document.getElementById('loadingStatus').textContent = '✅ Listo';
-                    document.getElementById('btnCreate').disabled = false;
-                    document.getElementById('btnJoin').disabled = false;
-                }
-            }
+            // Obstáculos centrales
+            { x: 400, y: 200, width: 200, height: 20 },
+            { x: 400, y: 400, width: 200, height: 20 },
+            { x: 300, y: 250, width: 20, height: 100 },
+            { x: 680, y: 250, width: 20, height: 100 },
             
-            // Cargar pla1.png
-            images.player = new Image();
-            images.player.onload = checkLoaded;
-            images.player.onerror = () => {
-                // Placeholder si no existe
-                const c = document.createElement('canvas');
-                c.width = c.height = 64;
-                const x = c.getContext('2d');
-                x.fillStyle = '#888';
-                x.fillRect(16, 16, 32, 32);
-                x.fillStyle = '#333';
-                x.fillText('P', 28, 40);
-                images.player.src = c.toDataURL();
-                checkLoaded();
-            };
-            images.player.src = 'pla1.png';
+            // Cajas dispersas
+            { x: 150, y: 150, width: 60, height: 60 },
+            { x: 790, y: 390, width: 60, height: 60 },
+            { x: 100, y: 450, width: 80, height: 30 },
+            { x: 820, y: 120, width: 80, height: 30 }
+        ];
+        
+        // Inicializar PeerJS
+        function initPeer() {
+            peer = new Peer();
             
-            // Cargar esp1.png
-            images.sword = new Image();
-            images.sword.onload = checkLoaded;
-            images.sword.onerror = () => {
-                // Placeholder espada
-                const c = document.createElement('canvas');
-                c.width = c.height = 32;
-                const x = c.getContext('2d');
-                x.fillStyle = '#silver';
-                x.fillRect(14, 0, 4, 24);
-                x.fillStyle = '#8B4513';
-                x.fillRect(10, 24, 12, 8);
-                images.sword.src = c.toDataURL();
-                checkLoaded();
-            };
-            images.sword.src = 'esp1.png';
+            peer.on('open', (id) => {
+                document.getElementById('myId').textContent = id;
+            });
+            
+            peer.on('connection', (connection) => {
+                conn = connection;
+                setupConnection();
+                startGame();
+            });
+            
+            peer.on('error', (err) => {
+                alert('Error: ' + err);
+            });
         }
-
-        class Character {
-            constructor(x, y, isLocal) {
-                this.x = x;
-                this.y = y;
-                this.width = 48;
-                this.height = 48;
-                this.isLocal = isLocal;
-                
-                // Stats RPG
-                this.level = 1;
-                this.hp = 100;
-                this.maxHp = 100;
-                this.mp = 50;
-                this.maxMp = 50;
-                this.atk = 10;
-                this.def = 5;
-                this.spd = 4;
-                
-                // Movimiento
-                this.vx = 0;
-                this.vy = 0;
-                this.direction = 2; // 0:up, 1:right, 2:down, 3:left
-                this.moving = false;
-                this.animFrame = 0;
-                
-                // Combate
-                this.attacking = false;
-                this.attackCooldown = 0;
-                this.attackRange = 60;
-                
-                // Para diferenciar visualmente
-                this.isPlayer1 = isLocal; // El local es "jugador 1" visualmente
+        
+        function hostGame() {
+            isHost = true;
+            document.getElementById('setup').style.display = 'none';
+            document.getElementById('waiting').style.display = 'block';
+            document.getElementById('shareId').textContent = peer.id;
+        }
+        
+        function joinGame() {
+            const peerId = document.getElementById('peerId').value;
+            if (!peerId) {
+                alert('Introduce un ID válido');
+                return;
             }
-
-            update() {
-                if (this.isLocal) {
-                    this.vx = 0;
-                    this.vy = 0;
-                    this.moving = false;
-                    
-                    if (keys['w'] || keys['W']) { this.vy = -this.spd; this.direction = 0; this.moving = true; }
-                    if (keys['s'] || keys['S']) { this.vy = this.spd; this.direction = 2; this.moving = true; }
-                    if (keys['a'] || keys['A']) { this.vx = -this.spd; this.direction = 3; this.moving = true; }
-                    if (keys['d'] || keys['D']) { this.vx = this.spd; this.direction = 1; this.moving = true; }
-                    
-                    if (keys[' '] && this.attackCooldown <= 0) {
-                        this.attack();
-                    }
-                }
-
-                // Colisiones con mapa
-                let nextX = this.x + this.vx;
-                let nextY = this.y + this.vy;
-                
-                if (!checkCollision(nextX + 12, this.y + 24) && !checkCollision(nextX + 36, this.y + 24)) {
-                    this.x = nextX;
-                }
-                if (!checkCollision(this.x + 12, nextY + 24) && !checkCollision(this.x + 36, nextY + 36)) {
-                    this.y = nextY;
-                }
-
-                // Limites
-                this.x = Math.max(0, Math.min(this.x, MAP_WIDTH * TILE_SIZE - this.width));
-                this.y = Math.max(0, Math.min(this.y, MAP_HEIGHT * TILE_SIZE - this.height));
-
-                if (this.attackCooldown > 0) this.attackCooldown--;
-                if (this.moving) this.animFrame += 0.15;
-                
-                // Regen MP
-                if (this.mp < this.maxMp && Math.random() < 0.01) this.mp++;
-                
-                updateHUD();
-            }
-
-            attack() {
-                this.attacking = true;
-                this.attackCooldown = 25;
-                
-                // Calcular posición del "hit" según dirección
-                let hitX = this.x + 24;
-                let hitY = this.y + 24;
-                let range = this.attackRange;
-                
-                switch(this.direction) {
-                    case 0: hitY -= range; break;
-                    case 1: hitX += range; break;
-                    case 2: hitY += range; break;
-                    case 3: hitX -= range; break;
-                }
-                
-                // Verificar hit
-                if (game.opponent) {
-                    const dx = game.opponent.x + 24 - hitX;
-                    const dy = game.opponent.y + 24 - hitY;
-                    const dist = Math.sqrt(dx*dx + dy*dy);
-                    
-                    if (dist < 40) { // Radio de hit
-                        let dmg = Math.max(1, this.atk - Math.floor(game.opponent.def * 0.3));
-                        game.opponent.takeDamage(dmg);
-                        
-                        if (this.isLocal) {
-                            sendData({type: 'hit', dmg: dmg});
-                        }
-                        
-                        // Efecto visual
-                        createParticle(hitX, hitY, 'hit');
-                    }
-                }
-                
-                setTimeout(() => this.attacking = false, 200);
-            }
-
-            takeDamage(amount) {
-                this.hp -= amount;
-                createFloatingText(this.x, this.y - 10, `-${amount}`, '#ff4444');
-                
-                if (this.hp <= 0) {
-                    this.hp = 0;
-                    if (this.isLocal) {
-                        setTimeout(() => alert('¡Derrotado!'), 500);
-                    } else {
-                        // Ganar EXP
-                        game.player.level++;
-                        game.player.maxHp += 20;
-                        game.player.hp = game.player.maxHp;
-                        game.player.atk += 3;
-                        createFloatingText(game.player.x, game.player.y - 40, '¡SUBES DE NIVEL!', '#ffd700');
-                        
-                        // Respawn oponente
-                        setTimeout(() => {
-                            this.hp = this.maxHp;
-                            this.x = Math.random() * MAP_WIDTH * TILE_SIZE;
-                            this.y = Math.random() * MAP_HEIGHT * TILE_SIZE;
-                        }, 1000);
-                    }
-                }
-                updateHUD();
-            }
-
-            draw() {
-                const screenX = this.x - camera.x;
-                const screenY = this.y - camera.y;
-                
-                // Sombra
-                ctx.fillStyle = 'rgba(0,0,0,0.2)';
-                ctx.beginPath();
-                ctx.ellipse(screenX + 24, screenY + 44, 18, 6, 0, 0, Math.PI * 2);
-                ctx.fill();
-                
-                ctx.save();
-                ctx.translate(screenX + 24, screenY + 24);
-                
-                // Si es el oponente, tinte azulado (efecto simple)
-                if (!this.isPlayer1) {
-                    ctx.globalCompositeOperation = 'source-atop';
-                }
-                
-                // Dibujar personaje pla1.png
-                if (images.player && images.player.complete) {
-                    // Animación simple (cambio de escala al caminar)
-                    const bounce = this.moving ? Math.sin(this.animFrame * 2) * 2 : 0;
-                    ctx.drawImage(images.player, -24, -24 + bounce, 48, 48);
-                } else {
-                    // Placeholder
-                    ctx.fillStyle = this.isPlayer1 ? '#ff6b6b' : '#4ecdc4';
-                    ctx.fillRect(-20, -20, 40, 40);
-                }
-                
-                ctx.restore();
-                
-                // Dibujar espada esp1.png
-                if (images.sword && images.sword.complete) {
-                    ctx.save();
-                    ctx.translate(screenX + 24, screenY + 24);
-                    
-                    // Rotar según dirección
-                    const angles = [-Math.PI/2, 0, Math.PI/2, Math.PI]; // up, right, down, left
-                    let angle = angles[this.direction];
-                    
-                    // Animación de ataque
-                    if (this.attacking) {
-                        angle += Math.sin(Date.now() / 50) * 0.5;
-                    }
-                    
-                    ctx.rotate(angle);
-                    ctx.drawImage(images.sword, 10, -16, 32, 32);
-                    ctx.restore();
-                }
-                
-                // Barra vida arriba
-                const hpPercent = this.hp / this.maxHp;
-                ctx.fillStyle = 'red';
-                ctx.fillRect(screenX + 8, screenY - 8, 32, 4);
-                ctx.fillStyle = '#00ff00';
-                ctx.fillRect(screenX + 8, screenY - 8, 32 * hpPercent, 4);
-            }
-
-            getState() {
-                return {
-                    x: this.x, y: this.y,
-                    direction: this.direction,
-                    moving: this.moving,
-                    animFrame: this.animFrame,
-                    hp: this.hp, mp: this.mp,
-                    level: this.level,
-                    attacking: this.attacking
-                };
-            }
-
-            setState(data) {
-                this.x = data.x;
-                this.y = data.y;
-                this.direction = data.direction;
-                this.moving = data.moving;
-                this.animFrame = data.animFrame;
-                this.hp = data.hp;
-                this.mp = data.mp;
-                this.level = data.level;
-                this.attacking = data.attacking;
+            
+            conn = peer.connect(peerId);
+            isHost = false;
+            
+            conn.on('open', () => {
+                setupConnection();
+                startGame();
+            });
+        }
+        
+        function setupConnection() {
+            document.getElementById('status').textContent = 'Conectado';
+            document.getElementById('status').className = 'connected';
+            
+            conn.on('data', (data) => {
+                handleNetworkData(data);
+            });
+            
+            conn.on('close', () => {
+                document.getElementById('status').textContent = 'Desconectado';
+                document.getElementById('status').className = 'disconnected';
+            });
+        }
+        
+        function handleNetworkData(data) {
+            if (data.type === 'player') {
+                opponent.x = data.x;
+                opponent.y = data.y;
+                opponent.angle = data.angle;
+                opponent.health = data.health;
+                opponent.isDead = data.isDead;
+                opponent.score = data.score;
+            } else if (data.type === 'bullet') {
+                bullets.push({
+                    x: data.x,
+                    y: data.y,
+                    vx: data.vx,
+                    vy: data.vy,
+                    owner: 'opponent',
+                    damage: 25
+                });
+            } else if (data.type === 'respawn') {
+                opponent.isDead = false;
+                opponent.health = 100;
+                opponent.x = data.x;
+                opponent.y = data.y;
             }
         }
-
-        function checkCollision(x, y) {
-            const tx = Math.floor(x / TILE_SIZE);
-            const ty = Math.floor(y / TILE_SIZE);
-            if (tx < 0 || tx >= MAP_WIDTH || ty < 0 || ty >= MAP_HEIGHT) return true;
-            return game.map[ty] && game.map[ty][tx] === 1;
-        }
-
-        function createParticle(x, y, type) {
-            for (let i = 0; i < 5; i++) {
-                game.particles.push({
-                    x: x, y: y,
-                    vx: (Math.random() - 0.5) * 6,
-                    vy: (Math.random() - 0.5) * 6,
-                    life: 20,
-                    color: type === 'hit' ? '#ff0000' : '#ffff00'
+        
+        function sendGameData() {
+            if (conn && conn.open) {
+                conn.send({
+                    type: 'player',
+                    x: player.x,
+                    y: player.y,
+                    angle: player.angle,
+                    health: player.health,
+                    isDead: player.isDead,
+                    score: player.score
                 });
             }
         }
-
-        function createFloatingText(x, y, text, color) {
-            game.particles.push({
-                x: x, y: y,
-                text: text,
-                color: color,
-                life: 40,
-                vy: -1
-            });
-        }
-
-        function updateHUD() {
-            if (!game.player || !game.opponent) return;
-            
-            // Jugador local
-            document.getElementById('level1').textContent = game.player.level;
-            document.getElementById('hp1').style.width = (game.player.hp / game.player.maxHp * 100) + '%';
-            document.getElementById('mp1').style.width = (game.player.mp / game.player.maxMp * 100) + '%';
-            document.getElementById('hpText1').textContent = `${game.player.hp}/${game.player.maxHp}`;
-            document.getElementById('atk1').textContent = game.player.atk;
-            document.getElementById('def1').textContent = game.player.def;
-            
-            // Oponente
-            document.getElementById('level2').textContent = game.opponent.level;
-            document.getElementById('hp2').style.width = (game.opponent.hp / game.opponent.maxHp * 100) + '%';
-            document.getElementById('mp2').style.width = (game.opponent.mp / game.opponent.maxMp * 100) + '%';
-            document.getElementById('hpText2').textContent = `${game.opponent.hp}/${game.opponent.maxHp}`;
-            document.getElementById('atk2').textContent = game.opponent.atk;
-            document.getElementById('def2').textContent = game.opponent.def;
-        }
-
-        function generateMap() {
-            game.map = [];
-            for (let y = 0; y < MAP_HEIGHT; y++) {
-                const row = [];
-                for (let x = 0; x < MAP_WIDTH; x++) {
-                    // Bordes y algunas rocas aleatorias
-                    if (x === 0 || x === MAP_WIDTH - 1 || y === 0 || y === MAP_HEIGHT - 1) {
-                        row.push(1);
-                    } else {
-                        row.push(Math.random() < 0.05 ? 1 : 0);
-                    }
-                }
-                game.map.push(row);
-            }
-        }
-
-        // WebRTC P2P
-        async function createRoom() {
-            isHost = true;
-            document.getElementById('step1').classList.add('hidden');
-            document.getElementById('step2').classList.remove('hidden');
-
-            const config = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
-            peerConnection = new RTCPeerConnection(config);
-            dataChannel = peerConnection.createDataChannel('game');
-            
-            setupDataChannel();
-            
-            peerConnection.onicecandidate = (e) => {
-                if (!e.candidate) {
-                    document.getElementById('sdpOffer').value = btoa(JSON.stringify(peerConnection.localDescription));
-                }
-            };
-
-            const offer = await peerConnection.createOffer();
-            await peerConnection.setLocalDescription(offer);
-        }
-
-        function showJoin() {
-            document.getElementById('step1').classList.add('hidden');
-            document.getElementById('step3').classList.remove('hidden');
-        }
-
-        async function acceptAnswer() {
-            const sdp = document.getElementById('sdpAnswer').value.trim();
-            if (!sdp) return;
-            
-            try {
-                if (isHost) {
-                    await peerConnection.setRemoteDescription(JSON.parse(atob(sdp)));
-                    document.getElementById('step2').classList.add('hidden');
-                    startGame();
-                } else {
-                    const config = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
-                    peerConnection = new RTCPeerConnection(config);
-                    peerConnection.ondatachannel = (e) => {
-                        dataChannel = e.channel;
-                        setupDataChannel();
-                    };
-                    peerConnection.onicecandidate = (e) => {
-                        if (!e.candidate) {
-                            document.getElementById('sdpAnswer').value = btoa(JSON.stringify(peerConnection.localDescription));
-                            document.getElementById('step3').classList.add('hidden');
-                            document.getElementById('step4').classList.remove('hidden');
-                        }
-                    };
-                    
-                    await peerConnection.setRemoteDescription(JSON.parse(atob(sdp)));
-                    const answer = await peerConnection.createAnswer();
-                    await peerConnection.setLocalDescription(answer);
-                }
-            } catch (e) {
-                alert('Error: ' + e.message);
-            }
-        }
-
-        function setupDataChannel() {
-            dataChannel.onopen = () => { if (isHost) startGame(); };
-            dataChannel.onmessage = (e) => {
-                const data = JSON.parse(e.data);
-                if (data.type === 'state' && game.opponent) {
-                    game.opponent.setState(data);
-                } else if (data.type === 'hit') {
-                    game.player.takeDamage(data.dmg);
-                }
-            };
-        }
-
-        function sendData(data) {
-            if (dataChannel && dataChannel.readyState === 'open') {
-                dataChannel.send(JSON.stringify(data));
-            }
-        }
-
+        
         function startGame() {
-            document.getElementById('connectionPanel').classList.add('hidden');
-            document.getElementById('rpgHud').classList.remove('hidden');
-            document.getElementById('controls').classList.remove('hidden');
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('gameCanvas').style.display = 'block';
+            document.getElementById('ui').style.display = 'block';
             
-            generateMap();
-            
-            const startX = isHost ? 400 : 1200;
-            const startY = 600;
-            
-            game.player = new Character(startX, startY, true);
-            game.opponent = new Character(startX + 200, startY, false);
-            
-            gameLoop();
-            
-            setInterval(() => {
-                if (game.player) sendData({type: 'state', ...game.player.getState()});
-            }, 50);
-        }
-
-        function gameLoop() {
-            update();
-            draw();
-            requestAnimationFrame(gameLoop);
-        }
-
-        function update() {
-            if (game.player) {
-                game.player.update();
-                
-                // Cámara sigue al jugador
-                camera.x = game.player.x - canvas.width / 2;
-                camera.y = game.player.y - canvas.height / 2;
-                camera.x = Math.max(0, Math.min(camera.x, MAP_WIDTH * TILE_SIZE - canvas.width));
-                camera.y = Math.max(0, Math.min(camera.y, MAP_HEIGHT * TILE_SIZE - canvas.height));
+            // Posiciones iniciales según rol
+            if (!isHost) {
+                player.x = 800;
+                opponent.x = 200;
             }
-            if (game.opponent) game.opponent.update();
             
-            // Partículas
-            game.particles = game.particles.filter(p => {
-                if (p.text) {
-                    p.y += p.vy || 0;
-                } else {
-                    p.x += p.vx;
-                    p.y += p.vy;
-                }
-                p.life--;
-                return p.life > 0;
+            // Event listeners
+            window.addEventListener('keydown', (e) => keys[e.key.toLowerCase()] = true);
+            window.addEventListener('keyup', (e) => keys[e.key.toLowerCase()] = false);
+            window.addEventListener('mousemove', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                mouse.x = e.clientX - rect.left;
+                mouse.y = e.clientY - rect.top;
             });
+            window.addEventListener('mousedown', shoot);
+            
+            gameLoop = requestAnimationFrame(update);
+            setInterval(sendGameData, 1000 / 60); // 60 Hz network update
         }
-
-        function draw() {
-            // Fondo verde (terreno)
-            ctx.fillStyle = '#2d5016';
+        
+        function shoot(e) {
+            if (player.isDead || Date.now() - player.lastShot < player.shotDelay) return;
+            
+            player.lastShot = Date.now();
+            
+            const bulletSpeed = 12;
+            const angle = player.angle;
+            
+            const bullet = {
+                x: player.x + Math.cos(angle) * 25,
+                y: player.y + Math.sin(angle) * 25,
+                vx: Math.cos(angle) * bulletSpeed,
+                vy: Math.sin(angle) * bulletSpeed,
+                owner: 'player',
+                damage: 25
+            };
+            
+            bullets.push(bullet);
+            
+            // Enviar al oponente
+            if (conn && conn.open) {
+                conn.send({
+                    type: 'bullet',
+                    x: bullet.x,
+                    y: bullet.y,
+                    vx: bullet.vx,
+                    vy: bullet.vy
+                });
+            }
+            
+            // Efecto de retroceso visual
+            createParticles(player.x, player.y, 3, '#ffff00');
+        }
+        
+        function createParticles(x, y, count, color) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 4,
+                    vy: (Math.random() - 0.5) * 4,
+                    life: 1,
+                    color: color
+                });
+            }
+        }
+        
+        function checkWallCollision(x, y, radius) {
+            for (let wall of walls) {
+                if (x + radius > wall.x && 
+                    x - radius < wall.x + wall.width &&
+                    y + radius > wall.y && 
+                    y - radius < wall.y + wall.height) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        function respawn() {
+            if (isHost) {
+                player.x = 200;
+                player.y = 300;
+            } else {
+                player.x = 800;
+                player.y = 300;
+            }
+            player.health = 100;
+            player.isDead = false;
+            
+            if (conn && conn.open) {
+                conn.send({
+                    type: 'respawn',
+                    x: opponent.x,
+                    y: opponent.y
+                });
+            }
+        }
+        
+        function update() {
+            ctx.fillStyle = '#0a0a0a';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Pasto detalle
-            ctx.fillStyle = '#3a6b1f';
-            for (let y = 0; y < canvas.height; y += 40) {
-                for (let x = 0; x < canvas.width; x += 40) {
-                    if ((x + y) % 80 === 0) {
-                        ctx.fillRect(x - (camera.x % 40), y - (camera.y % 40), 2, 2);
-                    }
-                }
-            }
-            
-            // Dibujar solo lo visible del mapa
-            const startCol = Math.floor(camera.x / TILE_SIZE);
-            const endCol = startCol + (canvas.width / TILE_SIZE) + 1;
-            const startRow = Math.floor(camera.y / TILE_SIZE);
-            const endRow = startRow + (canvas.height / TILE_SIZE) + 1;
-            
-            for (let y = startRow; y <= endRow; y++) {
-                for (let x = startCol; x <= endCol; x++) {
-                    if (y < 0 || y >= MAP_HEIGHT || x < 0 || x >= MAP_WIDTH) continue;
-                    
-                    const screenX = x * TILE_SIZE - camera.x;
-                    const screenY = y * TILE_SIZE - camera.y;
-                    
-                    if (game.map[y] && game.map[y][x] === 1) {
-                        // Roca/Obstáculo - dibujo simple
-                        ctx.fillStyle = '#555';
-                        ctx.fillRect(screenX + 2, screenY + 2, 60, 60);
-                        ctx.fillStyle = '#777';
-                        ctx.fillRect(screenX + 5, screenY + 5, 54, 54);
-                    }
-                }
-            }
-            
-            // Partículas
-            game.particles.forEach(p => {
-                const sx = p.x - camera.x;
-                const sy = p.y - camera.y;
+            if (!player.isDead) {
+                // Movimiento
+                let newX = player.x;
+                let newY = player.y;
                 
-                if (p.text) {
-                    ctx.fillStyle = p.color;
-                    ctx.font = 'bold 16px Arial';
-                    ctx.fillText(p.text, sx, sy);
-                } else {
-                    ctx.fillStyle = p.color;
-                    ctx.fillRect(sx, sy, 4, 4);
+                if (keys['w']) newY -= player.speed;
+                if (keys['s']) newY += player.speed;
+                if (keys['a']) newX -= player.speed;
+                if (keys['d']) newX += player.speed;
+                
+                // Colisión con paredes
+                if (!checkWallCollision(newX, player.y, player.radius)) {
+                    player.x = newX;
                 }
+                if (!checkWallCollision(player.x, newY, player.radius)) {
+                    player.y = newY;
+                }
+                
+                // Calcular ángulo hacia el ratón
+                player.angle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
+            } else {
+                // Respawn después de 3 segundos
+                if (!player.respawnTimer) {
+                    player.respawnTimer = Date.now();
+                } else if (Date.now() - player.respawnTimer > 3000) {
+                    player.respawnTimer = null;
+                    respawn();
+                }
+            }
+            
+            // Dibujar paredes
+            ctx.fillStyle = '#2a2a3e';
+            walls.forEach(wall => {
+                ctx.fillRect(wall.x, wall.y, wall.width, wall.height);
+                ctx.strokeStyle = '#00fff2';
+                ctx.strokeRect(wall.x, wall.y, wall.width, wall.height);
             });
             
-            // Jugadores
-            if (game.opponent) game.opponent.draw();
-            if (game.player) game.player.draw();
+            // Actualizar balas
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                let b = bullets[i];
+                b.x += b.vx;
+                b.y += b.vy;
+                
+                // Colisión con paredes
+                if (checkWallCollision(b.x, b.y, 3)) {
+                    createParticles(b.x, b.y, 5, '#ffa500');
+                    bullets.splice(i, 1);
+                    continue;
+                }
+                
+                // Colisión con jugadores
+                const target = b.owner === 'player' ? opponent : player;
+                const dist = Math.hypot(b.x - target.x, b.y - target.y);
+                
+                if (dist < target.radius + 5 && !target.isDead) {
+                    target.health -= b.damage;
+                    createParticles(b.x, b.y, 8, '#ff0000');
+                    
+                    if (target.health <= 0) {
+                        target.isDead = true;
+                        target.health = 0;
+                        if (b.owner === 'player') {
+                            player.score++;
+                        } else {
+                            opponent.score++;
+                        }
+                    }
+                    
+                    bullets.splice(i, 1);
+                    continue;
+                }
+                
+                // Eliminar balas fuera de pantalla
+                if (b.x < 0 || b.x > WORLD_WIDTH || b.y < 0 || b.y > WORLD_HEIGHT) {
+                    bullets.splice(i, 1);
+                    continue;
+                }
+                
+                // Dibujar bala
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, 3, 0, Math.PI * 2);
+                ctx.fillStyle = b.owner === 'player' ? '#00fff2' : '#e94560';
+                ctx.fill();
+            }
+            
+            // Actualizar partículas
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= 0.05;
+                
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                    continue;
+                }
+                
+                ctx.globalAlpha = p.life;
+                ctx.fillStyle = p.color;
+                ctx.fillRect(p.x, p.y, 3, 3);
+                ctx.globalAlpha = 1;
+            }
+            
+            // Dibujar jugador local
+            if (!player.isDead) {
+                ctx.save();
+                ctx.translate(player.x, player.y);
+                ctx.rotate(player.angle);
+                
+                // Cuerpo
+                ctx.beginPath();
+                ctx.arc(0, 0, player.radius, 0, Math.PI * 2);
+                ctx.fillStyle = player.color;
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Cañón
+                ctx.fillStyle = '#666';
+                ctx.fillRect(0, -3, 25, 6);
+                
+                ctx.restore();
+            } else {
+                // Pantalla de muerte
+                ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 40px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('💀 ELIMINADO', canvas.width/2, canvas.height/2);
+                
+                const timeLeft = Math.ceil((3000 - (Date.now() - player.respawnTimer)) / 1000);
+                ctx.font = '20px Arial';
+                ctx.fillText(`Reapareciendo en ${timeLeft}...`, canvas.width/2, canvas.height/2 + 40);
+            }
+            
+            // Dibujar oponente
+            if (!opponent.isDead) {
+                ctx.save();
+                ctx.translate(opponent.x, opponent.y);
+                ctx.rotate(opponent.angle);
+                
+                ctx.beginPath();
+                ctx.arc(0, 0, opponent.radius, 0, Math.PI * 2);
+                ctx.fillStyle = opponent.color;
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                ctx.fillStyle = '#666';
+                ctx.fillRect(0, -3, 25, 6);
+                
+                ctx.restore();
+                
+                // Barra de vida del oponente
+                const barWidth = 40;
+                const barHeight = 4;
+                ctx.fillStyle = '#333';
+                ctx.fillRect(opponent.x - barWidth/2, opponent.y - 30, barWidth, barHeight);
+                
+                ctx.fillStyle = opponent.health > 50 ? '#0f0' : '#f00';
+                ctx.fillRect(opponent.x - barWidth/2, opponent.y - 30, 
+                          barWidth * (opponent.health/100), barHeight);
+            }
+            
+            // Dibujar línea de mira
+            if (!player.isDead) {
+                ctx.strokeStyle = 'rgba(0, 255, 242, 0.3)';
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(player.x, player.y);
+                ctx.lineTo(mouse.x, mouse.y);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+            
+            // UI updates
+            document.getElementById('health').style.width = player.health + '%';
+            document.getElementById('ammo').textContent = `🔫 ${player.isDead ? 0 : Math.max(0, Math.floor((Date.now() - player.lastShot) / player.shotDelay * 30))} / ∞`;
+            
+            // Score
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 24px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`${player.score} - ${opponent.score}`, canvas.width/2, 40);
+            
+            requestAnimationFrame(update);
         }
-
-        function copySDP() {
-            document.getElementById('sdpOffer').select();
-            document.execCommand('copy');
-        }
-
-        function copyFinal() {
-            document.getElementById('sdpFinal').select();
-            document.execCommand('copy');
-            startGame();
-        }
-
-        function reset() {
-            location.reload();
-        }
-
-        // Input
-        window.addEventListener('keydown', e => {
-            keys[e.key] = true;
-            if (e.code === 'Space' && e.target === document.body) e.preventDefault();
-        });
-        window.addEventListener('keyup', e => keys[e.key] = false);
-
-        // Iniciar
-        loadImages();
+        
+        // Iniciar Peer al cargar
+        window.onload = initPeer;
     </script>
 </body>
 </html>

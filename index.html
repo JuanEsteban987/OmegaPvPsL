@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P2P Arena Shooter</title>
+    <title>P2P Arena Shooter - Sprite Edition</title>
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <style>
         * {
@@ -65,10 +65,19 @@
             transform: scale(1.05);
         }
         
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
         #gameCanvas {
             display: none;
             background: #0a0a0a;
             border: 2px solid #00fff2;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
         }
         
         #ui {
@@ -76,6 +85,10 @@
             top: 10px;
             left: 10px;
             display: none;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #00fff2;
         }
         
         .health-bar {
@@ -85,6 +98,7 @@
             border: 2px solid #fff;
             border-radius: 15px;
             overflow: hidden;
+            margin-bottom: 10px;
         }
         
         #health {
@@ -94,10 +108,30 @@
             transition: width 0.3s;
         }
         
-        #ammo {
+        #weaponInfo {
             margin-top: 10px;
-            font-size: 20px;
+            font-size: 18px;
             color: #ffd700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        #weaponIcon {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #fff;
+            border-radius: 5px;
+            background: #0f3460;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #weaponIcon img {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
         }
         
         #connectionStatus {
@@ -116,34 +150,72 @@
             margin-top: 20px;
             font-size: 14px;
             color: #aaa;
+            line-height: 1.6;
         }
         
-        .bullet {
+        .loading {
+            color: #ffd700;
+            font-size: 18px;
+            margin: 20px 0;
+        }
+        
+        #crosshair {
             position: absolute;
-            width: 6px;
-            height: 6px;
-            background: #ffff00;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(0, 255, 242, 0.8);
             border-radius: 50%;
-            box-shadow: 0 0 10px #ffff00;
+            pointer-events: none;
+            display: none;
+            transform: translate(-50%, -50%);
+            z-index: 50;
+        }
+        
+        #crosshair::before, #crosshair::after {
+            content: '';
+            position: absolute;
+            background: rgba(0, 255, 242, 0.8);
+        }
+        
+        #crosshair::before {
+            width: 2px;
+            height: 10px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        #crosshair::after {
+            width: 10px;
+            height: 2px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
         }
     </style>
 </head>
 <body>
+    <div id="crosshair"></div>
+    
     <div id="menu">
-        <h1>🔫 P2P ARENA SHOOTER</h1>
+        <h1>⚔️ P2P ARENA BATTLE ⚔️</h1>
         <div id="setup">
-            <p>Tu ID: <span id="myId" style="color: #00fff2;">Generando...</span></p>
-            <input type="text" id="peerId" placeholder="ID del oponente">
-            <br>
-            <button onclick="hostGame()">CREAR SALA</button>
-            <button onclick="joinGame()">UNIRSE</button>
+            <p class="loading" id="loadingText">Cargando recursos...</p>
+            <div id="gameControls" style="display: none;">
+                <p>Tu ID: <span id="myId" style="color: #00fff2;">Generando...</span></p>
+                <input type="text" id="peerId" placeholder="ID del oponente">
+                <br>
+                <button onclick="hostGame()" id="btnHost">CREAR SALA</button>
+                <button onclick="joinGame()" id="btnJoin">UNIRSE</button>
+            </div>
         </div>
         <div id="waiting" style="display: none;">
             <p>Esperando oponente...</p>
             <p style="color: #00fff2; margin-top: 10px;">Comparte tu ID: <b id="shareId"></b></p>
         </div>
         <div id="instructions">
-            <p>WASD - Moverse | Ratón - Apuntar | Click - Disparar</p>
+            <p><strong>WASD</strong> - Moverse | <strong>Mouse</strong> - Apuntar | <strong>Click</strong> - Atacar</p>
+            <p><strong>1</strong> - Espada (Melee) | <strong>2</strong> - Pistola (Rango)</p>
         </div>
     </div>
 
@@ -151,7 +223,12 @@
         <div class="health-bar">
             <div id="health"></div>
         </div>
-        <div id="ammo">🔫 30 / ∞</div>
+        <div id="weaponInfo">
+            <div id="weaponIcon">
+                <img id="currentWeaponImg" src="" alt="weapon">
+            </div>
+            <span id="weaponName">Cargando...</span>
+        </div>
     </div>
 
     <div id="connectionStatus">
@@ -172,71 +249,126 @@
         canvas.width = WORLD_WIDTH;
         canvas.height = WORLD_HEIGHT;
         
+        // Cargar assets
+        const assets = {
+            player: new Image(),
+            sword: new Image(),
+            pistol: new Image()
+        };
+        
+        let assetsLoaded = false;
+        
+        // Configurar fuentes de imágenes (asegúrate de tener estos archivos en la misma carpeta)
+        assets.player.src = 'pla1.png';
+        assets.sword.src = 'esp1.png';
+        assets.pistol.src = 'pis1.png';
+        
         // Variables del juego
         let peer = null;
         let conn = null;
         let isHost = false;
         let gameLoop = null;
-        let playerId = Math.random().toString(36).substr(2, 9);
+        
+        // Sistema de armas
+        const WEAPONS = {
+            SWORD: {
+                name: 'Espada',
+                type: 'melee',
+                damage: 40,
+                range: 60,
+                cooldown: 500,
+                image: assets.sword,
+                offsetX: 20,
+                offsetY: 10
+            },
+            PISTOL: {
+                name: 'Pistola',
+                type: 'ranged',
+                damage: 25,
+                speed: 12,
+                cooldown: 300,
+                image: assets.pistol,
+                offsetX: 25,
+                offsetY: 5
+            }
+        };
         
         // Estado del jugador local
         const player = {
             x: 200,
             y: 300,
-            radius: 15,
+            width: 40,
+            height: 40,
             angle: 0,
             health: 100,
             maxHealth: 100,
             speed: 4,
             color: '#00fff2',
-            lastShot: 0,
-            shotDelay: 150,
+            lastAttack: 0,
+            currentWeapon: 'PISTOL',
+            isAttacking: false,
+            attackAnimation: 0,
             isDead: false,
-            score: 0
+            score: 0,
+            flip: false
         };
         
         // Estado del oponente
         const opponent = {
             x: 800,
             y: 300,
-            radius: 15,
+            width: 40,
+            height: 40,
             angle: 0,
             health: 100,
-            color: '#e94560',
+            currentWeapon: 'PISTOL',
+            isAttacking: false,
+            attackAnimation: 0,
             isDead: false,
-            score: 0
+            score: 0,
+            flip: false
         };
         
         // Controles
         const keys = {};
-        const mouse = { x: 0, y: 0 };
+        const mouse = { x: 0, y: 0, down: false };
         
-        // Balas
+        // Balas y efectos
         let bullets = [];
+        let slashEffects = [];
         let particles = [];
         
-        // Paredes del escenario (arena cerrada con obstáculos)
+        // Paredes del escenario
         const walls = [
-            // Bordes
             { x: 0, y: 0, width: WORLD_WIDTH, height: 20 },
             { x: 0, y: WORLD_HEIGHT - 20, width: WORLD_WIDTH, height: 20 },
             { x: 0, y: 0, width: 20, height: WORLD_HEIGHT },
             { x: WORLD_WIDTH - 20, y: 0, width: 20, height: WORLD_HEIGHT },
-            
-            // Obstáculos centrales
             { x: 400, y: 200, width: 200, height: 20 },
             { x: 400, y: 400, width: 200, height: 20 },
             { x: 300, y: 250, width: 20, height: 100 },
             { x: 680, y: 250, width: 20, height: 100 },
-            
-            // Cajas dispersas
             { x: 150, y: 150, width: 60, height: 60 },
             { x: 790, y: 390, width: 60, height: 60 },
             { x: 100, y: 450, width: 80, height: 30 },
             { x: 820, y: 120, width: 80, height: 30 }
         ];
         
-        // Inicializar PeerJS
+        // Cargar recursos
+        Promise.all([
+            new Promise(resolve => assets.player.onload = resolve),
+            new Promise(resolve => assets.sword.onload = resolve),
+            new Promise(resolve => assets.pistol.onload = resolve)
+        ]).then(() => {
+            assetsLoaded = true;
+            document.getElementById('loadingText').style.display = 'none';
+            document.getElementById('gameControls').style.display = 'block';
+            initPeer();
+        }).catch(err => {
+            console.error('Error cargando assets:', err);
+            document.getElementById('loadingText').textContent = 'Error cargando imágenes. Verifica que existan pla1.png, esp1.png y pis1.png';
+        });
+        
         function initPeer() {
             peer = new Peer();
             
@@ -256,6 +388,7 @@
         }
         
         function hostGame() {
+            if (!assetsLoaded) return;
             isHost = true;
             document.getElementById('setup').style.display = 'none';
             document.getElementById('waiting').style.display = 'block';
@@ -263,6 +396,7 @@
         }
         
         function joinGame() {
+            if (!assetsLoaded) return;
             const peerId = document.getElementById('peerId').value;
             if (!peerId) {
                 alert('Introduce un ID válido');
@@ -300,6 +434,10 @@
                 opponent.health = data.health;
                 opponent.isDead = data.isDead;
                 opponent.score = data.score;
+                opponent.currentWeapon = data.weapon;
+                opponent.isAttacking = data.isAttacking;
+                opponent.attackAnimation = data.attackAnimation;
+                opponent.flip = data.flip;
             } else if (data.type === 'bullet') {
                 bullets.push({
                     x: data.x,
@@ -307,13 +445,18 @@
                     vx: data.vx,
                     vy: data.vy,
                     owner: 'opponent',
-                    damage: 25
+                    damage: WEAPONS.PISTOL.damage
                 });
+            } else if (data.type === 'slash') {
+                createSlashEffect(opponent.x, opponent.y, opponent.angle, 'opponent');
+                checkSlashDamage(opponent, player);
             } else if (data.type === 'respawn') {
                 opponent.isDead = false;
                 opponent.health = 100;
                 opponent.x = data.x;
                 opponent.y = data.y;
+            } else if (data.type === 'weaponChange') {
+                opponent.currentWeapon = data.weapon;
             }
         }
         
@@ -326,68 +469,145 @@
                     angle: player.angle,
                     health: player.health,
                     isDead: player.isDead,
-                    score: player.score
+                    score: player.score,
+                    weapon: player.currentWeapon,
+                    isAttacking: player.isAttacking,
+                    attackAnimation: player.attackAnimation,
+                    flip: player.flip
                 });
             }
         }
         
-        function startGame() {
-            document.getElementById('menu').style.display = 'none';
-            document.getElementById('gameCanvas').style.display = 'block';
-            document.getElementById('ui').style.display = 'block';
+        function switchWeapon(weaponName) {
+            if (player.currentWeapon === weaponName || player.isDead) return;
             
-            // Posiciones iniciales según rol
-            if (!isHost) {
-                player.x = 800;
-                opponent.x = 200;
-            }
+            player.currentWeapon = weaponName;
+            updateWeaponUI();
             
-            // Event listeners
-            window.addEventListener('keydown', (e) => keys[e.key.toLowerCase()] = true);
-            window.addEventListener('keyup', (e) => keys[e.key.toLowerCase()] = false);
-            window.addEventListener('mousemove', (e) => {
-                const rect = canvas.getBoundingClientRect();
-                mouse.x = e.clientX - rect.left;
-                mouse.y = e.clientY - rect.top;
-            });
-            window.addEventListener('mousedown', shoot);
-            
-            gameLoop = requestAnimationFrame(update);
-            setInterval(sendGameData, 1000 / 60); // 60 Hz network update
-        }
-        
-        function shoot(e) {
-            if (player.isDead || Date.now() - player.lastShot < player.shotDelay) return;
-            
-            player.lastShot = Date.now();
-            
-            const bulletSpeed = 12;
-            const angle = player.angle;
-            
-            const bullet = {
-                x: player.x + Math.cos(angle) * 25,
-                y: player.y + Math.sin(angle) * 25,
-                vx: Math.cos(angle) * bulletSpeed,
-                vy: Math.sin(angle) * bulletSpeed,
-                owner: 'player',
-                damage: 25
-            };
-            
-            bullets.push(bullet);
-            
-            // Enviar al oponente
             if (conn && conn.open) {
                 conn.send({
-                    type: 'bullet',
-                    x: bullet.x,
-                    y: bullet.y,
-                    vx: bullet.vx,
-                    vy: bullet.vy
+                    type: 'weaponChange',
+                    weapon: weaponName
                 });
             }
+        }
+        
+        function updateWeaponUI() {
+            const weapon = WEAPONS[player.currentWeapon];
+            document.getElementById('currentWeaponImg').src = weapon.image.src;
+            document.getElementById('weaponName').textContent = weapon.name;
+        }
+        
+        function attack() {
+            if (player.isDead || player.isAttacking) return;
             
-            // Efecto de retroceso visual
-            createParticles(player.x, player.y, 3, '#ffff00');
+            const weapon = WEAPONS[player.currentWeapon];
+            const now = Date.now();
+            
+            if (now - player.lastAttack < weapon.cooldown) return;
+            
+            player.lastAttack = now;
+            player.isAttacking = true;
+            player.attackAnimation = 0;
+            
+            if (weapon.type === 'melee') {
+                // Ataque de espada
+                setTimeout(() => {
+                    createSlashEffect(player.x, player.y, player.angle, 'player');
+                    
+                    // Verificar hit en oponente
+                    const dist = Math.hypot(opponent.x - player.x, opponent.y - player.y);
+                    if (dist < weapon.range && !opponent.isDead) {
+                        const angleToOpponent = Math.atan2(opponent.y - player.y, opponent.x - player.x);
+                        const angleDiff = Math.abs(angleToOpponent - player.angle);
+                        const normalizedDiff = Math.min(angleDiff, 2 * Math.PI - angleDiff);
+                        
+                        if (normalizedDiff < Math.PI / 3) { // 60 grados de arco
+                            opponent.health -= weapon.damage;
+                            createParticles(opponent.x, opponent.y, 10, '#ff0000');
+                            
+                            if (opponent.health <= 0) {
+                                opponent.isDead = true;
+                                opponent.health = 0;
+                                player.score++;
+                            }
+                        }
+                    }
+                    
+                    // Enviar a red
+                    if (conn && conn.open) {
+                        conn.send({ type: 'slash' });
+                    }
+                }, 100);
+                
+                setTimeout(() => {
+                    player.isAttacking = false;
+                }, 300);
+            } else {
+                // Disparo de pistola
+                const bullet = {
+                    x: player.x + Math.cos(player.angle) * 30,
+                    y: player.y + Math.sin(player.angle) * 30,
+                    vx: Math.cos(player.angle) * weapon.speed,
+                    vy: Math.sin(player.angle) * weapon.speed,
+                    owner: 'player',
+                    damage: weapon.damage
+                };
+                
+                bullets.push(bullet);
+                
+                // Retroceso visual
+                player.x -= Math.cos(player.angle) * 2;
+                player.y -= Math.sin(player.angle) * 2;
+                
+                if (conn && conn.open) {
+                    conn.send({
+                        type: 'bullet',
+                        x: bullet.x,
+                        y: bullet.y,
+                        vx: bullet.vx,
+                        vy: bullet.vy
+                    });
+                }
+                
+                setTimeout(() => {
+                    player.isAttacking = false;
+                }, 100);
+            }
+        }
+        
+        function createSlashEffect(x, y, angle, owner) {
+            slashEffects.push({
+                x: x,
+                y: y,
+                angle: angle,
+                life: 10,
+                owner: owner,
+                distance: 0
+            });
+        }
+        
+        function checkSlashDamage(attacker, target) {
+            const weapon = WEAPONS.SWORD;
+            const dist = Math.hypot(target.x - attacker.x, target.y - attacker.y);
+            
+            if (dist < weapon.range && !target.isDead) {
+                const angleToTarget = Math.atan2(target.y - attacker.y, target.x - attacker.x);
+                const angleDiff = Math.abs(angleToTarget - attacker.angle);
+                const normalizedDiff = Math.min(angleDiff, 2 * Math.PI - angleDiff);
+                
+                if (normalizedDiff < Math.PI / 3) {
+                    target.health -= weapon.damage;
+                    createParticles(target.x, target.y, 10, '#ff0000');
+                    
+                    if (target.health <= 0) {
+                        target.isDead = true;
+                        target.health = 0;
+                        if (target === opponent) player.score++;
+                        else opponent.score++;
+                    }
+                }
+            }
         }
         
         function createParticles(x, y, count, color) {
@@ -395,10 +615,11 @@
                 particles.push({
                     x: x,
                     y: y,
-                    vx: (Math.random() - 0.5) * 4,
-                    vy: (Math.random() - 0.5) * 4,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.5) * 6,
                     life: 1,
-                    color: color
+                    color: color,
+                    size: Math.random() * 4 + 2
                 });
             }
         }
@@ -429,38 +650,136 @@
             if (conn && conn.open) {
                 conn.send({
                     type: 'respawn',
-                    x: opponent.x,
-                    y: opponent.y
+                    x: isHost ? 800 : 200,
+                    y: 300
                 });
             }
         }
         
+        function startGame() {
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('gameCanvas').style.display = 'block';
+            document.getElementById('ui').style.display = 'block';
+            document.getElementById('crosshair').style.display = 'block';
+            
+            if (!isHost) {
+                player.x = 800;
+                opponent.x = 200;
+            }
+            
+            updateWeaponUI();
+            
+            // Event listeners
+            window.addEventListener('keydown', (e) => {
+                keys[e.key.toLowerCase()] = true;
+                if (e.key === '1') switchWeapon('SWORD');
+                if (e.key === '2') switchWeapon('PISTOL');
+            });
+            
+            window.addEventListener('keyup', (e) => keys[e.key.toLowerCase()] = false);
+            window.addEventListener('mousemove', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                mouse.x = e.clientX - rect.left;
+                mouse.y = e.clientY - rect.top;
+                
+                // Actualizar crosshair
+                const crosshair = document.getElementById('crosshair');
+                crosshair.style.left = e.clientX + 'px';
+                crosshair.style.top = e.clientY + 'px';
+            });
+            window.addEventListener('mousedown', () => {
+                mouse.down = true;
+                attack();
+            });
+            window.addEventListener('mouseup', () => mouse.down = false);
+            
+            gameLoop = requestAnimationFrame(update);
+            setInterval(sendGameData, 1000 / 60);
+        }
+        
+        function drawRotatedImage(image, x, y, width, height, angle, flip = false) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle);
+            if (flip) {
+                ctx.scale(1, -1);
+            }
+            ctx.drawImage(image, -width/2, -height/2, width, height);
+            ctx.restore();
+        }
+        
+        function drawWeapon(weapon, x, y, angle, isAttacking, attackProgress, flip = false) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle);
+            
+            if (weapon.type === 'melee' && isAttacking) {
+                // Animación de swing
+                const swingAngle = Math.sin(attackProgress * Math.PI) * Math.PI / 4;
+                ctx.rotate(swingAngle);
+            }
+            
+            if (flip) ctx.scale(1, -1);
+            
+            // Offset del arma
+            ctx.drawImage(
+                weapon.image, 
+                weapon.offsetX - 20, 
+                weapon.offsetY - 20, 
+                40, 40
+            );
+            
+            ctx.restore();
+        }
+        
         function update() {
-            ctx.fillStyle = '#0a0a0a';
+            // Fondo
+            ctx.fillStyle = '#1a1a2e';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
+            // Grid sutil
+            ctx.strokeStyle = 'rgba(0, 255, 242, 0.1)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < WORLD_WIDTH; i += 50) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, WORLD_HEIGHT);
+                ctx.stroke();
+            }
+            for (let i = 0; i < WORLD_HEIGHT; i += 50) {
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(WORLD_WIDTH, i);
+                ctx.stroke();
+            }
+            
+            // Lógica jugador
             if (!player.isDead) {
                 // Movimiento
                 let newX = player.x;
                 let newY = player.y;
+                let moving = false;
                 
-                if (keys['w']) newY -= player.speed;
-                if (keys['s']) newY += player.speed;
-                if (keys['a']) newX -= player.speed;
-                if (keys['d']) newX += player.speed;
+                if (keys['w']) { newY -= player.speed; moving = true; }
+                if (keys['s']) { newY += player.speed; moving = true; }
+                if (keys['a']) { newX -= player.speed; moving = true; }
+                if (keys['d']) { newX += player.speed; moving = true; }
                 
-                // Colisión con paredes
-                if (!checkWallCollision(newX, player.y, player.radius)) {
-                    player.x = newX;
+                if (!checkWallCollision(newX, player.y, player.width/2)) player.x = newX;
+                if (!checkWallCollision(player.x, newY, player.height/2)) player.y = newY;
+                
+                // Ángulo y flip
+                const dx = mouse.x - player.x;
+                const dy = mouse.y - player.y;
+                player.angle = Math.atan2(dy, dx);
+                player.flip = Math.abs(player.angle) > Math.PI / 2;
+                
+                // Animación ataque
+                if (player.isAttacking) {
+                    player.attackAnimation += 0.1;
+                    if (player.attackAnimation >= 1) player.isAttacking = false;
                 }
-                if (!checkWallCollision(player.x, newY, player.radius)) {
-                    player.y = newY;
-                }
-                
-                // Calcular ángulo hacia el ratón
-                player.angle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
             } else {
-                // Respawn después de 3 segundos
                 if (!player.respawnTimer) {
                     player.respawnTimer = Date.now();
                 } else if (Date.now() - player.respawnTimer > 3000) {
@@ -471,9 +790,10 @@
             
             // Dibujar paredes
             ctx.fillStyle = '#2a2a3e';
+            ctx.strokeStyle = '#00fff2';
+            ctx.lineWidth = 2;
             walls.forEach(wall => {
                 ctx.fillRect(wall.x, wall.y, wall.width, wall.height);
-                ctx.strokeStyle = '#00fff2';
                 ctx.strokeRect(wall.x, wall.y, wall.width, wall.height);
             });
             
@@ -483,54 +803,83 @@
                 b.x += b.vx;
                 b.y += b.vy;
                 
-                // Colisión con paredes
                 if (checkWallCollision(b.x, b.y, 3)) {
-                    createParticles(b.x, b.y, 5, '#ffa500');
+                    createParticles(b.x, b.y, 3, '#ffa500');
                     bullets.splice(i, 1);
                     continue;
                 }
                 
-                // Colisión con jugadores
                 const target = b.owner === 'player' ? opponent : player;
                 const dist = Math.hypot(b.x - target.x, b.y - target.y);
                 
-                if (dist < target.radius + 5 && !target.isDead) {
+                if (dist < target.width/2 + 5 && !target.isDead) {
                     target.health -= b.damage;
-                    createParticles(b.x, b.y, 8, '#ff0000');
+                    createParticles(target.x, target.y, 8, '#ff0000');
                     
                     if (target.health <= 0) {
                         target.isDead = true;
                         target.health = 0;
-                        if (b.owner === 'player') {
-                            player.score++;
-                        } else {
-                            opponent.score++;
-                        }
+                        if (b.owner === 'player') player.score++;
+                        else opponent.score++;
                     }
                     
                     bullets.splice(i, 1);
                     continue;
                 }
                 
-                // Eliminar balas fuera de pantalla
                 if (b.x < 0 || b.x > WORLD_WIDTH || b.y < 0 || b.y > WORLD_HEIGHT) {
                     bullets.splice(i, 1);
                     continue;
                 }
                 
-                // Dibujar bala
                 ctx.beginPath();
-                ctx.arc(b.x, b.y, 3, 0, Math.PI * 2);
-                ctx.fillStyle = b.owner === 'player' ? '#00fff2' : '#e94560';
+                ctx.arc(b.x, b.y, 4, 0, Math.PI * 2);
+                ctx.fillStyle = '#ffff00';
                 ctx.fill();
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#ffff00';
+                ctx.stroke();
+                ctx.shadowBlur = 0;
             }
             
-            // Actualizar partículas
+            // Efectos de slash
+            for (let i = slashEffects.length - 1; i >= 0; i--) {
+                let s = slashEffects[i];
+                s.life--;
+                s.distance += 2;
+                
+                if (s.life <= 0) {
+                    slashEffects.splice(i, 1);
+                    continue;
+                }
+                
+                ctx.save();
+                ctx.translate(s.x, s.y);
+                ctx.rotate(s.angle);
+                
+                const alpha = s.life / 10;
+                ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(0, 0, 30 + s.distance, -Math.PI/4, Math.PI/4);
+                ctx.stroke();
+                
+                ctx.strokeStyle = `rgba(0, 255, 242, ${alpha})`;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(0, 0, 35 + s.distance, -Math.PI/3, Math.PI/3);
+                ctx.stroke();
+                
+                ctx.restore();
+            }
+            
+            // Partículas
             for (let i = particles.length - 1; i >= 0; i--) {
                 let p = particles[i];
                 p.x += p.vx;
                 p.y += p.vy;
                 p.life -= 0.05;
+                p.vy += 0.1; // gravedad
                 
                 if (p.life <= 0) {
                     particles.splice(i, 1);
@@ -539,101 +888,140 @@
                 
                 ctx.globalAlpha = p.life;
                 ctx.fillStyle = p.color;
-                ctx.fillRect(p.x, p.y, 3, 3);
+                ctx.fillRect(p.x, p.y, p.size, p.size);
                 ctx.globalAlpha = 1;
+            }
+            
+            // Dibujar oponente
+            if (!opponent.isDead) {
+                // Sombra
+                ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                ctx.beginPath();
+                ctx.ellipse(opponent.x, opponent.y + 20, 20, 8, 0, 0, Math.PI*2);
+                ctx.fill();
+                
+                // Jugador
+                drawRotatedImage(
+                    assets.player, 
+                    opponent.x, 
+                    opponent.y, 
+                    opponent.width, 
+                    opponent.height, 
+                    opponent.angle,
+                    opponent.flip
+                );
+                
+                // Arma oponente
+                const oppWeapon = WEAPONS[opponent.currentWeapon];
+                drawWeapon(
+                    oppWeapon,
+                    opponent.x,
+                    opponent.y,
+                    opponent.angle,
+                    opponent.isAttacking,
+                    opponent.attackAnimation,
+                    opponent.flip
+                );
+                
+                // Barra de vida
+                const barWidth = 50;
+                ctx.fillStyle = '#333';
+                ctx.fillRect(opponent.x - barWidth/2, opponent.y - 40, barWidth, 6);
+                ctx.fillStyle = opponent.health > 50 ? '#0f0' : '#f00';
+                ctx.fillRect(opponent.x - barWidth/2, opponent.y - 40, 
+                          barWidth * (opponent.health/100), 6);
             }
             
             // Dibujar jugador local
             if (!player.isDead) {
-                ctx.save();
-                ctx.translate(player.x, player.y);
-                ctx.rotate(player.angle);
-                
-                // Cuerpo
+                // Sombra
+                ctx.fillStyle = 'rgba(0,0,0,0.3)';
                 ctx.beginPath();
-                ctx.arc(0, 0, player.radius, 0, Math.PI * 2);
-                ctx.fillStyle = player.color;
+                ctx.ellipse(player.x, player.y + 20, 20, 8, 0, 0, Math.PI*2);
                 ctx.fill();
-                ctx.strokeStyle = '#fff';
-                ctx.lineWidth = 2;
-                ctx.stroke();
                 
-                // Cañón
-                ctx.fillStyle = '#666';
-                ctx.fillRect(0, -3, 25, 6);
+                // Jugador
+                drawRotatedImage(
+                    assets.player, 
+                    player.x, 
+                    player.y, 
+                    player.width, 
+                    player.height, 
+                    player.angle,
+                    player.flip
+                );
                 
-                ctx.restore();
+                // Arma
+                const currentWpn = WEAPONS[player.currentWeapon];
+                drawWeapon(
+                    currentWpn,
+                    player.x,
+                    player.y,
+                    player.angle,
+                    player.isAttacking,
+                    player.attackAnimation,
+                    player.flip
+                );
+                
+                // Línea de mira (solo pistola)
+                if (player.currentWeapon === 'PISTOL') {
+                    ctx.strokeStyle = 'rgba(0, 255, 242, 0.2)';
+                    ctx.setLineDash([5, 5]);
+                    ctx.beginPath();
+                    ctx.moveTo(player.x, player.y);
+                    ctx.lineTo(
+                        player.x + Math.cos(player.angle) * 200,
+                        player.y + Math.sin(player.angle) * 200
+                    );
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+                
+                // Indicador de ataque melee
+                if (player.currentWeapon === 'SWORD' && player.isAttacking) {
+                    ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(player.x, player.y, 60, 
+                           player.angle - Math.PI/3, 
+                           player.angle + Math.PI/3);
+                    ctx.stroke();
+                }
             } else {
                 // Pantalla de muerte
                 ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
                 ctx.fillStyle = '#fff';
-                ctx.font = 'bold 40px Arial';
+                ctx.font = 'bold 50px Arial';
                 ctx.textAlign = 'center';
-                ctx.fillText('💀 ELIMINADO', canvas.width/2, canvas.height/2);
+                ctx.fillText('💀 ELIMINADO', canvas.width/2, canvas.height/2 - 50);
                 
-                const timeLeft = Math.ceil((3000 - (Date.now() - player.respawnTimer)) / 1000);
-                ctx.font = '20px Arial';
-                ctx.fillText(`Reapareciendo en ${timeLeft}...`, canvas.width/2, canvas.height/2 + 40);
+                const timeLeft = Math.max(0, Math.ceil((3000 - (Date.now() - player.respawnTimer)) / 1000));
+                ctx.font = '30px Arial';
+                ctx.fillText(`Reapareciendo en ${timeLeft}...`, canvas.width/2, canvas.height/2 + 20);
             }
             
-            // Dibujar oponente
-            if (!opponent.isDead) {
-                ctx.save();
-                ctx.translate(opponent.x, opponent.y);
-                ctx.rotate(opponent.angle);
-                
-                ctx.beginPath();
-                ctx.arc(0, 0, opponent.radius, 0, Math.PI * 2);
-                ctx.fillStyle = opponent.color;
-                ctx.fill();
-                ctx.strokeStyle = '#fff';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-                
-                ctx.fillStyle = '#666';
-                ctx.fillRect(0, -3, 25, 6);
-                
-                ctx.restore();
-                
-                // Barra de vida del oponente
-                const barWidth = 40;
-                const barHeight = 4;
-                ctx.fillStyle = '#333';
-                ctx.fillRect(opponent.x - barWidth/2, opponent.y - 30, barWidth, barHeight);
-                
-                ctx.fillStyle = opponent.health > 50 ? '#0f0' : '#f00';
-                ctx.fillRect(opponent.x - barWidth/2, opponent.y - 30, 
-                          barWidth * (opponent.health/100), barHeight);
-            }
-            
-            // Dibujar línea de mira
-            if (!player.isDead) {
-                ctx.strokeStyle = 'rgba(0, 255, 242, 0.3)';
-                ctx.setLineDash([5, 5]);
-                ctx.beginPath();
-                ctx.moveTo(player.x, player.y);
-                ctx.lineTo(mouse.x, mouse.y);
-                ctx.stroke();
-                ctx.setLineDash([]);
-            }
-            
-            // UI updates
+            // UI
             document.getElementById('health').style.width = player.health + '%';
-            document.getElementById('ammo').textContent = `🔫 ${player.isDead ? 0 : Math.max(0, Math.floor((Date.now() - player.lastShot) / player.shotDelay * 30))} / ∞`;
             
             // Score
             ctx.fillStyle = '#fff';
-            ctx.font = 'bold 24px Arial';
+            ctx.font = 'bold 32px Arial';
             ctx.textAlign = 'center';
+            ctx.shadowColor = '#000';
+            ctx.shadowBlur = 4;
             ctx.fillText(`${player.score} - ${opponent.score}`, canvas.width/2, 40);
+            ctx.shadowBlur = 0;
+            
+            // Controles hint
+            ctx.font = '14px Arial';
+            ctx.fillStyle = 'rgba(255,255,255,0.5)';
+            ctx.textAlign = 'left';
+            ctx.fillText('[1] Espada | [2] Pistola', 10, canvas.height - 10);
             
             requestAnimationFrame(update);
         }
-        
-        // Iniciar Peer al cargar
-        window.onload = initPeer;
     </script>
 </body>
 </html>

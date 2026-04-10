@@ -2,14 +2,18 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tactical P2P Arena</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tactical P2P Arena Mobile</title>
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            touch-action: none;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
         }
         
         body {
@@ -17,6 +21,9 @@
             background: #0d0d0d;
             color: #e0e0e0;
             overflow: hidden;
+            position: fixed;
+            width: 100%;
+            height: 100%;
         }
         
         #menu {
@@ -26,17 +33,18 @@
             transform: translate(-50%, -50%);
             text-align: center;
             background: #1a1a1a;
-            padding: 40px;
+            padding: 30px;
             border-radius: 2px;
             border: 1px solid #333;
             box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
             z-index: 100;
+            max-width: 90%;
         }
         
         h1 {
             color: #d4d4d4;
             margin-bottom: 20px;
-            font-size: 28px;
+            font-size: 24px;
             text-transform: uppercase;
             letter-spacing: 3px;
             border-bottom: 2px solid #555;
@@ -50,66 +58,58 @@
             border-radius: 0;
             background: #2a2a2a;
             color: #fff;
-            width: 220px;
+            width: 200px;
             font-family: inherit;
-        }
-        
-        input:focus {
-            outline: none;
-            border-color: #666;
+            font-size: 14px;
         }
         
         button {
-            padding: 12px 30px;
-            margin: 10px;
+            padding: 12px 25px;
+            margin: 8px;
             border: 1px solid #555;
             border-radius: 0;
             background: #333;
             color: #d0d0d0;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 13px;
             text-transform: uppercase;
             letter-spacing: 1px;
             transition: all 0.2s;
         }
         
-        button:hover {
+        button:hover, button:active {
             background: #444;
             border-color: #777;
             color: #fff;
         }
         
-        button:disabled {
-            background: #222;
-            color: #555;
-            cursor: not-allowed;
-        }
-        
         #gameCanvas {
             display: none;
             background: #3d3429;
-            border: 1px solid #222;
-            box-shadow: inset 0 0 100px rgba(0,0,0,0.5);
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
         }
         
         #ui {
             position: absolute;
-            top: 20px;
-            left: 20px;
+            top: 10px;
+            left: 10px;
             display: none;
             background: rgba(20, 20, 20, 0.9);
-            padding: 15px;
+            padding: 12px;
             border: 1px solid #444;
-            min-width: 220px;
+            z-index: 50;
+            pointer-events: none;
         }
         
         .health-bar {
-            width: 200px;
-            height: 20px;
+            width: 150px;
+            height: 16px;
             background: #2a2a2a;
             border: 1px solid #555;
             overflow: hidden;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
         
         #health {
@@ -120,19 +120,18 @@
         }
         
         #weaponInfo {
-            margin-top: 15px;
-            font-size: 14px;
+            margin-top: 8px;
+            font-size: 12px;
             color: #b0b0b0;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
             text-transform: uppercase;
-            letter-spacing: 1px;
         }
         
         #weaponIcon {
-            width: 36px;
-            height: 36px;
+            width: 28px;
+            height: 28px;
             border: 1px solid #555;
             background: #2a2a2a;
             display: flex;
@@ -141,75 +140,195 @@
         }
         
         #weaponIcon img {
-            width: 28px;
-            height: 28px;
+            width: 22px;
+            height: 22px;
             object-fit: contain;
             filter: grayscale(30%);
         }
         
         #connectionStatus {
             position: absolute;
-            top: 20px;
-            right: 20px;
-            padding: 10px 15px;
+            top: 10px;
+            right: 10px;
+            padding: 8px 12px;
             background: rgba(20, 20, 20, 0.9);
             border: 1px solid #444;
-            font-size: 12px;
+            font-size: 11px;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            z-index: 50;
         }
         
         .connected { color: #7c9c6c; }
         .disconnected { color: #8b4513; }
         
         #instructions {
-            margin-top: 30px;
+            margin-top: 20px;
             font-size: 12px;
             color: #888;
-            line-height: 1.8;
+            line-height: 1.6;
             text-transform: uppercase;
-            letter-spacing: 1px;
         }
         
         .loading {
             color: #999;
             font-size: 14px;
-            margin: 20px 0;
+            margin: 15px 0;
             letter-spacing: 2px;
+        }
+        
+        /* Controles Móviles */
+        #mobileControls {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            z-index: 40;
+            pointer-events: none;
+        }
+        
+        #joystickZone {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 120px;
+            height: 120px;
+            pointer-events: auto;
+            touch-action: none;
+        }
+        
+        #joystickBase {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        #joystickKnob {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+        
+        #actionButtons {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: auto;
+        }
+        
+        .mobile-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(40, 40, 40, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: none;
+            position: relative;
+        }
+        
+        .mobile-btn:active {
+            background: rgba(80, 80, 80, 0.9);
+            transform: scale(0.95);
+        }
+        
+        #btnAttack {
+            width: 80px;
+            height: 80px;
+            font-size: 24px;
+        }
+        
+        #btnDash {
+            display: none;
+            border-color: rgba(212, 175, 55, 0.5);
+            color: #d4af37;
+        }
+        
+        #btnDash.cooldown {
+            opacity: 0.5;
+            color: #666;
+        }
+        
+        #weaponSelect {
+            position: absolute;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: auto;
+        }
+        
+        .weapon-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            background: rgba(30, 30, 30, 0.9);
+            border: 1px solid #555;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        .weapon-btn.active {
+            border-color: #d4af37;
+            background: rgba(212, 175, 55, 0.2);
         }
         
         #crosshair {
             position: absolute;
-            width: 24px;
-            height: 24px;
+            width: 20px;
+            height: 20px;
             border: 1px solid rgba(255, 255, 255, 0.6);
             border-radius: 50%;
             pointer-events: none;
             display: none;
             transform: translate(-50%, -50%);
-            z-index: 50;
+            z-index: 45;
         }
         
-        #crosshair::before {
-            content: '';
+        .dash-indicator {
             position: absolute;
-            width: 2px;
-            height: 8px;
-            background: rgba(255, 255, 255, 0.8);
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            border: 2px solid rgba(212, 175, 55, 0.3);
+            border-radius: 50%;
+            animation: dashPulse 0.5s ease-out;
+            pointer-events: none;
         }
         
-        #crosshair::after {
-            content: '';
+        @keyframes dashPulse {
+            to { transform: scale(2); opacity: 0; }
+        }
+        
+        #cooldownOverlay {
             position: absolute;
-            width: 8px;
-            height: 2px;
-            background: rgba(255, 255, 255, 0.8);
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 0%;
+            background: rgba(0, 0, 0, 0.6);
+            transition: height 0.1s;
         }
     </style>
 </head>
@@ -219,22 +338,24 @@
     <div id="menu">
         <h1>Tactical P2P Arena</h1>
         <div id="setup">
-            <p class="loading" id="loadingText">Cargando recursos...</p>
+            <p class="loading" id="loadingText">Cargando...</p>
             <div id="gameControls" style="display: none;">
-                <p style="color: #888; font-size: 12px; margin-bottom: 15px;">ID: <span id="myId" style="color: #d0d0d0; font-family: monospace;">...</span></p>
-                <input type="text" id="peerId" placeholder="ID del oponente">
+                <p style="color: #888; font-size: 11px; margin-bottom: 10px;">ID: <span id="myId" style="color: #d0d0d0;">...</span></p>
+                <input type="text" id="peerId" placeholder="ID oponente">
                 <br>
                 <button onclick="hostGame()" id="btnHost">Crear Sala</button>
                 <button onclick="joinGame()" id="btnJoin">Unirse</button>
             </div>
         </div>
         <div id="waiting" style="display: none;">
-            <p style="color: #999; font-size: 14px;">Esperando oponente...</p>
-            <p style="color: #b0b0b0; margin-top: 15px; font-size: 12px; word-break: break-all;">ID: <b id="shareId" style="color: #fff;"></b></p>
+            <p style="color: #999; font-size: 13px;">Esperando...</p>
+            <p style="color: #b0b0b0; margin-top: 10px; font-size: 11px; word-break: break-all;">ID: <b id="shareId" style="color: #fff;"></b></p>
         </div>
         <div id="instructions">
-            <p><span style="color: #fff;">WASD</span> Mover | <span style="color: #fff;">Mouse</span> Apuntar | <span style="color: #fff;">Click</span> Atacar</p>
-            <p><span style="color: #fff;">[1]</span> Espada | <span style="color: #fff;">[2]</span> Pistola</p>
+            <p><span style="color: #fff;">WASD</span> Mover | <span style="color: #fff;">Mouse</span> Apuntar</p>
+            <p><span style="color: #fff;">[1]</span> Espada <span style="color: #fff;">[2]</span> Pistola</p>
+            <p><span style="color: #d4af37;">[Q]</span> Dash (Solo Espada)</p>
+            <p style="margin-top: 10px; color: #666; font-size: 10px;">También compatible con móvil</p>
         </div>
     </div>
 
@@ -242,10 +363,10 @@
         <div class="health-bar">
             <div id="health"></div>
         </div>
-        <div style="font-size: 11px; color: #666; margin-top: 5px;">Salud</div>
+        <div style="font-size: 10px; color: #666;">HP 100/100</div>
         <div id="weaponInfo">
             <div id="weaponIcon">
-                <img id="currentWeaponImg" src="" alt="weapon">
+                <img id="currentWeaponImg" src="" alt="w">
             </div>
             <span id="weaponName">--</span>
         </div>
@@ -255,10 +376,30 @@
         <span style="color: #666;">Estado:</span> <span id="status" class="disconnected">Offline</span>
     </div>
 
+    <!-- Controles Móviles -->
+    <div id="mobileControls">
+        <div id="joystickZone">
+            <div id="joystickBase"></div>
+            <div id="joystickKnob"></div>
+        </div>
+        
+        <div id="weaponSelect">
+            <div class="weapon-btn" id="btnSword" onclick="switchWeapon('SWORD')">⚔️</div>
+            <div class="weapon-btn" id="btnPistol" onclick="switchWeapon('PISTOL')">🔫</div>
+        </div>
+        
+        <div id="actionButtons">
+            <div class="mobile-btn" id="btnDash" onclick="performDash()">
+                Q
+                <div id="cooldownOverlay"></div>
+            </div>
+            <div class="mobile-btn" id="btnAttack" onclick="attack()">⚔️</div>
+        </div>
+    </div>
+
     <canvas id="gameCanvas"></canvas>
 
     <script>
-        // Configuración del juego
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         
@@ -268,7 +409,6 @@
         canvas.width = WORLD_WIDTH;
         canvas.height = WORLD_HEIGHT;
         
-        // Cargar assets
         const assets = {
             player: new Image(),
             sword: new Image(),
@@ -276,77 +416,74 @@
         };
         
         let assetsLoaded = false;
-        
         assets.player.src = 'pla1.png';
         assets.sword.src = 'esp1.png';
         assets.pistol.src = 'pis1.png';
         
-        // Variables del juego
         let peer = null;
         let conn = null;
         let isHost = false;
         let gameLoop = null;
         
-        // Paleta de colores táctica
-        const COLORS = {
-            bg: '#4a453f',          // Arena oscuro Call of Duty
-            bgDark: '#3d3429',      // Arena más oscuro
-            wall: '#b8b8b8',        // Blanco grisáceo
-            wallBorder: '#909090',  // Borde pared
-            grid: 'rgba(0, 0, 0, 0.1)',
-            text: '#d0d0d0',
-            health: '#8b0000',
-            bullet: '#d4af37',      // Oro apagado/bronce
-            bulletGlow: 'rgba(212, 175, 55, 0.3)'
-        };
+        // Detectar móvil
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 800;
         
-        // Sistema de armas
+        // Sistema de armas actualizado
         const WEAPONS = {
             SWORD: {
                 name: 'Espada',
                 type: 'melee',
-                damage: 40,
+                damage: 20,  // Cambiado a 20
                 range: 60,
                 cooldown: 500,
                 image: assets.sword,
                 offsetX: 20,
-                offsetY: 10
+                offsetY: 10,
+                canDash: true,
+                dashCooldown: 2000,
+                dashDistance: 120,
+                dashSpeed: 15
             },
             PISTOL: {
                 name: 'Pistola',
                 type: 'ranged',
-                damage: 25,
+                damage: 15,  // Cambiado a 15
                 speed: 12,
                 cooldown: 300,
                 image: assets.pistol,
                 offsetX: 25,
                 offsetY: 5,
-                recoil: 0.3,        // Rotación en radianes
-                recoilRecovery: 0.05 // Velocidad de recuperación
+                recoil: 0.3,
+                recoilRecovery: 0.05,
+                canDash: false
             }
         };
         
-        // Estado del jugador local
+        // Jugador con sistema de dash
         const player = {
             x: 200,
             y: 300,
             width: 40,
             height: 40,
             angle: 0,
-            health: 100,
+            health: 100,  // 100/100
             maxHealth: 100,
             speed: 4,
             lastAttack: 0,
-            currentWeapon: 'PISTOL',
+            currentWeapon: 'SWORD', // Empezar con espada para probar dash
             isAttacking: false,
             attackAnimation: 0,
-            weaponRecoil: 0,        // Nuevo: animación de retroceso rotacional
+            weaponRecoil: 0,
             isDead: false,
             score: 0,
-            flip: false
+            flip: false,
+            // Dash
+            isDashing: false,
+            dashCooldown: 0,
+            dashTrail: [],
+            lastDashTime: 0
         };
         
-        // Estado del oponente
         const opponent = {
             x: 800,
             y: 300,
@@ -354,25 +491,24 @@
             height: 40,
             angle: 0,
             health: 100,
-            currentWeapon: 'PISTOL',
+            maxHealth: 100,
+            currentWeapon: 'SWORD',
             isAttacking: false,
             attackAnimation: 0,
             weaponRecoil: 0,
             isDead: false,
             score: 0,
-            flip: false
+            flip: false,
+            isDashing: false,
+            dashTrail: []
         };
         
-        // Controles
         const keys = {};
         const mouse = { x: 0, y: 0, down: false };
-        
-        // Balas y efectos
         let bullets = [];
         let slashEffects = [];
         let particles = [];
         
-        // Paredes del escenario
         const walls = [
             { x: 0, y: 0, width: WORLD_WIDTH, height: 20 },
             { x: 0, y: WORLD_HEIGHT - 20, width: WORLD_WIDTH, height: 20 },
@@ -398,27 +534,19 @@
             document.getElementById('loadingText').style.display = 'none';
             document.getElementById('gameControls').style.display = 'block';
             initPeer();
-        }).catch(err => {
-            console.error('Error cargando assets:', err);
-            document.getElementById('loadingText').textContent = 'Error: Verifica que existan pla1.png, esp1.png y pis1.png';
         });
         
         function initPeer() {
             peer = new Peer();
-            
             peer.on('open', (id) => {
                 document.getElementById('myId').textContent = id;
             });
-            
             peer.on('connection', (connection) => {
                 conn = connection;
                 setupConnection();
                 startGame();
             });
-            
-            peer.on('error', (err) => {
-                alert('Error: ' + err);
-            });
+            peer.on('error', (err) => alert('Error: ' + err));
         }
         
         function hostGame() {
@@ -432,14 +560,9 @@
         function joinGame() {
             if (!assetsLoaded) return;
             const peerId = document.getElementById('peerId').value;
-            if (!peerId) {
-                alert('Introduce un ID válido');
-                return;
-            }
-            
+            if (!peerId) return alert('Introduce ID');
             conn = peer.connect(peerId);
             isHost = false;
-            
             conn.on('open', () => {
                 setupConnection();
                 startGame();
@@ -449,11 +572,7 @@
         function setupConnection() {
             document.getElementById('status').textContent = 'Conectado';
             document.getElementById('status').className = 'connected';
-            
-            conn.on('data', (data) => {
-                handleNetworkData(data);
-            });
-            
+            conn.on('data', handleNetworkData);
             conn.on('close', () => {
                 document.getElementById('status').textContent = 'Desconectado';
                 document.getElementById('status').className = 'disconnected';
@@ -473,6 +592,8 @@
                 opponent.attackAnimation = data.attackAnimation;
                 opponent.weaponRecoil = data.weaponRecoil || 0;
                 opponent.flip = data.flip;
+                opponent.isDashing = data.isDashing || false;
+                if (data.dashTrail) opponent.dashTrail = data.dashTrail;
             } else if (data.type === 'bullet') {
                 bullets.push({
                     x: data.x,
@@ -485,6 +606,10 @@
             } else if (data.type === 'slash') {
                 createSlashEffect(opponent.x, opponent.y, opponent.angle, 'opponent');
                 checkSlashDamage(opponent, player);
+            } else if (data.type === 'dash') {
+                opponent.isDashing = true;
+                opponent.dashTrail = data.trail || [];
+                setTimeout(() => { opponent.isDashing = false; }, 200);
             } else if (data.type === 'respawn') {
                 opponent.isDead = false;
                 opponent.health = 100;
@@ -509,30 +634,111 @@
                     isAttacking: player.isAttacking,
                     attackAnimation: player.attackAnimation,
                     weaponRecoil: player.weaponRecoil,
-                    flip: player.flip
+                    flip: player.flip,
+                    isDashing: player.isDashing,
+                    dashTrail: player.dashTrail
                 });
             }
         }
         
         function switchWeapon(weaponName) {
             if (player.currentWeapon === weaponName || player.isDead) return;
-            
             player.currentWeapon = weaponName;
-            player.weaponRecoil = 0; // Resetear recoil al cambiar
+            player.weaponRecoil = 0;
             updateWeaponUI();
             
+            // Actualizar UI móvil
+            if (isMobile) {
+                document.getElementById('btnSword').classList.toggle('active', weaponName === 'SWORD');
+                document.getElementById('btnPistol').classList.toggle('active', weaponName === 'PISTOL');
+                document.getElementById('btnDash').style.display = 
+                    WEAPONS[weaponName].canDash ? 'flex' : 'none';
+                document.getElementById('btnAttack').textContent = weaponName === 'SWORD' ? '⚔️' : '🔫';
+            }
+            
             if (conn && conn.open) {
-                conn.send({
-                    type: 'weaponChange',
-                    weapon: weaponName
-                });
+                conn.send({ type: 'weaponChange', weapon: weaponName });
             }
         }
         
         function updateWeaponUI() {
             const weapon = WEAPONS[player.currentWeapon];
             document.getElementById('currentWeaponImg').src = weapon.image.src;
-            document.getElementById('weaponName').textContent = weapon.name;
+            document.getElementById('weaponName').textContent = 
+                `${weapon.name} (${weapon.damage} Dmg)`;
+        }
+        
+        function performDash() {
+            if (player.isDead || player.isDashing) return;
+            
+            const weapon = WEAPONS[player.currentWeapon];
+            const now = Date.now();
+            
+            if (!weapon.canDash || now - player.lastDashTime < weapon.dashCooldown) return;
+            
+            player.lastDashTime = now;
+            player.isDashing = true;
+            
+            // Calcular dirección del dash (según ángulo del mouse/mira)
+            const dashX = Math.cos(player.angle) * weapon.dashDistance;
+            const dashY = Math.sin(player.angle) * weapon.dashDistance;
+            
+            // Crear estela
+            player.dashTrail = [];
+            for (let i = 0; i < 5; i++) {
+                player.dashTrail.push({
+                    x: player.x - (dashX * i / 5),
+                    y: player.y - (dashY * i / 5),
+                    alpha: 1 - (i * 0.2)
+                });
+            }
+            
+            // Aplicar movimiento con colisión
+            const targetX = player.x + dashX;
+            const targetY = player.y + dashY;
+            
+            if (!checkWallCollision(targetX, player.y, player.width/2)) player.x = targetX;
+            if (!checkWallCollision(player.x, targetY, player.height/2)) player.y = targetY;
+            
+            // Enviar a red
+            if (conn && conn.open) {
+                conn.send({ 
+                    type: 'dash', 
+                    trail: player.dashTrail 
+                });
+            }
+            
+            // Animación de dash
+            setTimeout(() => {
+                player.isDashing = false;
+                player.dashTrail = [];
+            }, 200);
+            
+            // Actualizar cooldown UI
+            if (isMobile && weapon.canDash) {
+                updateDashCooldown();
+            }
+        }
+        
+        function updateDashCooldown() {
+            const weapon = WEAPONS.SWORD;
+            const btn = document.getElementById('btnDash');
+            const overlay = document.getElementById('cooldownOverlay');
+            
+            btn.classList.add('cooldown');
+            let remaining = weapon.dashCooldown;
+            
+            const interval = setInterval(() => {
+                remaining -= 100;
+                const pct = (remaining / weapon.dashCooldown) * 100;
+                overlay.style.height = (100 - pct) + '%';
+                
+                if (remaining <= 0) {
+                    clearInterval(interval);
+                    btn.classList.remove('cooldown');
+                    overlay.style.height = '0%';
+                }
+            }, 100);
         }
         
         function attack() {
@@ -548,7 +754,6 @@
             player.attackAnimation = 0;
             
             if (weapon.type === 'melee') {
-                // Ataque de espada
                 setTimeout(() => {
                     createSlashEffect(player.x, player.y, player.angle, 'player');
                     
@@ -560,8 +765,7 @@
                         
                         if (normalizedDiff < Math.PI / 3) {
                             opponent.health -= weapon.damage;
-                            createParticles(opponent.x, opponent.y, 10, '#8b0000');
-                            
+                            createParticles(opponent.x, opponent.y, 8, '#8b0000');
                             if (opponent.health <= 0) {
                                 opponent.isDead = true;
                                 opponent.health = 0;
@@ -569,18 +773,12 @@
                             }
                         }
                     }
-                    
-                    if (conn && conn.open) {
-                        conn.send({ type: 'slash' });
-                    }
+                    if (conn && conn.open) conn.send({ type: 'slash' });
                 }, 100);
                 
-                setTimeout(() => {
-                    player.isAttacking = false;
-                }, 300);
+                setTimeout(() => { player.isAttacking = false; }, 300);
             } else {
-                // Disparo de pistola - SIN RETROCESO DE POSICIÓN, solo rotación
-                player.weaponRecoil = weapon.recoil; // Aplicar rotación de retroceso
+                player.weaponRecoil = weapon.recoil;
                 
                 const bullet = {
                     x: player.x + Math.cos(player.angle) * 30,
@@ -590,15 +788,7 @@
                     owner: 'player',
                     damage: weapon.damage
                 };
-                
                 bullets.push(bullet);
-                
-                // Casquillo (efecto visual apenas visible)
-                createParticles(
-                    player.x + Math.cos(player.angle + Math.PI/2) * 10,
-                    player.y + Math.sin(player.angle + Math.PI/2) * 10,
-                    1, '#b8860b'
-                );
                 
                 if (conn && conn.open) {
                     conn.send({
@@ -610,9 +800,7 @@
                     });
                 }
                 
-                setTimeout(() => {
-                    player.isAttacking = false;
-                }, 100);
+                setTimeout(() => { player.isAttacking = false; }, 100);
             }
         }
         
@@ -630,16 +818,13 @@
         function checkSlashDamage(attacker, target) {
             const weapon = WEAPONS.SWORD;
             const dist = Math.hypot(target.x - attacker.x, target.y - attacker.y);
-            
             if (dist < weapon.range && !target.isDead) {
                 const angleToTarget = Math.atan2(target.y - attacker.y, target.x - attacker.x);
                 const angleDiff = Math.abs(angleToTarget - attacker.angle);
                 const normalizedDiff = Math.min(angleDiff, 2 * Math.PI - angleDiff);
-                
                 if (normalizedDiff < Math.PI / 3) {
                     target.health -= weapon.damage;
-                    createParticles(target.x, target.y, 10, '#8b0000');
-                    
+                    createParticles(target.x, target.y, 8, '#8b0000');
                     if (target.health <= 0) {
                         target.isDead = true;
                         target.health = 0;
@@ -666,10 +851,8 @@
         
         function checkWallCollision(x, y, radius) {
             for (let wall of walls) {
-                if (x + radius > wall.x && 
-                    x - radius < wall.x + wall.width &&
-                    y + radius > wall.y && 
-                    y - radius < wall.y + wall.height) {
+                if (x + radius > wall.x && x - radius < wall.x + wall.width &&
+                    y + radius > wall.y && y - radius < wall.y + wall.height) {
                     return true;
                 }
             }
@@ -687,6 +870,7 @@
             player.health = 100;
             player.isDead = false;
             player.weaponRecoil = 0;
+            player.isDashing = false;
             
             if (conn && conn.open) {
                 conn.send({
@@ -697,11 +881,114 @@
             }
         }
         
+        // Controles Móviles
+        let joystickActive = false;
+        let joystickCenter = { x: 0, y: 0 };
+        let joystickCurrent = { x: 0, y: 0 };
+        
+        function initMobileControls() {
+            const joystickZone = document.getElementById('joystickZone');
+            const knob = document.getElementById('joystickKnob');
+            
+            joystickZone.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const touch = e.changedTouches[0];
+                const rect = joystickZone.getBoundingClientRect();
+                joystickCenter = {
+                    x: rect.left + rect.width / 2,
+                    y: rect.top + rect.height / 2
+                };
+                joystickActive = true;
+                updateJoystick(touch);
+            }, { passive: false });
+            
+            joystickZone.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                if (!joystickActive) return;
+                const touch = e.changedTouches[0];
+                updateJoystick(touch);
+            }, { passive: false });
+            
+            joystickZone.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                joystickActive = false;
+                knob.style.transform = `translate(-50%, -50%)`;
+                keys['w'] = keys['a'] = keys['s'] = keys['d'] = false;
+            });
+            
+            function updateJoystick(touch) {
+                const maxDist = 35;
+                let dx = touch.clientX - joystickCenter.x;
+                let dy = touch.clientY - joystickCenter.y;
+                const dist = Math.hypot(dx, dy);
+                
+                if (dist > maxDist) {
+                    dx = (dx / dist) * maxDist;
+                    dy = (dy / dist) * maxDist;
+                }
+                
+                knob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+                
+                // Convertir a WASD
+                const threshold = 10;
+                keys['w'] = dy < -threshold;
+                keys['s'] = dy > threshold;
+                keys['a'] = dx < -threshold;
+                keys['d'] = dx > threshold;
+            }
+            
+            // Mira táctil (mitad derecha de pantalla)
+            document.addEventListener('touchstart', (e) => {
+                for (let touch of e.changedTouches) {
+                    if (touch.clientX > window.innerWidth / 2 && 
+                        !e.target.closest('#actionButtons') && 
+                        !e.target.closest('#weaponSelect')) {
+                        const rect = canvas.getBoundingClientRect();
+                        mouse.x = (touch.clientX - rect.left) * (canvas.width / rect.width);
+                        mouse.y = (touch.clientY - rect.top) * (canvas.height / rect.height);
+                        
+                        // Actualizar ángulo
+                        const dx = mouse.x - player.x;
+                        const dy = mouse.y - player.y;
+                        player.angle = Math.atan2(dy, dx);
+                        player.flip = Math.abs(player.angle) > Math.PI / 2;
+                    }
+                }
+            }, { passive: false });
+            
+            document.addEventListener('touchmove', (e) => {
+                for (let touch of e.changedTouches) {
+                    if (touch.clientX > window.innerWidth / 2 && 
+                        !e.target.closest('#actionButtons') && 
+                        !e.target.closest('#weaponSelect')) {
+                        const rect = canvas.getBoundingClientRect();
+                        mouse.x = (touch.clientX - rect.left) * (canvas.width / rect.width);
+                        mouse.y = (touch.clientY - rect.top) * (canvas.height / rect.height);
+                        
+                        const dx = mouse.x - player.x;
+                        const dy = mouse.y - player.y;
+                        player.angle = Math.atan2(dy, dx);
+                        player.flip = Math.abs(player.angle) > Math.PI / 2;
+                    }
+                }
+            }, { passive: false });
+        }
+        
         function startGame() {
             document.getElementById('menu').style.display = 'none';
             document.getElementById('gameCanvas').style.display = 'block';
             document.getElementById('ui').style.display = 'block';
-            document.getElementById('crosshair').style.display = 'block';
+            
+            if (isMobile) {
+                document.getElementById('mobileControls').style.display = 'block';
+                document.getElementById('btnSword').classList.add('active');
+                initMobileControls();
+                // Forzar espada al inicio en móvil para mostrar dash
+                player.currentWeapon = 'SWORD';
+                updateWeaponUI();
+            } else {
+                document.getElementById('crosshair').style.display = 'block';
+            }
             
             if (!isHost) {
                 player.x = 800;
@@ -710,39 +997,42 @@
             
             updateWeaponUI();
             
-            window.addEventListener('keydown', (e) => {
-                keys[e.key.toLowerCase()] = true;
-                if (e.key === '1') switchWeapon('SWORD');
-                if (e.key === '2') switchWeapon('PISTOL');
-            });
-            
-            window.addEventListener('keyup', (e) => keys[e.key.toLowerCase()] = false);
-            window.addEventListener('mousemove', (e) => {
-                const rect = canvas.getBoundingClientRect();
-                mouse.x = e.clientX - rect.left;
-                mouse.y = e.clientY - rect.top;
+            // Controles Desktop
+            if (!isMobile) {
+                window.addEventListener('keydown', (e) => {
+                    keys[e.key.toLowerCase()] = true;
+                    if (e.key === '1') switchWeapon('SWORD');
+                    if (e.key === '2') switchWeapon('PISTOL');
+                    if (e.key.toLowerCase() === 'q') performDash();
+                });
                 
-                const crosshair = document.getElementById('crosshair');
-                crosshair.style.left = e.clientX + 'px';
-                crosshair.style.top = e.clientY + 'px';
-            });
-            window.addEventListener('mousedown', () => {
-                mouse.down = true;
-                attack();
-            });
-            window.addEventListener('mouseup', () => mouse.down = false);
+                window.addEventListener('keyup', (e) => keys[e.key.toLowerCase()] = false);
+                window.addEventListener('mousemove', (e) => {
+                    const rect = canvas.getBoundingClientRect();
+                    mouse.x = e.clientX - rect.left;
+                    mouse.y = e.clientY - rect.top;
+                    
+                    const crosshair = document.getElementById('crosshair');
+                    crosshair.style.left = e.clientX + 'px';
+                    crosshair.style.top = e.clientY + 'px';
+                });
+                window.addEventListener('mousedown', () => {
+                    mouse.down = true;
+                    attack();
+                });
+                window.addEventListener('mouseup', () => mouse.down = false);
+            }
             
             gameLoop = requestAnimationFrame(update);
             setInterval(sendGameData, 1000 / 60);
         }
         
-        function drawRotatedImage(image, x, y, width, height, angle, flip = false) {
+        function drawRotatedImage(image, x, y, width, height, angle, flip = false, alpha = 1) {
             ctx.save();
             ctx.translate(x, y);
             ctx.rotate(angle);
-            if (flip) {
-                ctx.scale(1, -1);
-            }
+            if (flip) ctx.scale(1, -1);
+            ctx.globalAlpha = alpha;
             ctx.drawImage(image, -width/2, -height/2, width, height);
             ctx.restore();
         }
@@ -751,11 +1041,10 @@
             ctx.save();
             ctx.translate(x, y);
             
-            // Aplicar rotación base más retroceso
             let drawAngle = angle;
             
             if (weapon.type === 'ranged' && recoil > 0) {
-                drawAngle -= recoil; // Rotar hacia atrás
+                drawAngle -= recoil;
             }
             
             if (weapon.type === 'melee' && isAttacking) {
@@ -766,12 +1055,11 @@
             ctx.rotate(drawAngle);
             if (flip) ctx.scale(1, -1);
             
-            // Dibujar arma con posible "retroceso visual" de posición (no del jugador)
             let offsetX = weapon.offsetX;
             let offsetY = weapon.offsetY;
             
             if (weapon.type === 'ranged' && recoil > 0) {
-                offsetX -= recoil * 10; // Mover el sprite un poco hacia atrás
+                offsetX -= recoil * 10;
             }
             
             ctx.drawImage(weapon.image, offsetX - 20, offsetY - 20, 40, 40);
@@ -779,56 +1067,48 @@
         }
         
         function update() {
-            // Fondo arena Call of Duty
-            ctx.fillStyle = COLORS.bg;
+            // Fondo arena
+            ctx.fillStyle = '#3d3429';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Textura sutil de arena
-            ctx.fillStyle = COLORS.bgDark;
-            for (let i = 0; i < 50; i++) {
-                const x = (i * 137) % WORLD_WIDTH;
+            // Textura arena
+            ctx.fillStyle = '#332d26';
+            for (let i = 0; i < 30; i++) {
+                const x = ((i * 137) + Math.floor(Date.now() / 1000)) % WORLD_WIDTH;
                 const y = (i * 253) % WORLD_HEIGHT;
                 ctx.fillRect(x, y, 2, 2);
             }
             
-            // Grid muy sutil
-            ctx.strokeStyle = COLORS.grid;
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            for (let i = 0; i < WORLD_WIDTH; i += 100) {
-                ctx.moveTo(i, 0);
-                ctx.lineTo(i, WORLD_HEIGHT);
-            }
-            for (let i = 0; i < WORLD_HEIGHT; i += 100) {
-                ctx.moveTo(0, i);
-                ctx.lineTo(WORLD_WIDTH, i);
-            }
-            ctx.stroke();
-            
             // Lógica jugador
             if (!player.isDead) {
-                let newX = player.x;
-                let newY = player.y;
+                // Movimiento normal o dash
+                if (player.isDashing) {
+                    // Efecto de estela durante dash
+                } else {
+                    let newX = player.x;
+                    let newY = player.y;
+                    
+                    if (keys['w']) newY -= player.speed;
+                    if (keys['s']) newY += player.speed;
+                    if (keys['a']) newX -= player.speed;
+                    if (keys['d']) newX += player.speed;
+                    
+                    if (!checkWallCollision(newX, player.y, player.width/2)) player.x = newX;
+                    if (!checkWallCollision(player.x, newY, player.height/2)) player.y = newY;
+                }
                 
-                if (keys['w']) newY -= player.speed;
-                if (keys['s']) newY += player.speed;
-                if (keys['a']) newX -= player.speed;
-                if (keys['d']) newX += player.speed;
-                
-                if (!checkWallCollision(newX, player.y, player.width/2)) player.x = newX;
-                if (!checkWallCollision(player.x, newY, player.height/2)) player.y = newY;
-                
-                const dx = mouse.x - player.x;
-                const dy = mouse.y - player.y;
-                player.angle = Math.atan2(dy, dx);
-                player.flip = Math.abs(player.angle) > Math.PI / 2;
+                if (!isMobile) {
+                    const dx = mouse.x - player.x;
+                    const dy = mouse.y - player.y;
+                    player.angle = Math.atan2(dy, dx);
+                    player.flip = Math.abs(player.angle) > Math.PI / 2;
+                }
                 
                 if (player.isAttacking) {
                     player.attackAnimation += 0.15;
                     if (player.attackAnimation >= 1) player.isAttacking = false;
                 }
                 
-                // Recuperación del retroceso del arma
                 if (player.weaponRecoil > 0) {
                     player.weaponRecoil -= WEAPONS.PISTOL.recoilRecovery;
                     if (player.weaponRecoil < 0) player.weaponRecoil = 0;
@@ -842,18 +1122,16 @@
                 }
             }
             
-            // Dibujar paredes - Blanco grisáceo
-            ctx.fillStyle = COLORS.wall;
-            ctx.strokeStyle = COLORS.wallBorder;
+            // Dibujar paredes grisáceas
+            ctx.fillStyle = '#b8b8b8';
+            ctx.strokeStyle = '#909090';
             ctx.lineWidth = 2;
             walls.forEach(wall => {
                 ctx.fillRect(wall.x, wall.y, wall.width, wall.height);
                 ctx.strokeRect(wall.x, wall.y, wall.width, wall.height);
-                
-                // Sombra sutil
                 ctx.fillStyle = 'rgba(0,0,0,0.1)';
                 ctx.fillRect(wall.x + 2, wall.y + wall.height - 4, wall.width - 2, 4);
-                ctx.fillStyle = COLORS.wall;
+                ctx.fillStyle = '#b8b8b8';
             });
             
             // Actualizar balas
@@ -874,14 +1152,12 @@
                 if (dist < target.width/2 + 5 && !target.isDead) {
                     target.health -= b.damage;
                     createParticles(target.x, target.y, 6, '#8b0000');
-                    
                     if (target.health <= 0) {
                         target.isDead = true;
                         target.health = 0;
                         if (b.owner === 'player') player.score++;
                         else opponent.score++;
                     }
-                    
                     bullets.splice(i, 1);
                     continue;
                 }
@@ -891,60 +1167,62 @@
                     continue;
                 }
                 
-                // Bala estilo táctico - sin brillo excesivo
                 ctx.beginPath();
                 ctx.arc(b.x, b.y, 3, 0, Math.PI * 2);
-                ctx.fillStyle = COLORS.bullet;
+                ctx.fillStyle = '#d4af37';
                 ctx.fill();
             }
             
-            // Efectos de slash
+            // Efectos slash
             for (let i = slashEffects.length - 1; i >= 0; i--) {
                 let s = slashEffects[i];
                 s.life--;
                 s.distance += 3;
-                
                 if (s.life <= 0) {
                     slashEffects.splice(i, 1);
                     continue;
                 }
-                
                 ctx.save();
                 ctx.translate(s.x, s.y);
                 ctx.rotate(s.angle);
-                
                 const alpha = s.life / 8;
                 ctx.strokeStyle = `rgba(200, 200, 200, ${alpha * 0.5})`;
                 ctx.lineWidth = 2;
                 ctx.beginPath();
                 ctx.arc(0, 0, 35 + s.distance, -Math.PI/3, Math.PI/3);
                 ctx.stroke();
-                
                 ctx.restore();
             }
             
-            // Partículas oscuras/sangre
+            // Partículas
             for (let i = particles.length - 1; i >= 0; i--) {
                 let p = particles[i];
                 p.x += p.vx;
                 p.y += p.vy;
                 p.life -= 0.03;
                 p.vy += 0.05;
-                
                 if (p.life <= 0) {
                     particles.splice(i, 1);
                     continue;
                 }
-                
                 ctx.globalAlpha = p.life;
                 ctx.fillStyle = p.color;
                 ctx.fillRect(p.x, p.y, p.size, p.size);
                 ctx.globalAlpha = 1;
             }
             
+            // Dibujar estelas de dash
+            [opponent, player].forEach(p => {
+                if (p.dashTrail && p.dashTrail.length > 0) {
+                    p.dashTrail.forEach((pos, i) => {
+                        ctx.fillStyle = `rgba(212, 175, 55, ${pos.alpha * 0.3})`;
+                        ctx.fillRect(pos.x - 10, pos.y - 10, 20, 20);
+                    });
+                }
+            });
+            
             // Dibujar oponente
             if (!opponent.isDead) {
-                // Sombra
                 ctx.fillStyle = 'rgba(0,0,0,0.3)';
                 ctx.beginPath();
                 ctx.ellipse(opponent.x, opponent.y + 20, 18, 6, 0, 0, Math.PI*2);
@@ -958,7 +1236,7 @@
                           opponent.isAttacking, opponent.attackAnimation, 
                           opponent.weaponRecoil || 0, opponent.flip);
                 
-                // Barra de vida grisácea
+                // Barra vida 100/100
                 const barWidth = 50;
                 ctx.fillStyle = '#333';
                 ctx.fillRect(opponent.x - barWidth/2, opponent.y - 45, barWidth, 4);
@@ -967,13 +1245,22 @@
                           barWidth * (opponent.health/100), 4);
             }
             
-            // Dibujar jugador local
+            // Dibujar jugador
             if (!player.isDead) {
-                // Sombra
                 ctx.fillStyle = 'rgba(0,0,0,0.3)';
                 ctx.beginPath();
                 ctx.ellipse(player.x, player.y + 20, 18, 6, 0, 0, Math.PI*2);
                 ctx.fill();
+                
+                // Indicador de dash disponible
+                if (WEAPONS[player.currentWeapon].canDash && !player.isDashing && 
+                    Date.now() - player.lastDashTime > WEAPONS.SWORD.dashCooldown) {
+                    ctx.strokeStyle = 'rgba(212, 175, 55, 0.5)';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.arc(player.x, player.y, 25, 0, Math.PI*2);
+                    ctx.stroke();
+                }
                 
                 drawRotatedImage(assets.player, player.x, player.y, 
                                player.width, player.height, player.angle, player.flip);
@@ -982,61 +1269,27 @@
                 drawWeapon(currentWpn, player.x, player.y, player.angle,
                           player.isAttacking, player.attackAnimation, 
                           player.weaponRecoil, player.flip);
-                
-                // Línea de mira sutil (pistola)
-                if (player.currentWeapon === 'PISTOL') {
-                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-                    ctx.setLineDash([8, 8]);
-                    ctx.beginPath();
-                    ctx.moveTo(player.x, player.y);
-                    ctx.lineTo(
-                        player.x + Math.cos(player.angle) * 150,
-                        player.y + Math.sin(player.angle) * 150
-                    );
-                    ctx.stroke();
-                    ctx.setLineDash([]);
-                }
-                
-                // Indicador de rango de espada
-                if (player.currentWeapon === 'SWORD' && player.isAttacking) {
-                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-                    ctx.lineWidth = 1;
-                    ctx.beginPath();
-                    ctx.arc(player.x, player.y, 60, 
-                           player.angle - Math.PI/3, 
-                           player.angle + Math.PI/3);
-                    ctx.stroke();
-                }
             } else {
-                // Pantalla de muerte oscura
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
                 ctx.fillStyle = '#666';
                 ctx.font = 'bold 40px Arial';
                 ctx.textAlign = 'center';
                 ctx.fillText('CAÍDO', canvas.width/2, canvas.height/2 - 40);
-                
                 const timeLeft = Math.max(0, Math.ceil((3000 - (Date.now() - player.respawnTimer)) / 1000));
                 ctx.font = '16px Arial';
                 ctx.fillStyle = '#888';
                 ctx.fillText(`Reapareciendo... ${timeLeft}`, canvas.width/2, canvas.height/2 + 20);
             }
             
-            // UI
+            // UI actualizada
             document.getElementById('health').style.width = player.health + '%';
             
-            // Score - estilo militar
+            // Score
             ctx.fillStyle = '#d0d0d0';
             ctx.font = 'bold 24px Courier New';
             ctx.textAlign = 'center';
             ctx.fillText(`${player.score} : ${opponent.score}`, canvas.width/2, 35);
-            
-            // Controles hint
-            ctx.font = '11px Courier New';
-            ctx.fillStyle = 'rgba(255,255,255,0.3)';
-            ctx.textAlign = 'left';
-            ctx.fillText('[1]ESP [2]PIST', 10, canvas.height - 15);
             
             requestAnimationFrame(update);
         }

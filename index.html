@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OmegaPvPsL - CS:GO Edition</title>
+    <title>OmegaPvPsL - CS:GO Edition (P2P)</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700;900&display=swap');
         
@@ -95,9 +96,10 @@
             padding: 15px;
             width: 100%;
             font-family: monospace;
-            font-size: 12px;
+            font-size: 14px;
             margin: 15px 0;
-            resize: none;
+            text-align: center;
+            font-weight: bold;
         }
         
         #main-menu {
@@ -105,6 +107,8 @@
             width: 500px;
             text-align: center;
         }
+        
+        .hidden { display: none !important; }
         
         /* HUD CS:GO Style */
         #hud {
@@ -230,6 +234,7 @@
             font-weight: 700;
             display: none;
             animation: slideIn 0.3s;
+            z-index: 100;
         }
         
         @keyframes slideIn {
@@ -262,6 +267,13 @@
         }
         .crosshair::before { width: 2px; height: 20px; left: 9px; top: 0; }
         .crosshair::after { width: 20px; height: 2px; left: 0; top: 9px; }
+        
+        .status-p2p {
+            color: #666;
+            font-size: 12px;
+            margin-top: 5px;
+            letter-spacing: 1px;
+        }
     </style>
 </head>
 <body>
@@ -272,28 +284,30 @@
     <!-- Menú Principal -->
     <div id="main-menu" class="cs-panel cyan">
         <h1>OmegaPvPsL</h1>
-        <div class="subtitle">Counter-Strike Edition // Protocolo P2P v2.0</div>
+        <div class="subtitle">Counter-Strike Edition // P2P Directo</div>
         
         <div id="menu-buttons">
             <button class="cs-btn" onclick="hostGame()">Crear Sala</button>
-            <button class="cs-btn orange" onclick="showJoin()">Unirse con Código</button>
+            <button class="cs-btn orange" onclick="showJoin()">Unirse con ID</button>
         </div>
         
         <div id="host-panel" class="hidden">
-            <p style="color:#ff6600; margin-bottom:10px;">Código de Sala Generado</p>
-            <textarea class="code-box" id="host-code" readonly rows="3"></textarea>
-            <button class="cs-btn" onclick="copyCode()">Copiar Código</button>
+            <p style="color:#ff6600; margin-bottom:10px;">Tu ID de Sala (compártelo)</p>
+            <div class="code-box" id="host-code" style="font-size: 18px; letter-spacing: 2px;">...</div>
+            <button class="cs-btn" onclick="copyCode()">Copiar ID</button>
+            <div class="status-p2p" id="host-status">Generando ID...</div>
             <p style="color:#00bfff; margin-top:15px; font-size:12px;">
-                Esperando jugador...<br>
-                Comparte el código y el entrará directamente.
+                Esperando conexión P2P...<br>
+                Tu oponente debe introducir este ID.
             </p>
         </div>
         
         <div id="join-panel" class="hidden">
-            <p style="color:#ff6600; margin-bottom:10px;">Introducir Código de Sala</p>
-            <textarea class="code-box" id="join-code" rows="3" placeholder="Pega aquí el código del host..."></textarea>
-            <button class="cs-btn orange" onclick="joinGame()">Conectar</button>
+            <p style="color:#ff6600; margin-bottom:10px;">Introducir ID del Host</p>
+            <input type="text" class="code-box" id="join-code" style="text-transform: uppercase;" placeholder="Ej: abc-123-xyz">
+            <button class="cs-btn orange" onclick="joinGame()">Conectar P2P</button>
             <button class="cs-btn" onclick="backToMenu()" style="margin-top:5px; font-size:14px;">Volver</button>
+            <div class="status-p2p" id="join-status"></div>
         </div>
     </div>
     
@@ -346,49 +360,10 @@
     <div class="crosshair" id="crosshair"></div>
 
     <script>
-        // SISTEMA P2P "UN SOLO CÓDIGO" - Usando BroadcastChannel + Fallback
-        const SIGNALING_CHANNEL = 'omegapvp_signal_v1';
-        let bc = null;
-        let pc = null;
-        let dc = null;
-        let roomCode = null;
-        let isHost = false;
-        
-        // Intentar usar BroadcastChannel (mismo PC/navegador) o simular con localStorage events
-        try {
-            bc = new BroadcastChannel(SIGNALING_CHANNEL);
-            bc.onmessage = handleSignaling;
-        } catch(e) {
-            // Fallback: usar storage events
-            window.addEventListener('storage', (e) => {
-                if(e.key.startsWith('omega_')) {
-                    handleSignaling({data: JSON.parse(e.newValue)});
-                }
-            });
-        }
-        
-        function sendSignal(data) {
-            data.room = roomCode;
-            data.timestamp = Date.now();
-            if(bc) bc.postMessage(data);
-            // Fallback para diferentes pestañas
-            localStorage.setItem('omega_' + data.type + '_' + Date.now(), JSON.stringify(data));
-        }
-        
-        function handleSignaling(msg) {
-            if(!msg.data || msg.data.room !== roomCode) return;
-            
-            const data = msg.data;
-            console.log('Signal:', data.type);
-            
-            if(isHost && data.type === 'answer') {
-                pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
-            } else if(!isHost && data.type === 'offer') {
-                completeJoin(data.sdp);
-            } else if(data.type === 'candidate') {
-                pc.addIceCandidate(new RTCIceCandidate(data.candidate));
-            }
-        }
+        // SISTEMA P2P CON PEERJS
+        let peer = null;      // Instancia PeerJS
+        let conn = null;      // Conexión DataChannel activa
+        let myId = null;      // Mi ID P2P
         
         // JUEGO
         const canvas = document.getElementById('gameCanvas');
@@ -402,14 +377,15 @@
             particles: [],
             camera: {x:0, y:0},
             money: 1000,
-            shopOpen: false
+            shopOpen: false,
+            connected: false
         };
         
         const WEAPONS = {
-            knife: {name:'Knife', damage:50, ammo:Infinity, fireRate:500, color:'#ccc', speed:0},
-            pistol: {name:'Glock', damage:25, ammo:100, fireRate:300, color:'#00bfff', speed:800},
-            shotgun: {name:'Nova', damage:80, ammo:0, fireRate:800, color:'#ff6600', speed:700, pellets:5},
-            ak: {name:'AK-47', damage:35, ammo:0, fireRate:100, color:'#9be67b', speed:900}
+            knife: {name:'Knife', damage:50, ammo:Infinity, fireRate:500, color:'#ccc', speed:0, owned:true},
+            pistol: {name:'Glock', damage:25, ammo:100, fireRate:300, color:'#00bfff', speed:800, owned:true},
+            shotgun: {name:'Nova', damage:80, ammo:0, fireRate:800, color:'#ff6600', speed:700, pellets:5, owned:false},
+            ak: {name:'AK-47', damage:35, ammo:0, fireRate:100, color:'#9be67b', speed:900, owned:false}
         };
         
         let currentWeapon = 'pistol';
@@ -458,12 +434,12 @@
                 const screenY = this.y - game.camera.y + canvas.height/2;
                 this.angle = Math.atan2(mouse.y - screenY, mouse.x - screenX);
                 
-                // Sync
-                if(dc && dc.readyState === 'open') {
-                    dc.send(JSON.stringify({
+                // Sync P2P
+                if(conn && conn.open) {
+                    conn.send({
                         t:'p', x:this.x, y:this.y, a:this.angle, 
                         w:currentWeapon, h:this.health
-                    }));
+                    });
                 }
             }
             
@@ -504,38 +480,31 @@
             }
         }
         
-        // WEBRTC
-        async function hostGame() {
-            isHost = true;
-            roomCode = 'ROOM-' + Math.random().toString(36).substr(2, 6).toUpperCase();
-            
+        // FUNCIONES P2P PEERJS
+        function hostGame() {
             document.getElementById('menu-buttons').classList.add('hidden');
             document.getElementById('host-panel').classList.remove('hidden');
-            document.getElementById('host-code').value = roomCode;
             
-            pc = new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
+            // Crear peer con ID aleatorio
+            peer = new Peer();
             
-            dc = pc.createDataChannel('game', {ordered:false});
-            setupGameChannel(dc);
+            peer.on('open', (id) => {
+                myId = id;
+                document.getElementById('host-code').innerText = id;
+                document.getElementById('host-status').innerHTML = '<span style="color:#0f0">●</span> Online - Esperando rival...';
+                console.log('Mi ID P2P:', id);
+            });
             
-            pc.onicecandidate = (e) => {
-                if(e.candidate) sendSignal({type:'candidate', candidate:e.candidate});
-            };
+            // Cuando alguien se conecta a nosotros
+            peer.on('connection', (connection) => {
+                conn = connection;
+                setupConnection(true);
+            });
             
-            const offer = await pc.createOffer();
-            await pc.setLocalDescription(offer);
-            
-            // Esperar a que se recolecten candidatos ICE
-            setTimeout(() => {
-                sendSignal({type:'offer', sdp:pc.localDescription});
-            }, 1000);
-        }
-        
-        function copyCode() {
-            const code = document.getElementById('host-code');
-            code.select();
-            document.execCommand('copy');
-            showNotif('Código copiado al portapapeles');
+            peer.on('error', (err) => {
+                console.error('Error PeerJS:', err);
+                document.getElementById('host-status').innerText = 'Error: ' + err.message;
+            });
         }
         
         function showJoin() {
@@ -545,67 +514,85 @@
         
         function backToMenu() {
             document.getElementById('join-panel').classList.add('hidden');
+            document.getElementById('host-panel').classList.add('hidden');
             document.getElementById('menu-buttons').classList.remove('hidden');
+            if(peer) peer.destroy();
+            peer = null;
         }
         
-        async function joinGame() {
-            roomCode = document.getElementById('join-code').value.trim();
-            if(!roomCode) return showNotif('Introduce un código válido');
+        function joinGame() {
+            const hostId = document.getElementById('join-code').value.trim();
+            if(!hostId) {
+                showNotif('Introduce un ID válido');
+                return;
+            }
             
-            isHost = false;
-            showNotif('Conectando...');
+            document.getElementById('join-status').innerText = 'Conectando...';
             
-            pc = new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
+            peer = new Peer();
             
-            pc.ondatachannel = (e) => {
-                dc = e.channel;
-                setupGameChannel(dc);
-            };
+            peer.on('open', () => {
+                // Conectar al host
+                conn = peer.connect(hostId);
+                setupConnection(false);
+            });
             
-            pc.onicecandidate = (e) => {
-                if(e.candidate) sendSignal({type:'candidate', candidate:e.candidate});
-            };
-            
-            // Solicitar la oferta (simulado - en realidad el host ya la mandó por broadcast)
-            // Esperamos recibirla por el canal de señalización
-            setTimeout(() => {
-                showNotif('Esperando respuesta del host...');
-            }, 500);
+            peer.on('error', (err) => {
+                document.getElementById('join-status').innerText = 'Error: ' + err.message;
+            });
         }
         
-        async function completeJoin(offerSDP) {
-            await pc.setRemoteDescription(new RTCSessionDescription(offerSDP));
-            const answer = await pc.createAnswer();
-            await pc.setLocalDescription(answer);
-            
-            setTimeout(() => {
-                sendSignal({type:'answer', sdp:pc.localDescription});
-            }, 500);
-        }
-        
-        function setupGameChannel(channel) {
-            channel.onopen = () => {
-                console.log('Conectado P2P!');
+        function setupConnection(isHost) {
+            conn.on('open', () => {
+                console.log('Conexión P2P establecida!');
+                game.connected = true;
+                
+                // Ocultar menú, mostrar juego
                 document.getElementById('main-menu').style.display = 'none';
                 document.getElementById('hud').style.display = 'block';
+                
+                showNotif(isHost ? 'Jugador conectado' : 'Conectado al host');
+                
+                // Iniciar juego
                 startGame();
-            };
+            });
             
-            channel.onmessage = (e) => {
-                const data = JSON.parse(e.data);
+            conn.on('data', (data) => {
+                // Recibir datos del enemigo
                 if(data.t === 'p' && game.enemy) {
                     game.enemy.x = data.x;
                     game.enemy.y = data.y;
                     game.enemy.angle = data.a;
                     game.enemy.health = data.h;
                 } else if(data.t === 's') {
+                    // Disparo enemigo
                     shoot(game.enemy, data.angle, data.weapon, false);
                 } else if(data.t === 'h') {
-                    game.player.health -= data.dmg;
-                    updateHUD();
-                    if(game.player.health <= 0) respawn();
+                    // Recibir daño
+                    if(game.player) {
+                        game.player.health -= data.dmg;
+                        updateHUD();
+                        if(game.player.health <= 0) respawn();
+                    }
                 }
-            };
+            });
+            
+            conn.on('error', (err) => {
+                console.error('Error conexión:', err);
+                showNotif('Error de conexión P2P');
+            });
+            
+            conn.on('close', () => {
+                showNotif('Conexión cerrada');
+                game.connected = false;
+            });
+        }
+        
+        function copyCode() {
+            const code = document.getElementById('host-code').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                showNotif('ID copiado al portapapeles');
+            });
         }
         
         // GAMEPLAY
@@ -613,8 +600,9 @@
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
             
-            game.player = new Entity(1000, 750, '#00bfff', true);
-            game.enemy = new Entity(1100, 750, '#ff6600', false);
+            // Posiciones iniciales separadas
+            game.player = new Entity(800, 600, '#00bfff', true);
+            game.enemy = new Entity(1200, 900, '#ff6600', false);
             
             window.addEventListener('keydown', e => {
                 keys[e.code] = true;
@@ -628,7 +616,11 @@
                 mouse.x = e.clientX;
                 mouse.y = e.clientY;
             });
-            window.addEventListener('mousedown', () => shoot(game.player, game.player.angle, currentWeapon, true));
+            window.addEventListener('mousedown', () => {
+                if(game.player && !game.shopOpen) {
+                    shoot(game.player, game.player.angle, currentWeapon, true);
+                }
+            });
             window.addEventListener('resize', () => {
                 canvas.width = window.innerWidth;
                 canvas.height = window.innerHeight;
@@ -646,7 +638,10 @@
             if(w.ammo !== Infinity) w.ammo--;
             updateHUD();
             
-            if(isLocal && dc) dc.send(JSON.stringify({t:'s', angle:angle, weapon:weaponKey}));
+            // Notificar al otro jugador
+            if(isLocal && conn && conn.open) {
+                conn.send({t:'s', angle:angle, weapon:weaponKey});
+            }
             
             if(weaponKey === 'knife') {
                 // Cuerpo a cuerpo
@@ -685,7 +680,11 @@
         
         function hit(target, damage, fromLocal) {
             target.health -= damage;
-            if(fromLocal && dc) dc.send(JSON.stringify({t:'h', dmg:damage}));
+            
+            // Notificar daño
+            if(fromLocal && conn && conn.open) {
+                conn.send({t:'h', dmg:damage});
+            }
             
             // Sangre/partículas
             for(let i=0; i<5; i++) {
@@ -717,6 +716,7 @@
                 game.player.y = 750 + (Math.random()-0.5)*200;
                 WEAPONS.pistol.ammo = 100;
                 updateHUD();
+                showNotif('Reaparecido');
             }, 2000);
         }
         
@@ -750,6 +750,9 @@
             ctx.fillRect(800,500,400,400);
             ctx.strokeStyle = '#ff6600';
             ctx.strokeRect(800,500,400,400);
+            ctx.fillStyle = '#ff6600';
+            ctx.font = 'bold 20px Rajdhani';
+            ctx.fillText('ZONA DE COMPRA [B]', 1000, 700);
             
             // Loot
             for(let i=game.loot.length-1; i>=0; i--) {
@@ -757,7 +760,8 @@
                 ctx.fillStyle = '#9be67b';
                 ctx.fillRect(l.x-15, l.y-15, 30, 30);
                 ctx.fillStyle = '#000';
-                ctx.font = '12px Rajdhani';
+                ctx.font = 'bold 12px Rajdhani';
+                ctx.textAlign = 'center';
                 ctx.fillText('LOOT', l.x, l.y+4);
                 
                 if(game.player && Math.hypot(game.player.x-l.x, game.player.y-l.y) < 40) {
@@ -824,33 +828,46 @@
         function updateRadar() {
             const r = document.getElementById('radar');
             if(!r) return;
-            const rc = r.getContext ? r.getContext('2d') : null;
-            if(!rc) {
-                // Crear canvas radar si no existe
+            // Crear canvas radar si no existe
+            if(!r.querySelector('canvas')) {
                 const canvas = document.createElement('canvas');
                 canvas.width = 150; canvas.height = 150;
                 canvas.style.width = '150px'; canvas.style.height = '150px';
+                r.innerHTML = '';
                 r.appendChild(canvas);
-                return setTimeout(updateRadar, 100);
             }
+            const rc = r.querySelector('canvas').getContext('2d');
             
             rc.fillStyle = 'rgba(0,0,0,0.8)';
             rc.fillRect(0,0,150,150);
             
-            if(!game.player) return;
-            const scale = 150/2000;
+            // Borde círculo
+            rc.strokeStyle = '#00bfff';
+            rc.lineWidth = 2;
+            rc.beginPath();
+            rc.arc(75,75,73,0,Math.PI*2);
+            rc.stroke();
             
-            // Enemigo
+            if(!game.player) return;
+            const scale = 0.075; // Escala del radar
+            
+            // Enemigo (rojo)
             if(game.enemy) {
                 const ex = (game.enemy.x - game.player.x)*scale + 75;
                 const ey = (game.enemy.y - game.player.y)*scale + 75;
-                rc.fillStyle = '#ff6600';
-                rc.fillRect(ex-3, ey-3, 6, 6);
+                if(Math.hypot(ex-75, ey-75) < 70) {
+                    rc.fillStyle = '#ff6600';
+                    rc.fillRect(ex-4, ey-4, 8, 8);
+                }
             }
             
-            // Player (centro)
+            // Player (centro, azul)
             rc.fillStyle = '#00bfff';
-            rc.fillRect(72,72,6,6);
+            rc.beginPath();
+            rc.moveTo(75,70);
+            rc.lineTo(70,80);
+            rc.lineTo(80,80);
+            rc.fill();
         }
         
         function selectWeapon(idx) {
@@ -918,7 +935,8 @@
         }
         
         function updateHUD() {
-            document.getElementById('health-fill').style.width = game.player ? game.player.health + '%' : '100%';
+            if(!game.player) return;
+            document.getElementById('health-fill').style.width = game.player.health + '%';
             document.getElementById('ammo-counter').innerText = WEAPONS[currentWeapon].ammo === Infinity ? '∞' : WEAPONS[currentWeapon].ammo;
             document.getElementById('money-display').innerText = '$' + game.money;
             

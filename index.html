@@ -3,34 +3,341 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CS 2D Tactical</title>
+    <title>CS 2D Tactical - P2P</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&display=swap');
+        
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body { 
             background: #0a0a0a; 
             color: white; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Rajdhani', sans-serif;
             display: flex; 
             flex-direction: column; 
             align-items: center;
             height: 100vh;
             overflow: hidden;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 107, 107, 0.1) 0%, transparent 50%);
         }
 
         #game-container {
             position: relative;
             border: 2px solid #333;
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            box-shadow: 0 0 50px rgba(0,0,0,0.9), inset 0 0 100px rgba(0,0,0,0.5);
+            display: none;
         }
 
         canvas { 
-            background: #1a1a1a; 
+            background: #0d1117; 
             cursor: crosshair;
             display: block;
         }
 
-        /* HUD Superior */
+        /* MENÚ PRINCIPAL MEJORADO */
+        #main-menu {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: 
+                linear-gradient(135deg, rgba(10,10,10,0.95), rgba(20,20,30,0.95)),
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.03) 2px, rgba(255,255,255,0.03) 4px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        #main-menu::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(255,255,255,0.02) 10px,
+                rgba(255,255,255,0.02) 20px
+            );
+            animation: backgroundMove 20s linear infinite;
+        }
+
+        @keyframes backgroundMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        .menu-title {
+            font-size: 72px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 8px;
+            background: linear-gradient(to bottom, #fff, #888);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+            text-shadow: 0 0 30px rgba(255,255,255,0.2);
+            z-index: 10;
+            position: relative;
+        }
+
+        .menu-subtitle {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 60px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            z-index: 10;
+        }
+
+        .menu-panel {
+            background: rgba(20, 20, 25, 0.9);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 40px;
+            border-radius: 10px;
+            min-width: 450px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+            z-index: 10;
+            position: relative;
+        }
+
+        .menu-tabs {
+            display: flex;
+            margin-bottom: 30px;
+            border-bottom: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .menu-tab {
+            flex: 1;
+            padding: 15px;
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .menu-tab:hover { color: #fff; }
+        .menu-tab.active { 
+            color: #4da6ff; 
+            background: rgba(77, 166, 255, 0.1);
+        }
+        .menu-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #4da6ff;
+            box-shadow: 0 0 10px #4da6ff;
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #888;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 1px;
+        }
+
+        .input-field {
+            width: 100%;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            padding: 12px 16px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 16px;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #4da6ff;
+            box-shadow: 0 0 10px rgba(77, 166, 255, 0.2);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(to bottom, rgba(77, 166, 255, 0.2), rgba(77, 166, 255, 0.1));
+            border: 1px solid rgba(77, 166, 255, 0.5);
+            color: #4da6ff;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.3s;
+            margin-top: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before { left: 100%; }
+        .btn:hover {
+            background: rgba(77, 166, 255, 0.3);
+            box-shadow: 0 0 20px rgba(77, 166, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn.secondary {
+            background: rgba(255,255,255,0.05);
+            border-color: rgba(255,255,255,0.2);
+            color: #888;
+        }
+        .btn.secondary:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+
+        .btn.danger {
+            background: rgba(255, 107, 107, 0.1);
+            border-color: rgba(255, 107, 107, 0.5);
+            color: #ff6b6b;
+        }
+        .btn.danger:hover {
+            background: rgba(255, 107, 107, 0.2);
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.3);
+        }
+
+        .connection-status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 14px;
+            display: none;
+        }
+
+        .connection-status.connecting {
+            display: block;
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            color: #ffc107;
+        }
+
+        .connection-status.connected {
+            display: block;
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            color: #4caf50;
+        }
+
+        .connection-status.error {
+            display: block;
+            background: rgba(244, 67, 54, 0.1);
+            border: 1px solid rgba(244, 67, 54, 0.3);
+            color: #f44336;
+        }
+
+        .id-display {
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+            color: #4da6ff;
+            text-align: center;
+            margin-top: 5px;
+            border: 1px dashed rgba(77, 166, 255, 0.3);
+        }
+
+        /* Lobby */
+        #lobby-panel {
+            display: none;
+            text-align: center;
+        }
+
+        .player-slot {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .player-slot.ready {
+            border-color: rgba(76, 175, 80, 0.5);
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        .team-select {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .team-btn {
+            flex: 1;
+            padding: 20px;
+            border: 2px solid;
+            background: rgba(0,0,0,0.3);
+            cursor: pointer;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            transition: all 0.3s;
+        }
+
+        .team-btn.ct {
+            border-color: #4da6ff;
+            color: #4da6ff;
+        }
+        .team-btn.ct:hover, .team-btn.ct.selected {
+            background: rgba(77, 166, 255, 0.2);
+            box-shadow: 0 0 20px rgba(77, 166, 255, 0.3);
+        }
+
+        .team-btn.t {
+            border-color: #ff6b6b;
+            color: #ff6b6b;
+        }
+        .team-btn.t:hover, .team-btn.t.selected {
+            background: rgba(255, 107, 107, 0.2);
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.3);
+        }
+
+        /* HUD del juego (igual que antes pero mejorado) */
         #hud-top {
             position: absolute;
             top: 0;
@@ -46,22 +353,22 @@
         }
 
         .team-score {
-            font-size: 24px;
-            font-weight: bold;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            font-size: 28px;
+            font-weight: 700;
+            text-shadow: 0 0 20px rgba(0,0,0,0.8);
         }
-
-        .ct-score { color: #4da6ff; }
-        .t-score { color: #ff6b6b; }
+        .ct-score { color: #4da6ff; text-shadow: 0 0 10px rgba(77, 166, 255, 0.5); }
+        .t-score { color: #ff6b6b; text-shadow: 0 0 10px rgba(255, 107, 107, 0.5); }
 
         #round-timer {
-            font-size: 28px;
-            font-weight: bold;
+            font-size: 32px;
+            font-weight: 700;
             color: #fff;
-            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+            text-shadow: 0 0 20px rgba(255,255,255,0.5);
+            font-family: 'Rajdhani', sans-serif;
         }
 
-        /* HUD Inferior */
+        /* Resto de estilos del HUD... */
         #hud-bottom {
             position: absolute;
             bottom: 0;
@@ -78,18 +385,20 @@
 
         .hud-section {
             background: rgba(0,0,0,0.8);
-            padding: 10px 20px;
-            border-radius: 5px;
-            border: 1px solid #333;
+            padding: 15px 25px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(5px);
         }
 
-        #health-bar {
+        #health-bar, #armor-bar {
             width: 200px;
             height: 20px;
-            background: #333;
-            border-radius: 3px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 4px;
             overflow: hidden;
             margin-top: 5px;
+            border: 1px solid rgba(255,255,255,0.1);
         }
 
         #health-fill {
@@ -97,15 +406,7 @@
             background: linear-gradient(to right, #ff3333, #ff6666);
             width: 100%;
             transition: width 0.3s;
-        }
-
-        #armor-bar {
-            width: 200px;
-            height: 10px;
-            background: #333;
-            border-radius: 3px;
-            overflow: hidden;
-            margin-top: 5px;
+            box-shadow: 0 0 10px rgba(255, 51, 51, 0.5);
         }
 
         #armor-fill {
@@ -113,185 +414,95 @@
             background: #4da6ff;
             width: 100%;
             transition: width 0.3s;
-        }
-
-        #weapon-info {
-            text-align: right;
-        }
-
-        #ammo-primary {
-            font-size: 36px;
-            font-weight: bold;
-            color: #fff;
-        }
-
-        #ammo-reserve {
-            font-size: 18px;
-            color: #aaa;
-        }
-
-        #money-display {
-            color: #4caf50;
-            font-size: 20px;
-            font-weight: bold;
-        }
-
-        /* Menús */
-        .menu-overlay {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(10,10,10,0.95);
-            border: 2px solid #444;
-            padding: 40px;
-            border-radius: 10px;
-            text-align: center;
-            min-width: 400px;
-            box-shadow: 0 0 30px rgba(0,0,0,0.8);
-        }
-
-        h2 { 
-            color: #fff; 
-            margin-bottom: 20px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .btn {
-            background: linear-gradient(to bottom, #4a4a4a, #2a2a2a);
-            border: 1px solid #666;
-            color: white;
-            padding: 12px 24px;
-            margin: 5px;
-            cursor: pointer;
-            border-radius: 3px;
-            font-size: 14px;
-            text-transform: uppercase;
-            transition: all 0.3s;
-            min-width: 200px;
-        }
-
-        .btn:hover {
-            background: linear-gradient(to bottom, #5a5a5a, #3a3a3a);
-            border-color: #888;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-        }
-
-        .btn-ct { border-color: #4da6ff; color: #4da6ff; }
-        .btn-t { border-color: #ff6b6b; color: #ff6b6b; }
-        .btn-primary { background: linear-gradient(to bottom, #4caf50, #2e7d32); }
-
-        input[type="text"] {
-            background: #222;
-            border: 1px solid #444;
-            color: white;
-            padding: 10px;
-            margin: 10px;
-            width: 200px;
-            border-radius: 3px;
-        }
-
-        /* Tienda */
-        #shop-menu {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            max-width: 600px;
-        }
-
-        .shop-item {
-            background: #222;
-            border: 1px solid #444;
-            padding: 15px;
-            cursor: pointer;
-            transition: all 0.2s;
-            border-radius: 5px;
-        }
-
-        .shop-item:hover {
-            background: #333;
-            border-color: #666;
-        }
-
-        .shop-item.selected {
-            border-color: #4caf50;
-            background: #1a3a1a;
-        }
-
-        .weapon-name { font-weight: bold; margin-bottom: 5px; }
-        .weapon-price { color: #4caf50; }
-        .weapon-stats { font-size: 12px; color: #888; margin-top: 5px; }
-
-        /* Kill Feed */
-        #kill-feed {
-            position: absolute;
-            top: 70px;
-            right: 20px;
-            text-align: right;
-            pointer-events: none;
-        }
-
-        .kill-entry {
-            background: rgba(0,0,0,0.7);
-            padding: 5px 10px;
-            margin: 2px 0;
-            border-radius: 3px;
-            font-size: 14px;
-            animation: fadeOut 3s forwards;
-            animation-delay: 5s;
-        }
-
-        @keyframes fadeOut {
-            to { opacity: 0; }
+            box-shadow: 0 0 10px rgba(77, 166, 255, 0.5);
         }
 
         .hidden { display: none !important; }
-
-        /* Radar */
-        #radar {
-            position: absolute;
-            top: 70px;
-            left: 20px;
-            width: 150px;
-            height: 150px;
-            background: rgba(0,20,0,0.8);
-            border: 2px solid #444;
-            border-radius: 50%;
-            overflow: hidden;
+        
+        /* Animaciones */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
-
-        .crosshair {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            border: 2px solid rgba(255,255,255,0.8);
-            border-radius: 50%;
-            pointer-events: none;
-            transform: translate(-50%, -50%);
-            z-index: 100;
-        }
-
-        .crosshair::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 4px;
-            height: 4px;
-            background: red;
-            transform: translate(-50%, -50%);
-            border-radius: 50%;
+        
+        .waiting-text {
+            animation: pulse 1.5s infinite;
+            color: #ffc107;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
+    <!-- MENÚ PRINCIPAL -->
+    <div id="main-menu">
+        <h1 class="menu-title">CS 2D Tactical</h1>
+        <p class="menu-subtitle">Operaciones P2P - Versión 2.0</p>
+        
+        <div class="menu-panel" id="connection-panel">
+            <div class="menu-tabs">
+                <button class="menu-tab active" onclick="switchTab('host')">Crear Sala</button>
+                <button class="menu-tab" onclick="switchTab('join')">Unirse</button>
+                <button class="menu-tab" onclick="switchTab('local')">Local</button>
+            </div>
+
+            <!-- Crear Sala -->
+            <div id="tab-host" class="tab-content active">
+                <div class="input-group">
+                    <label>Tu ID de Sala (Comparte esto con tu amigo)</label>
+                    <div class="id-display" id="my-peer-id">Generando...</div>
+                </div>
+                <button class="btn" onclick="createHost()">Crear Sala y Esperar</button>
+                <div class="connection-status" id="host-status"></div>
+            </div>
+
+            <!-- Unirse -->
+            <div id="tab-join" class="tab-content">
+                <div class="input-group">
+                    <label>ID de la Sala</label>
+                    <input type="text" class="input-field" id="join-peer-id" placeholder="Ej: abc-123-def">
+                </div>
+                <button class="btn" onclick="joinRoom()">Conectar a Sala</button>
+                <div class="connection-status" id="join-status"></div>
+            </div>
+
+            <!-- Local -->
+            <div id="tab-local" class="tab-content">
+                <p style="margin-bottom: 20px; color: #888;">Juega contra bots sin conexión</p>
+                <button class="btn secondary" onclick="startLocalGame()">Iniciar Partida Local</button>
+            </div>
+        </div>
+
+        <!-- Panel de Lobby (visible tras conectar) -->
+        <div class="menu-panel hidden" id="lobby-panel">
+            <h2 style="margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px;">Sala de Espera</h2>
+            
+            <div id="player-list">
+                <div class="player-slot" id="slot-host">
+                    <span>Tú (Host)</span>
+                    <span style="color: #888;">Seleccionando...</span>
+                </div>
+                <div class="player-slot" id="slot-client">
+                    <span>Invitado</span>
+                    <span style="color: #ffc107;">Conectando...</span>
+                </div>
+            </div>
+
+            <div class="team-select">
+                <button class="team-btn ct" onclick="selectTeam('CT')">CT</button>
+                <button class="team-btn t" onclick="selectTeam('T')">T</button>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <button class="btn" id="start-btn" onclick="startGame()" disabled style="opacity: 0.5;">Esperando jugador...</button>
+                <button class="btn danger secondary" onclick="leaveRoom()">Salir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTENEDOR DEL JUEGO -->
     <div id="game-container">
         <canvas id="gameCanvas" width="1200" height="800"></canvas>
         
-        <div id="crosshair" class="crosshair"></div>
-
         <!-- HUD Superior -->
         <div id="hud-top">
             <div class="team-score ct-score">CT: <span id="score-ct">0</span></div>
@@ -299,129 +510,312 @@
             <div class="team-score t-score">TR: <span id="score-t">0</span></div>
         </div>
 
-        <!-- Radar -->
-        <div id="radar">
-            <canvas id="radarCanvas" width="150" height="150"></canvas>
-        </div>
-
-        <!-- Kill Feed -->
-        <div id="kill-feed"></div>
-
         <!-- HUD Inferior -->
         <div id="hud-bottom">
             <div class="hud-section">
-                <div>Salud</div>
+                <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #888;">Salud</div>
                 <div id="health-bar"><div id="health-fill"></div></div>
-                <div style="margin-top:5px;">Chaleco</div>
+                <div style="margin-top:8px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #888;">Chaleco</div>
                 <div id="armor-bar"><div id="armor-fill"></div></div>
-                <div style="margin-top:5px; color: #ffd700;">$<span id="money">800</span></div>
+                <div style="margin-top:10px; color: #ffd700; font-weight: bold; font-size: 20px;">$<span id="money">800</span></div>
             </div>
             
-            <div id="weapon-info" class="hud-section">
-                <div id="weapon-name">Glock-18</div>
-                <div>
-                    <span id="ammo-primary">20</span> / <span id="ammo-reserve">120</span>
+            <div class="hud-section" style="text-align: right;">
+                <div id="weapon-name" style="font-size: 14px; text-transform: uppercase; color: #888; margin-bottom: 5px;">Glock-18</div>
+                <div style="font-size: 48px; font-weight: 700; line-height: 1;">
+                    <span id="ammo-primary">20</span>
+                    <span style="color: #666; font-size: 24px;">/</span>
+                    <span id="ammo-reserve" style="color: #666; font-size: 24px;">120</span>
                 </div>
             </div>
         </div>
 
-        <!-- Menú Principal -->
-        <div id="main-menu" class="menu-overlay">
-            <h2>CS 2D Tactical</h2>
-            <p style="margin-bottom: 20px; color: #888;">Vista desde arriba - Multijugador P2P</p>
-            
-            <div id="connection-panel">
-                <p>Tu ID: <span id="my-id" style="color: #4da6ff; font-weight: bold;">...</span></p>
-                <input type="text" id="peer-input" placeholder="ID del Oponente">
-                <br><br>
-                <button class="btn btn-primary" onclick="connectToPeer()">Conectar</button>
-                <button class="btn" onclick="startBotMatch()">Vs Bots</button>
-            </div>
-
-            <div id="team-select" class="hidden">
-                <p>Selecciona tu bando:</p>
-                <button class="btn btn-ct" onclick="selectTeam('CT')">Counter-Terrorist</button>
-                <button class="btn btn-t" onclick="selectTeam('T')">Terrorist</button>
-            </div>
-        </div>
-
-        <!-- Tienda -->
-        <div id="buy-menu" class="menu-overlay hidden">
-            <h2>Comprar Equipo</h2>
-            <p style="color: #4caf50; margin-bottom: 20px;">Dinero disponible: $<span id="shop-money">800</span></p>
-            
-            <div id="shop-menu">
-                <!-- Pistolas -->
-                <div class="shop-item" onclick="buyItem('glock')">
-                    <div class="weapon-name">Glock-18</div>
-                    <div class="weapon-price">$200</div>
-                    <div class="weapon-stats">20/120 | Automática</div>
-                </div>
-                
-                <div class="shop-item" onclick="buyItem('usp')">
-                    <div class="weapon-name">USP-S</div>
-                    <div class="weapon-price">$200</div>
-                    <div class="weapon-stats">12/24 | Silenciada</div>
-                </div>
-
-                <!-- Rifles -->
-                <div class="shop-item" onclick="buyItem('ak47')">
-                    <div class="weapon-name">AK-47</div>
-                    <div class="weapon-price">$2700</div>
-                    <div class="weapon-stats">30/90 | Alto daño</div>
-                </div>
-
-                <div class="shop-item" onclick="buyItem('m4a4')">
-                    <div class="weapon-name">M4A4</div>
-                    <div class="weapon-price">$3100</div>
-                    <div class="weapon-stats">30/90 | Precisa</div>
-                </div>
-
-                <div class="shop-item" onclick="buyItem('awp')">
-                    <div class="weapon-name">AWP</div>
-                    <div class="weapon-price">$4750</div>
-                    <div class="weapon-stats">10/30 | 1 Hit KO</div>
-                </div>
-
-                <!-- Subfusiles -->
-                <div class="shop-item" onclick="buyItem('mp7')">
-                    <div class="weapon-name">MP7</div>
-                    <div class="weapon-price">$1500</div>
-                    <div class="weapon-stats">30/120 | Rápida</div>
-                </div>
-
-                <!-- Equipo -->
-                <div class="shop-item" onclick="buyItem('vest')">
-                    <div class="weapon-name">Chaleco</div>
-                    <div class="weapon-price">$650</div>
-                    <div class="weapon-stats">Protección 100</div>
-                </div>
-
-                <div class="shop-item" onclick="buyItem('vesthelm')">
-                    <div class="weapon-name">Chaleco + Casco</div>
-                    <div class="weapon-price">$1000</div>
-                    <div class="weapon-stats">Protección + Cabeza</div>
-                </div>
-
-                <div class="shop-item" onclick="buyItem('defuse')">
-                    <div class="weapon-name">Kit Defuse</div>
-                    <div class="weapon-price">$400</div>
-                    <div class="weapon-stats">Desactivar bomba</div>
-                </div>
-            </div>
-
-            <button class="btn" onclick="closeShop()" style="margin-top: 20px;">Cerrar (ESC)</button>
-        </div>
-
-        <!-- Mensaje de Ronda -->
-        <div id="round-message" class="menu-overlay hidden" style="background: transparent; border: none; pointer-events: none;">
-            <h1 id="round-text" style="font-size: 48px; text-shadow: 0 0 20px rgba(0,0,0,1);"></h1>
+        <!-- Mensajes de ronda -->
+        <div id="round-message" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; pointer-events: none; display: none;">
+            <h1 id="round-text" style="font-size: 64px; text-shadow: 0 0 30px rgba(0,0,0,1); font-family: 'Rajdhani', sans-serif;"></h1>
         </div>
     </div>
 
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script>
-        // ============ CONFIGURACIÓN Y CONSTANTES ============
+        // ============ SISTEMA P2P CORREGIDO ============
+        let peer = null;
+        let conn = null;
+        let isHost = false;
+        let myTeam = null;
+        let enemyTeam = null;
+        let gameState = 'menu'; // menu, lobby, playing
+        
+        // Inicializar PeerJS
+        function initPeer() {
+            return new Promise((resolve) => {
+                if (peer) {
+                    resolve(peer);
+                    return;
+                }
+                
+                peer = new Peer();
+                peer.on('open', (id) => {
+                    document.getElementById('my-peer-id').textContent = id;
+                    resolve(peer);
+                });
+                
+                peer.on('connection', (connection) => {
+                    if (conn) return; // Ya conectado
+                    conn = connection;
+                    isHost = true;
+                    setupConnection();
+                    showLobby();
+                    updateLobbyStatus('connected');
+                });
+                
+                peer.on('error', (err) => {
+                    console.error('Peer error:', err);
+                    showStatus('host-status', 'Error: ' + err.type, 'error');
+                });
+            });
+        }
+
+        // Crear sala (Host)
+        async function createHost() {
+            await initPeer();
+            showStatus('host-status', 'Esperando jugador...', 'connecting');
+            document.querySelector('#tab-host .btn').disabled = true;
+        }
+
+        // Unirse a sala (Cliente)
+        async function joinRoom() {
+            const hostId = document.getElementById('join-peer-id').value.trim();
+            if (!hostId) {
+                showStatus('join-status', 'Introduce un ID válido', 'error');
+                return;
+            }
+            
+            await initPeer();
+            showStatus('join-status', 'Conectando...', 'connecting');
+            
+            conn = peer.connect(hostId);
+            isHost = false;
+            
+            conn.on('open', () => {
+                setupConnection();
+                showLobby();
+                updateLobbyStatus('connected');
+            });
+            
+            conn.on('error', () => {
+                showStatus('join-status', 'Error de conexión', 'error');
+            });
+        }
+
+        // Configurar conexión bidireccional
+        function setupConnection() {
+            conn.on('data', (data) => {
+                handleNetworkData(data);
+            });
+            
+            conn.on('close', () => {
+                alert('El oponente se ha desconectado');
+                location.reload();
+            });
+            
+            // Enviar ping cada 50ms para sincronización
+            setInterval(() => {
+                if (gameState === 'playing' && game && game.localPlayer) {
+                    sendData({
+                        type: 'playerUpdate',
+                        id: peer.id,
+                        x: game.localPlayer.x,
+                        y: game.localPlayer.y,
+                        angle: game.localPlayer.angle,
+                        health: game.localPlayer.health,
+                        currentWeapon: game.localPlayer.currentWeapon,
+                        isShooting: game.mouse.down,
+                        team: myTeam
+                    });
+                }
+            }, 50);
+        }
+
+        // Manejar datos recibidos
+        function handleNetworkData(data) {
+            if (!game) return;
+            
+            switch(data.type) {
+                case 'playerUpdate':
+                    if (!game.players[data.id]) {
+                        // Crear jugador remoto
+                        const spawn = game.getSpawnPoint(data.team);
+                        game.players[data.id] = new Player(data.id, spawn.x, spawn.y, data.team);
+                    }
+                    const remote = game.players[data.id];
+                    if (remote) {
+                        // Interpolación suave
+                        remote.x = lerp(remote.x, data.x, 0.3);
+                        remote.y = lerp(remote.y, data.y, 0.3);
+                        remote.angle = data.angle;
+                        remote.health = data.health;
+                        remote.currentWeapon = data.currentWeapon;
+                        
+                        // Si está disparando
+                        if (data.isShooting && Date.now() - remote.lastShot > WEAPONS[remote.currentWeapon].fireRate) {
+                            remote.shoot(true); // true = no sonido local
+                        }
+                    }
+                    break;
+                    
+                case 'bullet':
+                    // Crear bala remota
+                    game.bullets.push(new Bullet(data.x, data.y, data.angle, data.weapon, data.owner));
+                    break;
+                    
+                case 'damage':
+                    if (game.localPlayer && data.target === peer.id) {
+                        game.localPlayer.takeDamage(data.amount, data.isHeadshot);
+                    }
+                    break;
+                    
+                case 'teamSelected':
+                    // El otro jugador seleccionó equipo
+                    enemyTeam = data.team;
+                    checkTeamsReady();
+                    break;
+                    
+                case 'startGame':
+                    // Host inició el juego
+                    startGameLocal();
+                    break;
+            }
+        }
+
+        function lerp(start, end, t) {
+            return start + (end - start) * t;
+        }
+
+        function sendData(data) {
+            if (conn && conn.open) {
+                conn.send(data);
+            }
+        }
+
+        // UI Functions
+        function switchTab(tab) {
+            document.querySelectorAll('.menu-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById('tab-' + tab).classList.add('active');
+        }
+
+        function showStatus(elementId, text, type) {
+            const el = document.getElementById(elementId);
+            el.textContent = text;
+            el.className = 'connection-status ' + type;
+        }
+
+        function showLobby() {
+            document.getElementById('connection-panel').classList.add('hidden');
+            document.getElementById('lobby-panel').classList.remove('hidden');
+            document.getElementById('slot-host').querySelector('span:last-child').textContent = isHost ? 'Tú' : 'Host';
+        }
+
+        function updateLobbyStatus(status) {
+            const clientSpan = document.getElementById('slot-client').querySelector('span:last-child');
+            const startBtn = document.getElementById('start-btn');
+            
+            if (status === 'connected') {
+                clientSpan.textContent = 'Conectado';
+                clientSpan.style.color = '#4caf50';
+                if (isHost) {
+                    startBtn.disabled = false;
+                    startBtn.style.opacity = '1';
+                    startBtn.textContent = 'Iniciar Partida';
+                } else {
+                    startBtn.textContent = 'Esperando al host...';
+                }
+            }
+        }
+
+        function selectTeam(team) {
+            myTeam = team;
+            
+            // Actualizar UI
+            document.querySelectorAll('.team-btn').forEach(btn => btn.classList.remove('selected'));
+            event.target.classList.add('selected');
+            
+            // Enviar al otro
+            sendData({ type: 'teamSelected', team: team });
+            
+            // Actualizar slot
+            const slotId = isHost ? 'slot-host' : 'slot-client';
+            document.getElementById(slotId).querySelector('span:last-child').textContent = team;
+            document.getElementById(slotId).classList.add('ready');
+            
+            checkTeamsReady();
+        }
+
+        function checkTeamsReady() {
+            if (!isHost) return;
+            
+            // Verificar que ambos tengan equipo y sean diferentes
+            const hostReady = document.getElementById('slot-host').classList.contains('ready');
+            const clientReady = document.getElementById('slot-client').classList.contains('ready');
+            
+            if (hostReady && clientReady) {
+                const startBtn = document.getElementById('start-btn');
+                startBtn.textContent = '¡Iniciar Partida!';
+                startBtn.style.background = 'rgba(76, 175, 80, 0.2)';
+                startBtn.style.borderColor = '#4caf50';
+                startBtn.style.color = '#4caf50';
+            }
+        }
+
+        function startGame() {
+            if (!isHost) return;
+            sendData({ type: 'startGame' });
+            startGameLocal();
+        }
+
+        function startGameLocal() {
+            gameState = 'playing';
+            document.getElementById('main-menu').style.display = 'none';
+            document.getElementById('game-container').style.display = 'block';
+            
+            // Iniciar juego
+            game = new Game();
+            game.isMultiplayer = true;
+            game.isHost = isHost;
+            
+            // Crear jugador local
+            const spawn = game.getSpawnPoint(myTeam);
+            game.localPlayer = new Player(peer.id, spawn.x, spawn.y, myTeam);
+            game.players[peer.id] = game.localPlayer;
+            
+            // Si es host, crear bots en el equipo contrario (opcional)
+            if (isHost) {
+                // Aquí podrías añadir bots si quieres 2v2, etc.
+            }
+        }
+
+        function startLocalGame() {
+            gameState = 'playing';
+            document.getElementById('main-menu').style.display = 'none';
+            document.getElementById('game-container').style.display = 'block';
+            
+            game = new Game();
+            game.isMultiplayer = false;
+            
+            // Jugador CT por defecto
+            game.startLocalGame('CT');
+        }
+
+        function leaveRoom() {
+            if (conn) conn.close();
+            location.reload();
+        }
+
+        // ============ CLASES DEL JUEGO (Mejoradas para red) ============
+        
         const CANVAS_WIDTH = 1200;
         const CANVAS_HEIGHT = 800;
         const PLAYER_RADIUS = 15;
@@ -440,63 +834,19 @@
         };
 
         const MAP_WALLS = [
-            // Bordes
             {x: 0, y: 0, w: CANVAS_WIDTH, h: 50},
             {x: 0, y: CANVAS_HEIGHT-50, w: CANVAS_WIDTH, h: 50},
             {x: 0, y: 0, w: 50, h: CANVAS_HEIGHT},
             {x: CANVAS_WIDTH-50, y: 0, w: 50, h: CANVAS_HEIGHT},
-            // Obstáculos tipo Dust2
             {x: 300, y: 200, w: 100, h: 20},
             {x: 500, y: 300, w: 20, h: 200},
             {x: 700, y: 400, w: 150, h: 20},
             {x: 200, y: 500, w: 20, h: 150},
             {x: 900, y: 150, w: 200, h: 20},
             {x: 1000, y: 600, w: 20, h: 100},
-            // Cajas
             {x: 400, y: 600, w: 60, h: 60},
             {x: 800, y: 300, w: 60, h: 60}
         ];
-
-        const SITES = {
-            A: {x: 200, y: 200, radius: 80},
-            B: {x: 1000, y: 600, radius: 80}
-        };
-
-        // ============ CLASES ============
-        class Vector2 {
-            constructor(x, y) { this.x = x; this.y = y; }
-            add(v) { return new Vector2(this.x + v.x, this.y + v.y); }
-            mult(s) { return new Vector2(this.x * s, this.y * s); }
-        }
-
-        class Particle {
-            constructor(x, y, vx, vy, life, color) {
-                this.x = x;
-                this.y = y;
-                this.vx = vx;
-                this.vy = vy;
-                this.life = life;
-                this.maxLife = life;
-                this.color = color;
-                this.size = Math.random() * 3 + 1;
-            }
-
-            update() {
-                this.x += this.vx;
-                this.y += this.vy;
-                this.life--;
-                this.size *= 0.95;
-            }
-
-            draw(ctx) {
-                ctx.globalAlpha = this.life / this.maxLife;
-                ctx.fillStyle = this.color;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.globalAlpha = 1;
-            }
-        }
 
         class Bullet {
             constructor(x, y, angle, weapon, owner) {
@@ -508,60 +858,12 @@
                 this.owner = owner;
                 this.damage = WEAPONS[weapon].damage;
                 this.life = 100;
-                this.trail = [];
             }
 
             update() {
-                this.trail.push({x: this.x, y: this.y});
-                if (this.trail.length > 5) this.trail.shift();
-                
                 this.x += this.vx;
                 this.y += this.vy;
                 this.life--;
-            }
-
-            draw(ctx) {
-                ctx.strokeStyle = 'rgba(255, 255, 100, 0.8)';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                if (this.trail.length > 0) {
-                    ctx.moveTo(this.trail[0].x, this.trail[0].y);
-                    for (let p of this.trail) ctx.lineTo(p.x, p.y);
-                }
-                ctx.lineTo(this.x, this.y);
-                ctx.stroke();
-            }
-        }
-
-        class Grenade {
-            constructor(x, y, vx, vy, type) {
-                this.x = x;
-                this.y = y;
-                this.vx = vx;
-                this.vy = vy;
-                this.type = type; // 'flash', 'smoke', 'he', 'molotov'
-                this.life = 150;
-                this.bounces = 0;
-            }
-
-            update() {
-                this.vx *= 0.98;
-                this.vy *= 0.98;
-                this.x += this.vx;
-                this.y += this.vy;
-                this.life--;
-                
-                // Gravedad
-                this.vy += 0.2;
-            }
-
-            draw(ctx) {
-                ctx.fillStyle = this.type === 'flash' ? '#fff' : 
-                               this.type === 'smoke' ? '#888' :
-                               this.type === 'he' ? '#ff4444' : '#ff8800';
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, 4, 0, Math.PI * 2);
-                ctx.fill();
             }
         }
 
@@ -585,32 +887,20 @@
                 this.isReloading = false;
                 this.reloadTime = 0;
                 this.lastShot = 0;
-                this.isDefusing = false;
-                this.hasDefuseKit = false;
                 this.dead = false;
                 this.respawnTime = 0;
-                this.flashTime = 0;
             }
 
             update() {
-                if (this.dead) {
-                    if (Date.now() > this.respawnTime) this.respawn();
-                    return;
-                }
-
-                // Física de movimiento tipo CS
+                if (this.dead) return;
+                
                 this.vx *= FRICTION;
                 this.vy *= FRICTION;
                 this.x += this.vx;
                 this.y += this.vy;
-
-                // Colisión con paredes
+                
                 this.checkWallCollision();
-
-                // Cooldown flashbang
-                if (this.flashTime > 0) this.flashTime--;
-
-                // Recarga
+                
                 if (this.isReloading && Date.now() > this.reloadTime) {
                     this.finishReload();
                 }
@@ -623,7 +913,6 @@
                         this.y + PLAYER_RADIUS > wall.y && 
                         this.y - PLAYER_RADIUS < wall.y + wall.h) {
                         
-                        // Determinar lado de colisión
                         let overlapX = (this.x < wall.x + wall.w/2) ? 
                             (this.x + PLAYER_RADIUS) - wall.x : 
                             (wall.x + wall.w) - (this.x - PLAYER_RADIUS);
@@ -640,8 +929,7 @@
                         }
                     }
                 }
-
-                // Límites del mapa
+                
                 this.x = Math.max(PLAYER_RADIUS, Math.min(CANVAS_WIDTH - PLAYER_RADIUS, this.x));
                 this.y = Math.max(PLAYER_RADIUS, Math.min(CANVAS_HEIGHT - PLAYER_RADIUS, this.y));
             }
@@ -665,21 +953,10 @@
 
             die() {
                 this.dead = true;
-                this.respawnTime = Date.now() + (game.roundActive ? 5000 : 3000);
-                game.addKillFeed(this.team === 'CT' ? 'Terrorist' : 'CT', this.team === 'CT' ? 'CT' : 'Terrorist', this.currentWeapon);
+                this.respawnTime = Date.now() + 3000;
             }
 
-            respawn() {
-                this.dead = false;
-                this.health = 100;
-                this.armor = 0;
-                this.hasHelmet = false;
-                let spawn = game.getSpawnPoint(this.team);
-                this.x = spawn.x;
-                this.y = spawn.y;
-            }
-
-            shoot() {
+            shoot(isRemote = false) {
                 let weapon = WEAPONS[this.currentWeapon];
                 let now = Date.now();
                 
@@ -692,17 +969,22 @@
                 this.ammo[this.currentWeapon].clip--;
                 this.lastShot = now;
                 
-                // Spread/recoil
-                let spread = (Math.random() - 0.5) * weapon.spread * (1 + (100 - this.health) / 200);
+                let spread = (Math.random() - 0.5) * weapon.spread;
                 let finalAngle = this.angle + spread;
                 
-                game.bullets.push(new Bullet(this.x, this.y, finalAngle, this.currentWeapon, this.id));
+                // Si no es remoto, enviar por red
+                if (!isRemote && game && game.isMultiplayer) {
+                    sendData({
+                        type: 'bullet',
+                        x: this.x,
+                        y: this.y,
+                        angle: finalAngle,
+                        weapon: this.currentWeapon,
+                        owner: this.id
+                    });
+                }
                 
-                // Efecto retroceso visual
-                this.vx -= Math.cos(this.angle) * 0.5;
-                this.vy -= Math.sin(this.angle) * 0.5;
-                
-                return true;
+                return new Bullet(this.x, this.y, finalAngle, this.currentWeapon, this.id);
             }
 
             reload() {
@@ -724,36 +1006,6 @@
                 this.isReloading = false;
             }
 
-            buy(item) {
-                let weapon = WEAPONS[item];
-                if (!weapon) {
-                    if (item === 'vest') { this.armor = 100; this.money -= 650; }
-                    if (item === 'vesthelm') { this.armor = 100; this.hasHelmet = true; this.money -= 1000; }
-                    if (item === 'defuse') { this.hasDefuseKit = true; this.money -= 400; }
-                    return;
-                }
-                
-                if (this.money >= weapon.price) {
-                    if (!this.weapons.includes(item)) {
-                        this.weapons.push(item);
-                        this.ammo[item] = {clip: weapon.clipSize, reserve: weapon.reserveAmmo};
-                    } else {
-                        this.ammo[item].reserve += weapon.reserveAmmo;
-                    }
-                    this.money -= weapon.price;
-                }
-            }
-
-            switchWeapon(index) {
-                if (index < this.weapons.length) {
-                    this.currentWeapon = this.weapons[index];
-                    if (!this.ammo[this.currentWeapon]) {
-                        let w = WEAPONS[this.currentWeapon];
-                        this.ammo[this.currentWeapon] = {clip: w.clipSize, reserve: w.reserveAmmo};
-                    }
-                }
-            }
-
             draw(ctx) {
                 if (this.dead) return;
                 
@@ -761,17 +1013,14 @@
                 ctx.translate(this.x, this.y);
                 ctx.rotate(this.angle);
                 
-                // Cuerpo
                 ctx.fillStyle = this.team === 'CT' ? '#4da6ff' : '#ff6b6b';
                 ctx.beginPath();
                 ctx.arc(0, 0, PLAYER_RADIUS, 0, Math.PI * 2);
                 ctx.fill();
                 
-                // Dirección (cabeza/arma)
                 ctx.fillStyle = '#222';
                 ctx.fillRect(10, -5, 20, 10);
                 
-                // Chaleco visible
                 if (this.armor > 0) {
                     ctx.strokeStyle = '#4caf50';
                     ctx.lineWidth = 2;
@@ -782,13 +1031,11 @@
                 
                 ctx.restore();
                 
-                // Indicador de nombre
                 ctx.fillStyle = 'white';
-                ctx.font = '12px Arial';
+                ctx.font = 'bold 12px Rajdhani';
                 ctx.textAlign = 'center';
                 ctx.fillText(this.team, this.x, this.y - 25);
                 
-                // Barra de vida
                 if (this.health < 100) {
                     ctx.fillStyle = 'red';
                     ctx.fillRect(this.x - 15, this.y - 35, 30 * (this.health/100), 4);
@@ -798,30 +1045,27 @@
             }
         }
 
-        // ============ JUEGO PRINCIPAL ============
         class Game {
             constructor() {
                 this.canvas = document.getElementById('gameCanvas');
                 this.ctx = this.canvas.getContext('2d');
-                this.radarCanvas = document.getElementById('radarCanvas');
-                this.radarCtx = this.radarCanvas.getContext('2d');
                 
                 this.players = {};
                 this.bullets = [];
-                this.particles = [];
-                this.grenades = [];
                 this.localPlayer = null;
+                this.isMultiplayer = false;
+                this.isHost = false;
                 
                 this.roundActive = false;
-                this.roundTime = 115; // 1:45
+                this.roundTime = 115;
                 this.score = { CT: 0, T: 0 };
-                this.bomb = { planted: false, x: 0, y: 0, time: 0, planter: null };
                 this.freezeTime = false;
                 
                 this.keys = {};
                 this.mouse = { x: 0, y: 0, down: false };
                 
                 this.setupInputs();
+                this.startRound();
                 this.loop();
             }
 
@@ -829,45 +1073,52 @@
                 this.localPlayer = new Player('local', team === 'CT' ? 200 : 1000, team === 'CT' ? 600 : 200, team);
                 this.players['local'] = this.localPlayer;
                 
-                // Bots temporales para demo
-                if (!this.peer) {
-                    for (let i = 0; i < 2; i++) {
-                        let botTeam = team === 'CT' ? 'T' : 'CT';
-                        let bot = new Player('bot' + i, botTeam === 'CT' ? 200 : 1000, botTeam === 'CT' ? 600 : 200, botTeam);
-                        this.players['bot' + i] = bot;
-                    }
+                // Bots para modo local
+                for (let i = 0; i < 3; i++) {
+                    let botTeam = team === 'CT' ? 'T' : 'CT';
+                    let bot = new Player('bot' + i, botTeam === 'CT' ? 200 : 1000, botTeam === 'CT' ? 600 : 200, botTeam);
+                    this.players['bot' + i] = bot;
                 }
-                
-                this.startRound();
-                document.getElementById('main-menu').classList.add('hidden');
             }
 
             startRound() {
                 this.roundActive = true;
                 this.roundTime = 115;
                 this.freezeTime = true;
-                this.bomb.planted = false;
-                
                 setTimeout(() => { this.freezeTime = false; }, 3000);
-                
-                // Mostrar mensaje
-                this.showRoundMessage('ROUND START');
             }
 
-            showRoundMessage(text) {
-                let msg = document.getElementById('round-message');
-                document.getElementById('round-text').textContent = text;
-                msg.classList.remove('hidden');
-                setTimeout(() => msg.classList.add('hidden'), 2000);
+            setupInputs() {
+                window.addEventListener('keydown', (e) => {
+                    this.keys[e.key] = true;
+                    if (e.key === 'r' || e.key === 'R') this.localPlayer?.reload();
+                    if (e.key >= '1' && e.key <= '5') this.localPlayer?.switchWeapon(parseInt(e.key) - 1);
+                });
+                
+                window.addEventListener('keyup', (e) => this.keys[e.key] = false);
+                
+                this.canvas.addEventListener('mousemove', (e) => {
+                    let rect = this.canvas.getBoundingClientRect();
+                    this.mouse.x = e.clientX - rect.left;
+                    this.mouse.y = e.clientY - rect.top;
+                });
+                
+                this.canvas.addEventListener('mousedown', () => {
+                    this.mouse.down = true;
+                    if (this.localPlayer && !WEAPONS[this.localPlayer.currentWeapon].automatic) {
+                        let bullet = this.localPlayer.shoot();
+                        if (bullet) this.bullets.push(bullet);
+                    }
+                });
+                
+                this.canvas.addEventListener('mouseup', () => this.mouse.down = false);
             }
 
             update() {
                 if (!this.localPlayer) return;
                 
-                // Timer
-                if (this.roundActive && !this.freezeTime && Date.now() % 1000 < 20) {
-                    this.roundTime--;
-                    if (this.roundTime <= 0) this.endRound('CT'); // Time out = CT win
+                if (this.roundActive && !this.freezeTime) {
+                    this.roundTime -= 1/60;
                 }
                 
                 // Movimiento local
@@ -880,25 +1131,18 @@
                     
                     this.localPlayer.vx += moveX;
                     this.localPlayer.vy += moveY;
-                    
-                    // Apuntar
                     this.localPlayer.angle = Math.atan2(
                         this.mouse.y - this.localPlayer.y,
                         this.mouse.x - this.localPlayer.x
                     );
                     
-                    // Disparar
                     if (this.mouse.down && WEAPONS[this.localPlayer.currentWeapon].automatic) {
-                        this.localPlayer.shoot();
-                    }
-                    
-                    // Recargar automático
-                    if (this.localPlayer.ammo[this.localPlayer.currentWeapon]?.clip === 0) {
-                        this.localPlayer.reload();
+                        let bullet = this.localPlayer.shoot();
+                        if (bullet) this.bullets.push(bullet);
                     }
                 }
                 
-                // Actualizar entidades
+                // Actualizar jugadores
                 for (let id in this.players) this.players[id].update();
                 
                 // Balas
@@ -906,27 +1150,34 @@
                     let b = this.bullets[i];
                     b.update();
                     
-                    // Colisión con paredes
+                    // Colisión paredes
                     for (let wall of MAP_WALLS) {
                         if (b.x > wall.x && b.x < wall.x + wall.w && 
                             b.y > wall.y && b.y < wall.y + wall.h) {
-                            this.createImpactParticles(b.x, b.y, 'wall');
                             this.bullets.splice(i, 1);
                             break;
                         }
                     }
                     
-                    // Colisión con jugadores
+                    // Colisión jugadores
                     for (let id in this.players) {
                         let p = this.players[id];
                         if (p.id !== b.owner && !p.dead) {
-                            let dx = b.x - p.x;
-                            let dy = b.y - p.y;
-                            let dist = Math.sqrt(dx*dx + dy*dy);
+                            let dist = Math.hypot(b.x - p.x, b.y - p.y);
                             if (dist < PLAYER_RADIUS) {
                                 let isHeadshot = dist < PLAYER_RADIUS * 0.5;
-                                p.takeDamage(b.damage, isHeadshot);
-                                this.createImpactParticles(b.x, b.y, 'blood');
+                                
+                                // En multiplayer, notificar daño al host/peer
+                                if (this.isMultiplayer) {
+                                    sendData({
+                                        type: 'damage',
+                                        target: p.id,
+                                        amount: b.damage,
+                                        isHeadshot: isHeadshot
+                                    });
+                                } else {
+                                    p.takeDamage(b.damage, isHeadshot);
+                                }
                                 this.bullets.splice(i, 1);
                                 break;
                             }
@@ -936,140 +1187,15 @@
                     if (b.life <= 0) this.bullets.splice(i, 1);
                 }
                 
-                // Partículas
-                for (let i = this.particles.length - 1; i >= 0; i--) {
-                    this.particles[i].update();
-                    if (this.particles[i].life <= 0) this.particles.splice(i, 1);
-                }
-                
-                // Granadas
-                for (let i = this.grenades.length - 1; i >= 0; i--) {
-                    let g = this.grenades[i];
-                    g.update();
-                    
-                    // Colisión
-                    for (let wall of MAP_WALLS) {
-                        if (g.x > wall.x && g.x < wall.x + wall.w && 
-                            g.y > wall.y && g.y < wall.y + wall.h) {
-                            if (g.bounces < 3) {
-                                g.vx *= -0.7;
-                                g.vy *= -0.7;
-                                g.bounces++;
-                            }
-                        }
-                    }
-                    
-                    if (g.life <= 0) {
-                        this.explodeGrenade(g);
-                        this.grenades.splice(i, 1);
-                    }
-                }
-                
-                // Bomba
-                if (this.bomb.planted) {
-                    this.bomb.time--;
-                    if (this.bomb.time <= 0) {
-                        this.explodeBomb();
-                    }
-                }
-                
-                // IA simple de bots
-                this.updateBots();
-                
                 this.updateUI();
             }
 
-            updateBots() {
-                for (let id in this.players) {
-                    let p = this.players[id];
-                    if (id.startsWith('bot') && !p.dead) {
-                        // Buscar objetivo
-                        let target = null;
-                        let minDist = Infinity;
-                        for (let pid in this.players) {
-                            let other = this.players[pid];
-                            if (other.team !== p.team && !other.dead) {
-                                let dist = Math.hypot(other.x - p.x, other.y - p.y);
-                                if (dist < minDist) {
-                                    minDist = dist;
-                                    target = other;
-                                }
-                            }
-                        }
-                        
-                        if (target && minDist < 400) {
-                            p.angle = Math.atan2(target.y - p.y, target.x - p.x);
-                            if (minDist > 200) {
-                                p.vx += Math.cos(p.angle) * 0.3;
-                                p.vy += Math.sin(p.angle) * 0.3;
-                            }
-                            if (Math.random() < 0.05 && minDist < 300) p.shoot();
-                        } else {
-                            // Patrullar
-                            if (Math.random() < 0.02) {
-                                p.vx += (Math.random() - 0.5) * 2;
-                                p.vy += (Math.random() - 0.5) * 2;
-                            }
-                        }
-                        p.update();
-                    }
-                }
-            }
-
-            explodeGrenade(g) {
-                if (g.type === 'he') {
-                    // Daño en área
-                    for (let id in this.players) {
-                        let p = this.players[id];
-                        let dist = Math.hypot(p.x - g.x, p.y - g.y);
-                        if (dist < 150) {
-                            let damage = 100 * (1 - dist/150);
-                            p.takeDamage(damage, false);
-                        }
-                    }
-                    // Partículas explosión
-                    for (let i = 0; i < 20; i++) {
-                        let angle = (Math.PI * 2 / 20) * i;
-                        this.particles.push(new Particle(
-                            g.x, g.y,
-                            Math.cos(angle) * 5,
-                            Math.sin(angle) * 5,
-                            30,
-                            'orange'
-                        ));
-                    }
-                } else if (g.type === 'flash') {
-                    // Cegar jugadores
-                    for (let id in this.players) {
-                        let p = this.players[id];
-                        if (Math.hypot(p.x - g.x, p.y - g.y) < 300) {
-                            p.flashTime = 300; // 5 segundos a 60fps
-                        }
-                    }
-                }
-            }
-
-            createImpactParticles(x, y, type) {
-                let color = type === 'blood' ? 'red' : 'gray';
-                let count = type === 'blood' ? 8 : 4;
-                for (let i = 0; i < count; i++) {
-                    this.particles.push(new Particle(
-                        x, y,
-                        (Math.random() - 0.5) * 4,
-                        (Math.random() - 0.5) * 4,
-                        20 + Math.random() * 10,
-                        color
-                    ));
-                }
-            }
-
             draw() {
-                // Limpiar
-                this.ctx.fillStyle = '#1a1a1a';
+                this.ctx.fillStyle = '#0d1117';
                 this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
                 
                 // Grid
-                this.ctx.strokeStyle = '#222';
+                this.ctx.strokeStyle = '#161b22';
                 this.ctx.lineWidth = 1;
                 for (let i = 0; i < CANVAS_WIDTH; i += 50) {
                     this.ctx.beginPath();
@@ -1084,249 +1210,58 @@
                     this.ctx.stroke();
                 }
                 
-                // Zonas de bomba
-                for (let site in SITES) {
-                    let s = SITES[site];
-                    this.ctx.fillStyle = 'rgba(255, 0, 0, 0.1)';
-                    this.ctx.beginPath();
-                    this.ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
-                    this.ctx.fill();
-                    this.ctx.strokeStyle = 'rgba(255, 0, 0, 0.3)';
-                    this.ctx.stroke();
-                    this.ctx.fillStyle = 'white';
-                    this.ctx.font = '20px Arial';
-                    this.ctx.textAlign = 'center';
-                    this.ctx.fillText(site, s.x, s.y);
-                }
-                
                 // Paredes
-                this.ctx.fillStyle = '#444';
+                this.ctx.fillStyle = '#30363d';
+                this.ctx.shadowBlur = 10;
+                this.ctx.shadowColor = 'rgba(0,0,0,0.5)';
                 for (let wall of MAP_WALLS) {
                     this.ctx.fillRect(wall.x, wall.y, wall.w, wall.h);
-                    // Sombra
-                    this.ctx.fillStyle = 'rgba(0,0,0,0.3)';
-                    this.ctx.fillRect(wall.x + 5, wall.y + 5, wall.w, wall.h);
-                    this.ctx.fillStyle = '#444';
                 }
-                
-                // Bomb site indicadores
-                if (this.bomb.planted) {
-                    this.ctx.fillStyle = 'red';
-                    this.ctx.beginPath();
-                    this.ctx.arc(this.bomb.x, this.bomb.y, 10 + Math.sin(Date.now()/100)*5, 0, Math.PI*2);
-                    this.ctx.fill();
-                    // Timer
-                    this.ctx.fillStyle = 'white';
-                    this.ctx.font = 'bold 20px Arial';
-                    this.ctx.fillText(Math.ceil(this.bomb.time/60), this.bomb.x, this.bomb.y - 20);
-                }
+                this.ctx.shadowBlur = 0;
                 
                 // Entidades
-                for (let p of this.particles) p.draw(this.ctx);
-                for (let g of this.grenades) g.draw(this.ctx);
-                for (let b of this.bullets) b.draw(this.ctx);
+                for (let b of this.bullets) {
+                    this.ctx.fillStyle = '#ffeb3b';
+                    this.ctx.beginPath();
+                    this.ctx.arc(b.x, b.y, 3, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }
+                
                 for (let id in this.players) this.players[id].draw(this.ctx);
                 
-                // Efecto flashbang
-                if (this.localPlayer && this.localPlayer.flashTime > 0) {
-                    this.ctx.fillStyle = `rgba(255, 255, 255, ${this.localPlayer.flashTime / 300})`;
-                    this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-                }
-                
                 // Iluminación
-                this.drawLighting();
-                
-                // Radar
-                this.drawRadar();
-            }
-
-            drawLighting() {
-                if (!this.localPlayer || this.localPlayer.dead) return;
-                
-                // Crear oscuridad alrededor
-                let gradient = this.ctx.createRadialGradient(
-                    this.localPlayer.x, this.localPlayer.y, 100,
-                    this.localPlayer.x, this.localPlayer.y, 400
-                );
-                gradient.addColorStop(0, 'rgba(0,0,0,0)');
-                gradient.addColorStop(1, 'rgba(0,0,0,0.7)');
-                
-                this.ctx.fillStyle = gradient;
-                this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-            }
-
-            drawRadar() {
-                this.radarCtx.clearRect(0, 0, 150, 150);
-                this.radarCtx.fillStyle = 'rgba(0, 50, 0, 0.8)';
-                this.radarCtx.fillRect(0, 0, 150, 150);
-                
-                let scale = 150 / Math.max(CANVAS_WIDTH, CANVAS_HEIGHT);
-                
-                // Jugadores
-                for (let id in this.players) {
-                    let p = this.players[id];
-                    if (!p.dead) {
-                        let rx = p.x * scale;
-                        let ry = p.y * scale;
-                        this.radarCtx.fillStyle = p.team === 'CT' ? '#4da6ff' : '#ff6b6b';
-                        this.radarCtx.beginPath();
-                        this.radarCtx.arc(rx, ry, 3, 0, Math.PI * 2);
-                        this.radarCtx.fill();
-                    }
-                }
-                
-                // Bomba
-                if (this.bomb.planted) {
-                    let rx = this.bomb.x * scale;
-                    let ry = this.bomb.y * scale;
-                    this.radarCtx.fillStyle = 'red';
-                    this.radarCtx.beginPath();
-                    this.radarCtx.arc(rx, ry, 4, 0, Math.PI * 2);
-                    this.radarCtx.fill();
+                if (this.localPlayer && !this.localPlayer.dead) {
+                    let gradient = this.ctx.createRadialGradient(
+                        this.localPlayer.x, this.localPlayer.y, 100,
+                        this.localPlayer.x, this.localPlayer.y, 400
+                    );
+                    gradient.addColorStop(0, 'rgba(0,0,0,0)');
+                    gradient.addColorStop(1, 'rgba(0,0,0,0.7)');
+                    this.ctx.fillStyle = gradient;
+                    this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
                 }
             }
 
             updateUI() {
                 if (!this.localPlayer) return;
                 
-                // Vida y armadura
                 document.getElementById('health-fill').style.width = this.localPlayer.health + '%';
                 document.getElementById('armor-fill').style.width = this.localPlayer.armor + '%';
                 
-                // Arma
                 let w = WEAPONS[this.localPlayer.currentWeapon];
                 document.getElementById('weapon-name').textContent = w.name;
                 document.getElementById('ammo-primary').textContent = this.localPlayer.ammo[this.localPlayer.currentWeapon]?.clip || 0;
                 document.getElementById('ammo-reserve').textContent = this.localPlayer.ammo[this.localPlayer.currentWeapon]?.reserve || 0;
                 
-                // Dinero
                 document.getElementById('money').textContent = this.localPlayer.money;
-                document.getElementById('shop-money').textContent = this.localPlayer.money;
                 
-                // Timer
                 let mins = Math.floor(this.roundTime / 60);
-                let secs = this.roundTime % 60;
+                let secs = Math.floor(this.roundTime % 60);
                 document.getElementById('round-timer').textContent = 
                     `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
                 
-                // Scores
                 document.getElementById('score-ct').textContent = this.score.CT;
                 document.getElementById('score-t').textContent = this.score.T;
-                
-                // Crosshair position
-                let ch = document.getElementById('crosshair');
-                ch.style.left = this.mouse.x + 'px';
-                ch.style.top = this.mouse.y + 'px';
-            }
-
-            setupInputs() {
-                window.addEventListener('keydown', (e) => {
-                    this.keys[e.key] = true;
-                    
-                    if (e.key === 'b' || e.key === 'B') this.toggleShop();
-                    if (e.key === 'r' || e.key === 'R') this.localPlayer?.reload();
-                    if (e.key === 'Escape') document.getElementById('buy-menu').classList.add('hidden');
-                    if (e.key === 'e' || e.key === 'E') this.tryPlantDefuse();
-                    
-                    // Cambio de armas
-                    if (e.key >= '1' && e.key <= '5') {
-                        this.localPlayer?.switchWeapon(parseInt(e.key) - 1);
-                    }
-                    
-                    // Granadas (placeholder)
-                    if (e.key === 'g' || e.key === 'G') {
-                        if (this.localPlayer) {
-                            let g = new Grenade(
-                                this.localPlayer.x, this.localPlayer.y,
-                                Math.cos(this.localPlayer.angle) * 10,
-                                Math.sin(this.localPlayer.angle) * 10,
-                                'he'
-                            );
-                            this.grenades.push(g);
-                        }
-                    }
-                });
-                
-                window.addEventListener('keyup', (e) => this.keys[e.key] = false);
-                
-                this.canvas.addEventListener('mousemove', (e) => {
-                    let rect = this.canvas.getBoundingClientRect();
-                    this.mouse.x = e.clientX - rect.left;
-                    this.mouse.y = e.clientY - rect.top;
-                });
-                
-                this.canvas.addEventListener('mousedown', () => {
-                    this.mouse.down = true;
-                    if (this.localPlayer && !WEAPONS[this.localPlayer.currentWeapon].automatic) {
-                        this.localPlayer.shoot();
-                    }
-                });
-                
-                this.canvas.addEventListener('mouseup', () => this.mouse.down = false);
-            }
-
-            toggleShop() {
-                if (!this.roundActive || this.freezeTime) return;
-                let shop = document.getElementById('buy-menu');
-                shop.classList.toggle('hidden');
-            }
-
-            closeShop() {
-                document.getElementById('buy-menu').classList.add('hidden');
-            }
-
-            tryPlantDefuse() {
-                if (!this.localPlayer || this.localPlayer.dead) return;
-                
-                // Plantar
-                if (this.localPlayer.team === 'T' && !this.bomb.planted) {
-                    for (let site in SITES) {
-                        let s = SITES[site];
-                        let dist = Math.hypot(this.localPlayer.x - s.x, this.localPlayer.y - s.y);
-                        if (dist < s.radius) {
-                            this.bomb.planted = true;
-                            this.bomb.x = this.localPlayer.x;
-                            this.bomb.y = this.localPlayer.y;
-                            this.bomb.time = 1800; // 30 segundos
-                            this.bomb.planter = this.localPlayer.id;
-                            this.addKillFeed('Terrorist', 'Bombsite', 'plant');
-                        }
-                    }
-                }
-                
-                // Desactivar
-                if (this.localPlayer.team === 'CT' && this.bomb.planted) {
-                    let dist = Math.hypot(this.localPlayer.x - this.bomb.x, this.localPlayer.y - this.bomb.y);
-                    if (dist < 50) {
-                        this.bomb.time -= this.localPlayer.hasDefuseKit ? 5 : 2; // Más rápido con kit
-                        if (this.bomb.time <= 0) {
-                            this.endRound('CT');
-                        }
-                    }
-                }
-            }
-
-            addKillFeed(killer, victim, weapon) {
-                let feed = document.getElementById('kill-feed');
-                let entry = document.createElement('div');
-                entry.className = 'kill-entry';
-                entry.innerHTML = `<span style="color:${killer === 'CT' ? '#4da6ff' : '#ff6b6b'}">${killer}</span> [${weapon}] <span style="color:${victim === 'CT' ? '#4da6ff' : '#ff6b6b'}">${victim}</span>`;
-                feed.appendChild(entry);
-                if (feed.children.length > 5) feed.removeChild(feed.firstChild);
-            }
-
-            endRound(winner) {
-                this.roundActive = false;
-                this.score[winner]++;
-                this.showRoundMessage(winner + ' GANA LA RONDA');
-                
-                // Dar dinero
-                for (let id in this.players) {
-                    let p = this.players[id];
-                    p.money += (p.team === winner ? 3250 : 1400);
-                }
-                
-                setTimeout(() => this.startRound(), 3000);
             }
 
             getSpawnPoint(team) {
@@ -1342,77 +1277,13 @@
             }
         }
 
-        // ============ INICIALIZACIÓN ============
-        let game = new Game();
-        let peer = null;
-        let conn = null;
-
-        // Generar ID
-        peer = new Peer();
-        peer.on('open', (id) => {
-            document.getElementById('my-id').textContent = id;
-        });
-
-        peer.on('connection', (connection) => {
-            conn = connection;
-            setupConnection();
-            document.getElementById('connection-panel').classList.add('hidden');
-            document.getElementById('team-select').classList.remove('hidden');
-        });
-
-        function connectToPeer() {
-            let peerId = document.getElementById('peer-input').value;
-            if (peerId) {
-                conn = peer.connect(peerId);
-                setupConnection();
-                document.getElementById('connection-panel').classList.add('hidden');
-                document.getElementById('team-select').classList.remove('hidden');
-            }
-        }
-
-        function setupConnection() {
-            conn.on('data', (data) => {
-                // Sincronización de jugadores
-                if (data.type === 'player') {
-                    if (!game.players[data.id]) {
-                        game.players[data.id] = new Player(data.id, data.x, data.y, data.team);
-                    }
-                    Object.assign(game.players[data.id], data);
-                }
-            });
-        }
-
-        function selectTeam(team) {
-            game.startLocalGame(team);
-            if (conn) {
-                conn.send({type: 'team', team: team});
-            }
-        }
-
-        function startBotMatch() {
-            document.getElementById('team-select').classList.remove('hidden');
-            document.getElementById('connection-panel').classList.add('hidden');
-        }
-
-        function buyItem(item) {
-            game.localPlayer?.buy(item);
-        }
-
-        // Enviar datos locales
-        setInterval(() => {
-            if (conn && game.localPlayer) {
-                conn.send({
-                    type: 'player',
-                    id: game.localPlayer.id,
-                    x: game.localPlayer.x,
-                    y: game.localPlayer.y,
-                    angle: game.localPlayer.angle,
-                    health: game.localPlayer.health,
-                    currentWeapon: game.localPlayer.currentWeapon,
-                    dead: game.localPlayer.dead
-                });
-            }
-        }, 50);
+        // Inicialización
+        let game = null;
+        
+        // Generar ID al cargar
+        window.onload = () => {
+            initPeer();
+        };
     </script>
 </body>
 </html>

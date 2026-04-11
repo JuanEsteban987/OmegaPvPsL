@@ -3,30 +3,307 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CS 2D Tactical - P2P</title>
+    <title>CS 2D Tactical - Skins & Trade</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap');
         
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --ct-color: #4da6ff;
+            --t-color: #ff6b6b;
+            --gold: #ffd700;
+            --rare: #0080ff;
+            --epic: #a335ee;
+            --legendary: #ff8000;
+            --common: #b0c3d9;
+        }
         
         body { 
             background: #0a0a0a; 
             color: white; 
             font-family: 'Rajdhani', sans-serif;
-            display: flex; 
-            flex-direction: column; 
-            align-items: center;
             height: 100vh;
             overflow: hidden;
-            background-image: 
-                radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(255, 107, 107, 0.1) 0%, transparent 50%);
         }
 
+        /* ANIMACIONES */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(77, 166, 255, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(77, 166, 255, 0.6); }
+        }
+        
+        @keyframes openCrate {
+            0% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.2) rotate(-5deg); }
+            50% { transform: scale(0.9) rotate(5deg); }
+            75% { transform: scale(1.1) rotate(-3deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+        
+        @keyframes rarityGlow {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.3); }
+        }
+
+        /* MENÚ PRINCIPAL */
+        #main-menu {
+            width: 100%;
+            height: 100vh;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 107, 107, 0.1) 0%, transparent 50%),
+                linear-gradient(to bottom, #0a0a0a, #1a1a2e);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .menu-container {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 30px;
+            max-width: 1200px;
+            width: 90%;
+            height: 80vh;
+        }
+
+        .sidebar {
+            background: rgba(20, 20, 25, 0.95);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .profile-card {
+            text-align: center;
+            padding: 20px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            border: 3px solid var(--gold);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .avatar::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(45deg, var(--ct-color), var(--t-color));
+        }
+
+        .menu-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .menu-btn:hover {
+            background: rgba(77, 166, 255, 0.2);
+            border-color: var(--ct-color);
+            transform: translateX(5px);
+        }
+
+        .menu-btn.active {
+            background: rgba(77, 166, 255, 0.3);
+            border-color: var(--ct-color);
+            box-shadow: 0 0 20px rgba(77, 166, 255, 0.2);
+        }
+
+        .content-panel {
+            background: rgba(20, 20, 25, 0.95);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 30px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .currency-display {
+            display: flex;
+            gap: 20px;
+        }
+
+        .currency {
+            background: rgba(0,0,0,0.3);
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+        }
+
+        .money-icon { color: var(--gold); }
+        .key-icon { color: var(--rare); }
+
+        /* SISTEMA DE SKINS */
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 15px;
+        }
+
+        .skin-card {
+            aspect-ratio: 1;
+            background: rgba(0,0,0,0.3);
+            border: 2px solid;
+            border-radius: 10px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .skin-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .skin-card.equipped {
+            border-color: var(--gold) !important;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+
+        .skin-card.common { border-color: var(--common); }
+        .skin-card.rare { border-color: var(--rare); box-shadow: 0 0 10px rgba(0, 128, 255, 0.3); }
+        .skin-card.epic { border-color: var(--epic); box-shadow: 0 0 10px rgba(163, 53, 238, 0.3); }
+        .skin-card.legendary { border-color: var(--legendary); box-shadow: 0 0 10px rgba(255, 128, 0, 0.3); animation: rarityGlow 2s infinite; }
+
+        .skin-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin-bottom: 5px;
+        }
+
+        .skin-name {
+            font-size: 12px;
+            text-align: center;
+            padding: 0 5px;
+            font-weight: 600;
+        }
+
+        .skin-type {
+            font-size: 10px;
+            opacity: 0.7;
+            text-transform: uppercase;
+        }
+
+        /* CRATES */
+        .crate-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .crate-item {
+            background: linear-gradient(135deg, rgba(77, 166, 255, 0.1), rgba(20, 20, 25, 0.9));
+            border: 2px solid var(--rare);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .crate-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(0, 128, 255, 0.4);
+        }
+
+        .crate-image {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 15px;
+            background: linear-gradient(45deg, #1a1a2e, #16213e);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+        }
+
+        /* TRADE */
+        .trade-interface {
+            display: grid;
+            grid-template-columns: 1fr 100px 1fr;
+            gap: 20px;
+            height: 100%;
+        }
+
+        .trade-panel {
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .trade-arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: var(--gold);
+        }
+
+        .trade-slot {
+            border: 2px dashed rgba(255,255,255,0.2);
+            border-radius: 10px;
+            padding: 20px;
+            min-height: 100px;
+            margin-top: 10px;
+        }
+
+        /* JUEGO */
         #game-container {
             position: relative;
-            border: 2px solid #333;
-            box-shadow: 0 0 50px rgba(0,0,0,0.9), inset 0 0 100px rgba(0,0,0,0.5);
+            width: 100%;
+            height: 100vh;
             display: none;
         }
 
@@ -34,1256 +311,558 @@
             background: #0d1117; 
             cursor: crosshair;
             display: block;
+            width: 100%;
+            height: 100%;
         }
 
-        /* MENÚ PRINCIPAL MEJORADO */
-        #main-menu {
-            width: 100%;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
+        /* OVERLAYS */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.9);
+            display: none;
             align-items: center;
             justify-content: center;
-            background: 
-                linear-gradient(135deg, rgba(10,10,10,0.95), rgba(20,20,30,0.95)),
-                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.03) 2px, rgba(255,255,255,0.03) 4px);
-            position: relative;
-            overflow: hidden;
-        }
-
-        #main-menu::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: repeating-linear-gradient(
-                45deg,
-                transparent,
-                transparent 10px,
-                rgba(255,255,255,0.02) 10px,
-                rgba(255,255,255,0.02) 20px
-            );
-            animation: backgroundMove 20s linear infinite;
-        }
-
-        @keyframes backgroundMove {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(50px, 50px); }
-        }
-
-        .menu-title {
-            font-size: 72px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 8px;
-            background: linear-gradient(to bottom, #fff, #888);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
-            text-shadow: 0 0 30px rgba(255,255,255,0.2);
-            z-index: 10;
-            position: relative;
-        }
-
-        .menu-subtitle {
-            font-size: 18px;
-            color: #666;
-            margin-bottom: 60px;
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            z-index: 10;
-        }
-
-        .menu-panel {
-            background: rgba(20, 20, 25, 0.9);
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 40px;
-            border-radius: 10px;
-            min-width: 450px;
+            z-index: 1000;
             backdrop-filter: blur(10px);
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
-            z-index: 10;
-            position: relative;
         }
 
-        .menu-tabs {
-            display: flex;
-            margin-bottom: 30px;
-            border-bottom: 2px solid rgba(255,255,255,0.1);
-        }
+        .overlay.active { display: flex; }
 
-        .menu-tab {
-            flex: 1;
-            padding: 15px;
-            background: none;
-            border: none;
-            color: #666;
-            cursor: pointer;
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 16px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            transition: all 0.3s;
-            position: relative;
-        }
-
-        .menu-tab:hover { color: #fff; }
-        .menu-tab.active { 
-            color: #4da6ff; 
-            background: rgba(77, 166, 255, 0.1);
-        }
-        .menu-tab.active::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: #4da6ff;
-            box-shadow: 0 0 10px #4da6ff;
-        }
-
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-
-        .input-group {
-            margin-bottom: 20px;
-        }
-
-        .input-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #888;
-            text-transform: uppercase;
-            font-size: 12px;
-            letter-spacing: 1px;
-        }
-
-        .input-field {
-            width: 100%;
-            background: rgba(0,0,0,0.5);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: white;
-            padding: 12px 16px;
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 16px;
-            border-radius: 4px;
-            transition: all 0.3s;
-        }
-
-        .input-field:focus {
-            outline: none;
-            border-color: #4da6ff;
-            box-shadow: 0 0 10px rgba(77, 166, 255, 0.2);
-        }
-
-        .btn {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(to bottom, rgba(77, 166, 255, 0.2), rgba(77, 166, 255, 0.1));
-            border: 1px solid rgba(77, 166, 255, 0.5);
-            color: #4da6ff;
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 16px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            cursor: pointer;
-            border-radius: 4px;
-            transition: all 0.3s;
-            margin-top: 10px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .btn:hover::before { left: 100%; }
-        .btn:hover {
-            background: rgba(77, 166, 255, 0.3);
-            box-shadow: 0 0 20px rgba(77, 166, 255, 0.3);
-            transform: translateY(-2px);
-        }
-
-        .btn.secondary {
-            background: rgba(255,255,255,0.05);
-            border-color: rgba(255,255,255,0.2);
-            color: #888;
-        }
-        .btn.secondary:hover {
-            background: rgba(255,255,255,0.1);
-            color: #fff;
-        }
-
-        .btn.danger {
-            background: rgba(255, 107, 107, 0.1);
-            border-color: rgba(255, 107, 107, 0.5);
-            color: #ff6b6b;
-        }
-        .btn.danger:hover {
-            background: rgba(255, 107, 107, 0.2);
-            box-shadow: 0 0 20px rgba(255, 107, 107, 0.3);
-        }
-
-        .connection-status {
-            margin-top: 20px;
-            padding: 10px;
-            border-radius: 4px;
+        .modal {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
             text-align: center;
-            font-size: 14px;
-            display: none;
+            animation: float 3s ease-in-out infinite;
         }
 
-        .connection-status.connecting {
-            display: block;
-            background: rgba(255, 193, 7, 0.1);
-            border: 1px solid rgba(255, 193, 7, 0.3);
-            color: #ffc107;
-        }
-
-        .connection-status.connected {
-            display: block;
-            background: rgba(76, 175, 80, 0.1);
-            border: 1px solid rgba(76, 175, 80, 0.3);
-            color: #4caf50;
-        }
-
-        .connection-status.error {
-            display: block;
-            background: rgba(244, 67, 54, 0.1);
-            border: 1px solid rgba(244, 67, 54, 0.3);
-            color: #f44336;
-        }
-
-        .id-display {
-            background: rgba(0,0,0,0.5);
-            padding: 10px;
-            border-radius: 4px;
-            font-family: monospace;
-            font-size: 14px;
-            color: #4da6ff;
-            text-align: center;
-            margin-top: 5px;
-            border: 1px dashed rgba(77, 166, 255, 0.3);
-        }
-
-        /* Lobby */
-        #lobby-panel {
-            display: none;
-            text-align: center;
-        }
-
-        .player-slot {
-            background: rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 20px;
-            margin: 10px 0;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .player-slot.ready {
-            border-color: rgba(76, 175, 80, 0.5);
-            background: rgba(76, 175, 80, 0.1);
-        }
-
-        .team-select {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .team-btn {
-            flex: 1;
-            padding: 20px;
-            border: 2px solid;
-            background: rgba(0,0,0,0.3);
-            cursor: pointer;
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 18px;
-            font-weight: 700;
-            transition: all 0.3s;
-        }
-
-        .team-btn.ct {
-            border-color: #4da6ff;
-            color: #4da6ff;
-        }
-        .team-btn.ct:hover, .team-btn.ct.selected {
-            background: rgba(77, 166, 255, 0.2);
-            box-shadow: 0 0 20px rgba(77, 166, 255, 0.3);
-        }
-
-        .team-btn.t {
-            border-color: #ff6b6b;
-            color: #ff6b6b;
-        }
-        .team-btn.t:hover, .team-btn.t.selected {
-            background: rgba(255, 107, 107, 0.2);
-            box-shadow: 0 0 20px rgba(255, 107, 107, 0.3);
-        }
-
-        /* HUD del juego (igual que antes pero mejorado) */
-        #hud-top {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 60px;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.9), rgba(0,0,0,0));
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 20px;
-            pointer-events: none;
-        }
-
-        .team-score {
-            font-size: 28px;
-            font-weight: 700;
-            text-shadow: 0 0 20px rgba(0,0,0,0.8);
-        }
-        .ct-score { color: #4da6ff; text-shadow: 0 0 10px rgba(77, 166, 255, 0.5); }
-        .t-score { color: #ff6b6b; text-shadow: 0 0 10px rgba(255, 107, 107, 0.5); }
-
-        #round-timer {
-            font-size: 32px;
-            font-weight: 700;
-            color: #fff;
-            text-shadow: 0 0 20px rgba(255,255,255,0.5);
-            font-family: 'Rajdhani', sans-serif;
-        }
-
-        /* Resto de estilos del HUD... */
-        #hud-bottom {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 100px;
-            background: linear-gradient(to top, rgba(0,0,0,0.95), rgba(0,0,0,0));
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            padding: 20px;
-            pointer-events: none;
-        }
-
-        .hud-section {
-            background: rgba(0,0,0,0.8);
-            padding: 15px 25px;
-            border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.1);
-            backdrop-filter: blur(5px);
-        }
-
-        #health-bar, #armor-bar {
+        .crate-opening {
             width: 200px;
-            height: 20px;
+            height: 200px;
+            margin: 20px auto;
+            background: linear-gradient(45deg, var(--rare), var(--epic));
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+            animation: openCrate 0.5s ease-in-out;
+        }
+
+        .rare-text { color: var(--rare); font-weight: 700; }
+        .epic-text { color: var(--epic); font-weight: 700; }
+        .legendary-text { color: var(--legendary); font-weight: 700; }
+        .gold-text { color: var(--gold); font-weight: 700; }
+
+        input[type="text"] {
             background: rgba(0,0,0,0.5);
-            border-radius: 4px;
-            overflow: hidden;
-            margin-top: 5px;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Rajdhani', sans-serif;
+            width: 100%;
+            margin: 10px 0;
         }
 
-        #health-fill {
-            height: 100%;
-            background: linear-gradient(to right, #ff3333, #ff6666);
-            width: 100%;
-            transition: width 0.3s;
-            box-shadow: 0 0 10px rgba(255, 51, 51, 0.5);
+        .btn-primary {
+            background: linear-gradient(to bottom, var(--ct-color), #2a5a8a);
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin: 5px;
+            transition: all 0.3s;
         }
 
-        #armor-fill {
-            height: 100%;
-            background: #4da6ff;
-            width: 100%;
-            transition: width 0.3s;
-            box-shadow: 0 0 10px rgba(77, 166, 255, 0.5);
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(77, 166, 255, 0.4);
+        }
+
+        .btn-gold {
+            background: linear-gradient(to bottom, var(--gold), #b8860b);
+            color: black;
         }
 
         .hidden { display: none !important; }
         
-        /* Animaciones */
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        
-        .waiting-text {
-            animation: pulse 1.5s infinite;
-            color: #ffc107;
-            margin-top: 20px;
-        }
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        ::-webkit-scrollbar-thumb { background: var(--ct-color); border-radius: 4px; }
     </style>
 </head>
 <body>
     <!-- MENÚ PRINCIPAL -->
     <div id="main-menu">
-        <h1 class="menu-title">CS 2D Tactical</h1>
-        <p class="menu-subtitle">Operaciones P2P - Versión 2.0</p>
-        
-        <div class="menu-panel" id="connection-panel">
-            <div class="menu-tabs">
-                <button class="menu-tab active" onclick="switchTab('host')">Crear Sala</button>
-                <button class="menu-tab" onclick="switchTab('join')">Unirse</button>
-                <button class="menu-tab" onclick="switchTab('local')">Local</button>
-            </div>
-
-            <!-- Crear Sala -->
-            <div id="tab-host" class="tab-content active">
-                <div class="input-group">
-                    <label>Tu ID de Sala (Comparte esto con tu amigo)</label>
-                    <div class="id-display" id="my-peer-id">Generando...</div>
+        <div class="menu-container">
+            <!-- SIDEBAR -->
+            <div class="sidebar">
+                <div class="profile-card">
+                    <div class="avatar" id="player-avatar"></div>
+                    <h3 id="player-name">Jugador</h3>
+                    <p style="color: #888; font-size: 14px;" id="player-id">ID: ...</p>
                 </div>
-                <button class="btn" onclick="createHost()">Crear Sala y Esperar</button>
-                <div class="connection-status" id="host-status"></div>
+                
+                <button class="menu-btn active" onclick="showPanel('play')">
+                    <span>▶</span> Jugar
+                </button>
+                <button class="menu-btn" onclick="showPanel('inventory')">
+                    <span>🎒</span> Inventario
+                </button>
+                <button class="menu-btn" onclick="showPanel('crates')">
+                    <span>📦</span> Cajas
+                </button>
+                <button class="menu-btn" onclick="showPanel('trade')">
+                    <span>🤝</span> Tradeo
+                </button>
+                <button class="menu-btn" onclick="showPanel('settings')">
+                    <span>⚙</span> Opciones
+                </button>
             </div>
 
-            <!-- Unirse -->
-            <div id="tab-join" class="tab-content">
-                <div class="input-group">
-                    <label>ID de la Sala</label>
-                    <input type="text" class="input-field" id="join-peer-id" placeholder="Ej: abc-123-def">
+            <!-- CONTENT PANELS -->
+            <div class="content-panel" id="panel-play">
+                <div class="panel-header">
+                    <h2>Modos de Juego</h2>
+                    <div class="currency-display">
+                        <div class="currency money-icon">
+                            $<span id="menu-money">1000</span>
+                        </div>
+                        <div class="currency key-icon">
+                            🔑 <span id="menu-keys">2</span>
+                        </div>
+                    </div>
                 </div>
-                <button class="btn" onclick="joinRoom()">Conectar a Sala</button>
-                <div class="connection-status" id="join-status"></div>
-            </div>
-
-            <!-- Local -->
-            <div id="tab-local" class="tab-content">
-                <p style="margin-bottom: 20px; color: #888;">Juega contra bots sin conexión</p>
-                <button class="btn secondary" onclick="startLocalGame()">Iniciar Partida Local</button>
-            </div>
-        </div>
-
-        <!-- Panel de Lobby (visible tras conectar) -->
-        <div class="menu-panel hidden" id="lobby-panel">
-            <h2 style="margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px;">Sala de Espera</h2>
-            
-            <div id="player-list">
-                <div class="player-slot" id="slot-host">
-                    <span>Tú (Host)</span>
-                    <span style="color: #888;">Seleccionando...</span>
-                </div>
-                <div class="player-slot" id="slot-client">
-                    <span>Invitado</span>
-                    <span style="color: #ffc107;">Conectando...</span>
+                
+                <div style="display: grid; gap: 20px;">
+                    <div class="crate-item" onclick="startLocalGame()">
+                        <div class="crate-image" style="background: linear-gradient(45deg, #4da6ff, #2a5a8a);">
+                            🤖
+                        </div>
+                        <h3>Vs Bots</h3>
+                        <p style="color: #888; font-size: 14px;">Práctica offline</p>
+                    </div>
+                    
+                    <div class="crate-item" onclick="showPanel('multiplayer')">
+                        <div class="crate-image" style="background: linear-gradient(45deg, #ff6b6b, #8a2a2a);">
+                            🌐
+                        </div>
+                        <h3>Multijugador</h3>
+                        <p style="color: #888; font-size: 14px;">Jugar online P2P</p>
+                    </div>
                 </div>
             </div>
 
-            <div class="team-select">
-                <button class="team-btn ct" onclick="selectTeam('CT')">CT</button>
-                <button class="team-btn t" onclick="selectTeam('T')">T</button>
+            <div class="content-panel hidden" id="panel-inventory">
+                <div class="panel-header">
+                    <h2>Inventario</h2>
+                    <select id="filter-type" onchange="renderInventory()" style="background: rgba(0,0,0,0.5); color: white; padding: 8px; border-radius: 5px;">
+                        <option value="all">Todos</option>
+                        <option value="player">Jugador</option>
+                        <option value="weapon">Armas</option>
+                    </select>
+                </div>
+                <div class="inventory-grid" id="inventory-grid">
+                    <!-- Se llena dinámicamente -->
+                </div>
             </div>
 
-            <div style="margin-top: 20px;">
-                <button class="btn" id="start-btn" onclick="startGame()" disabled style="opacity: 0.5;">Esperando jugador...</button>
-                <button class="btn danger secondary" onclick="leaveRoom()">Salir</button>
+            <div class="content-panel hidden" id="panel-crates">
+                <div class="panel-header">
+                    <h2>Tienda de Cajas</h2>
+                    <div class="currency-display">
+                        <div class="currency key-icon">
+                            🔑 <span id="crate-keys">2</span> Llaves
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="crate-grid">
+                    <div class="crate-item" onclick="openCrate('standard')">
+                        <div class="crate-image">📦</div>
+                        <h3>Caja Estándar</h3>
+                        <p style="color: var(--rare); margin: 5px 0;">Requiere 1 Llave</p>
+                        <p style="font-size: 12px; color: #888;">Contiene skins comunes y raras</p>
+                    </div>
+                    
+                    <div class="crate-item" onclick="openCrate('premium')" style="border-color: var(--epic);">
+                        <div class="crate-image" style="background: linear-gradient(45deg, #a335ee, #4a0080);">💎</div>
+                        <h3>Caja Premium</h3>
+                        <p style="color: var(--epic); margin: 5px 0;">Requiere 3 Llaves</p>
+                        <p style="font-size: 12px; color: #888;">Skins épicas y legendarias</p>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 30px; text-align: center;">
+                    <button class="btn-primary btn-gold" onclick="buyKeys()">
+                        Comprar Llaves ($500 c/u)
+                    </button>
+                </div>
+            </div>
+
+            <div class="content-panel hidden" id="panel-trade">
+                <div class="panel-header">
+                    <h2>Tradeo P2P</h2>
+                </div>
+                <div class="trade-interface">
+                    <div class="trade-panel">
+                        <h3>Tu Oferta</h3>
+                        <div class="inventory-grid" id="trade-my-items" style="max-height: 300px; overflow-y: auto;">
+                            <!-- Tus items -->
+                        </div>
+                    </div>
+                    <div class="trade-arrow">⇄</div>
+                    <div class="trade-panel">
+                        <h3>Su Oferta</h3>
+                        <div id="trade-their-items" style="color: #888; text-align: center; padding: 40px;">
+                            Esperando jugador...
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top: 20px; text-align: center;">
+                    <button class="btn-primary" onclick="sendTradeOffer()">Enviar Oferta</button>
+                </div>
+            </div>
+
+            <div class="content-panel hidden" id="panel-settings">
+                <div class="panel-header">
+                    <h2>Configuración</h2>
+                </div>
+                <div style="max-width: 400px;">
+                    <label style="display: block; margin-bottom: 10px;">Nickname</label>
+                    <input type="text" id="nickname-input" placeholder="Tu nombre" maxlength="15">
+                    <button class="btn-primary" onclick="saveNickname()" style="width: 100%; margin-top: 10px;">
+                        Guardar Cambios
+                    </button>
+                    
+                    <div style="margin-top: 30px; padding: 20px; background: rgba(255,0,0,0.1); border-radius: 10px; border: 1px solid rgba(255,0,0,0.3);">
+                        <h4 style="color: #ff6b6b; margin-bottom: 10px;">⚠ Zona Peligrosa</h4>
+                        <button class="btn-primary" onclick="resetData()" style="background: #ff3333;">
+                            Reiniciar Datos (Borrar todo)
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- CONTENEDOR DEL JUEGO -->
+    <!-- OVERLAY DE APERTURA -->
+    <div class="overlay" id="crate-overlay">
+        <div class="modal">
+            <h2 id="crate-title">Abriendo Caja...</h2>
+            <div class="crate-opening" id="crate-animation">📦</div>
+            <div id="crate-result" class="hidden">
+                <h3 id="won-item-name"></h3>
+                <p id="won-item-rarity"></p>
+                <button class="btn-primary" onclick="closeCrate()" style="margin-top: 20px;">Aceptar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- GAME CONTAINER -->
     <div id="game-container">
-        <canvas id="gameCanvas" width="1200" height="800"></canvas>
-        
-        <!-- HUD Superior -->
-        <div id="hud-top">
-            <div class="team-score ct-score">CT: <span id="score-ct">0</span></div>
-            <div id="round-timer">01:45</div>
-            <div class="team-score t-score">TR: <span id="score-t">0</span></div>
-        </div>
-
-        <!-- HUD Inferior -->
-        <div id="hud-bottom">
-            <div class="hud-section">
-                <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #888;">Salud</div>
-                <div id="health-bar"><div id="health-fill"></div></div>
-                <div style="margin-top:8px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #888;">Chaleco</div>
-                <div id="armor-bar"><div id="armor-fill"></div></div>
-                <div style="margin-top:10px; color: #ffd700; font-weight: bold; font-size: 20px;">$<span id="money">800</span></div>
-            </div>
-            
-            <div class="hud-section" style="text-align: right;">
-                <div id="weapon-name" style="font-size: 14px; text-transform: uppercase; color: #888; margin-bottom: 5px;">Glock-18</div>
-                <div style="font-size: 48px; font-weight: 700; line-height: 1;">
-                    <span id="ammo-primary">20</span>
-                    <span style="color: #666; font-size: 24px;">/</span>
-                    <span id="ammo-reserve" style="color: #666; font-size: 24px;">120</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Mensajes de ronda -->
-        <div id="round-message" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; pointer-events: none; display: none;">
-            <h1 id="round-text" style="font-size: 64px; text-shadow: 0 0 30px rgba(0,0,0,1); font-family: 'Rajdhani', sans-serif;"></h1>
-        </div>
+        <canvas id="gameCanvas"></canvas>
+        <button onclick="backToMenu()" style="position: absolute; top: 20px; right: 20px; z-index: 100;" class="btn-primary">
+            ← Volver
+        </button>
     </div>
 
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script>
-        // ============ SISTEMA P2P CORREGIDO ============
+        // ============ BASE DE DATOS DE SKINS ============
+        const SKINS_DB = {
+            player: [
+                { id: 'default_ct', name: 'CT Default', color: '#4da6ff', rarity: 'common', type: 'player' },
+                { id: 'default_t', name: 'T Default', color: '#ff6b6b', rarity: 'common', type: 'player' },
+                { id: 'ct_gold', name: 'CT Dorado', color: '#ffd700', rarity: 'legendary', type: 'player', price: 5000 },
+                { id: 't_shadow', name: 'T Sombra', color: '#2d132c', rarity: 'epic', type: 'player', price: 3000 },
+                { id: 'ct_arctic', name: 'CT Ártico', color: '#e0f7fa', rarity: 'rare', type: 'player', price: 1500 },
+                { id: 't_desert', name: 'T Desierto', color: '#d4a373', rarity: 'rare', type: 'player', price: 1200 },
+                { id: 'neon_blue', name: 'Neón Azul', color: '#00ffff', rarity: 'epic', type: 'player', price: 2500 },
+                { id: 'neon_red', name: 'Neón Rojo', color: '#ff0055', rarity: 'epic', type: 'player', price: 2500 },
+                { id: 'camo_green', name: 'Camuflaje', color: '#2d5016', rarity: 'rare', type: 'player', price: 1000 },
+                { id: 'black_ops', name: 'Operaciones Negras', color: '#1a1a1a', rarity: 'legendary', type: 'player', price: 10000 }
+            ],
+            weapon: [
+                { id: 'ak_default', name: 'AK Default', weapon: 'ak47', rarity: 'common', type: 'weapon' },
+                { id: 'm4_default', name: 'M4 Default', weapon: 'm4a4', rarity: 'common', type: 'weapon' },
+                { id: 'awp_dragon', name: 'AWP Dragón', weapon: 'awp', rarity: 'legendary', price: 15000 },
+                { id: 'ak_case', name: 'AK Case Hardened', weapon: 'ak47', rarity: 'epic', price: 8000 },
+                { id: 'm4_howl', name: 'M4 Howl', weapon: 'm4a4', rarity: 'legendary', price: 25000 },
+                { id: 'glock_fade', name: 'Glock Fade', weapon: 'glock', rarity: 'rare', price: 2000 },
+                { id: 'usp_kill', name: 'USP Kill Confirmed', weapon: 'usp', rarity: 'epic', price: 6000 },
+                { id: 'awp_asiimov', name: 'AWP Asiimov', weapon: 'awp', rarity: 'epic', price: 12000 },
+                { id: 'mp7_bloodsport', name: 'MP7 Bloodsport', weapon: 'mp7', rarity: 'rare', price: 3000 },
+                { id: 'knife_default', name: 'Cuchillo Default', weapon: 'knife', rarity: 'common' },
+                { id: 'knife_karambit', name: 'Karambit', weapon: 'knife', rarity: 'legendary', price: 50000 }
+            ]
+        };
+
+        // ============ SISTEMA DE GUARDADO ============
+        const GameData = {
+            get: () => {
+                const saved = localStorage.getItem('cs2d_data');
+                if (saved) return JSON.parse(saved);
+                return {
+                    nickname: 'Jugador_' + Math.floor(Math.random() * 9999),
+                    money: 1000,
+                    keys: 2,
+                    inventory: ['default_ct', 'default_t', 'ak_default', 'm4_default', 'glock_default', 'usp_default', 'knife_default'],
+                    equipped: {
+                        player_ct: 'default_ct',
+                        player_t: 'default_t',
+                        ak47: 'ak_default',
+                        m4a4: 'm4_default',
+                        glock: 'glock_default',
+                        usp: 'usp_default',
+                        knife: 'knife_default'
+                    },
+                    stats: { kills: 0, deaths: 0, wins: 0 }
+                };
+            },
+            
+            save: (data) => {
+                localStorage.setItem('cs2d_data', JSON.stringify(data));
+            },
+            
+            addSkin: (skinId) => {
+                const data = GameData.get();
+                if (!data.inventory.includes(skinId)) {
+                    data.inventory.push(skinId);
+                    GameData.save(data);
+                    return true;
+                }
+                return false;
+            },
+            
+            equipSkin: (skinId) => {
+                const skin = [...SKINS_DB.player, ...SKINS_DB.weapon].find(s => s.id === skinId);
+                if (!skin) return;
+                
+                const data = GameData.get();
+                if (skin.type === 'player') {
+                    data.equipped.player_ct = skinId;
+                    data.equipped.player_t = skinId;
+                } else if (skin.type === 'weapon') {
+                    data.equipped[skin.weapon] = skinId;
+                }
+                GameData.save(data);
+            }
+        };
+
+        // ============ VARIABLES GLOBALES ============
+        let currentData = GameData.get();
         let peer = null;
         let conn = null;
-        let isHost = false;
-        let myTeam = null;
-        let enemyTeam = null;
-        let gameState = 'menu'; // menu, lobby, playing
-        
-        // Inicializar PeerJS
-        function initPeer() {
-            return new Promise((resolve) => {
-                if (peer) {
-                    resolve(peer);
-                    return;
-                }
-                
-                peer = new Peer();
-                peer.on('open', (id) => {
-                    document.getElementById('my-peer-id').textContent = id;
-                    resolve(peer);
-                });
-                
-                peer.on('connection', (connection) => {
-                    if (conn) return; // Ya conectado
-                    conn = connection;
-                    isHost = true;
-                    setupConnection();
-                    showLobby();
-                    updateLobbyStatus('connected');
-                });
-                
-                peer.on('error', (err) => {
-                    console.error('Peer error:', err);
-                    showStatus('host-status', 'Error: ' + err.type, 'error');
-                });
+        let game = null;
+
+        // ============ INICIALIZACIÓN ============
+        function init() {
+            // Cargar datos guardados
+            document.getElementById('player-name').textContent = currentData.nickname;
+            document.getElementById('menu-money').textContent = currentData.money;
+            document.getElementById('menu-keys').textContent = currentData.keys;
+            document.getElementById('crate-keys').textContent = currentData.keys;
+            document.getElementById('nickname-input').value = currentData.nickname;
+            
+            // Inicializar PeerJS
+            peer = new Peer();
+            peer.on('open', (id) => {
+                document.getElementById('player-id').textContent = 'ID: ' + id;
             });
         }
 
-        // Crear sala (Host)
-        async function createHost() {
-            await initPeer();
-            showStatus('host-status', 'Esperando jugador...', 'connecting');
-            document.querySelector('#tab-host .btn').disabled = true;
+        // ============ NAVEGACIÓN ============
+        function showPanel(panel) {
+            // Ocultar todos los paneles
+            document.querySelectorAll('.content-panel').forEach(p => p.classList.add('hidden'));
+            document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+            
+            // Mostrar seleccionado
+            document.getElementById('panel-' + panel).classList.remove('hidden');
+            event.target.classList.add('active');
+            
+            // Acciones especiales
+            if (panel === 'inventory') renderInventory();
+            if (panel === 'trade') renderTradeInventory();
         }
 
-        // Unirse a sala (Cliente)
-        async function joinRoom() {
-            const hostId = document.getElementById('join-peer-id').value.trim();
-            if (!hostId) {
-                showStatus('join-status', 'Introduce un ID válido', 'error');
+        // ============ SISTEMA DE INVENTARIO ============
+        function renderInventory() {
+            const grid = document.getElementById('inventory-grid');
+            grid.innerHTML = '';
+            const filter = document.getElementById('filter-type').value;
+            
+            currentData.inventory.forEach(skinId => {
+                const skin = [...SKINS_DB.player, ...SKINS_DB.weapon].find(s => s.id === skinId);
+                if (!skin) return;
+                if (filter !== 'all' && skin.type !== filter) return;
+                
+                const card = document.createElement('div');
+                card.className = `skin-card ${skin.rarity}`;
+                if (isEquipped(skinId)) card.classList.add('equipped');
+                
+                card.innerHTML = `
+                    <div class="skin-icon" style="background: ${skin.color || '#666'}; ${skin.image ? '' : ''}"></div>
+                    <div class="skin-name">${skin.name}</div>
+                    <div class="skin-type">${skin.type === 'player' ? 'Jugador' : skin.weapon}</div>
+                    ${isEquipped(skinId) ? '<div style="color: gold; font-size: 10px;">✦ EQUIPADO</div>' : ''}
+                `;
+                
+                card.onclick = () => equipSkin(skinId);
+                grid.appendChild(card);
+            });
+        }
+
+        function isEquipped(skinId) {
+            return Object.values(currentData.equipped).includes(skinId);
+        }
+
+        function equipSkin(skinId) {
+            GameData.equipSkin(skinId);
+            renderInventory();
+        }
+
+        // ============ SISTEMA DE CAJAS ============
+        function buyKeys() {
+            if (currentData.money >= 500) {
+                currentData.money -= 500;
+                currentData.keys++;
+                GameData.save(currentData);
+                updateCurrency();
+                alert('Llave comprada!');
+            } else {
+                alert('Dinero insuficiente');
+            }
+        }
+
+        function openCrate(type) {
+            const cost = type === 'standard' ? 1 : 3;
+            if (currentData.keys < cost) {
+                alert('Necesitas más llaves');
                 return;
             }
             
-            await initPeer();
-            showStatus('join-status', 'Conectando...', 'connecting');
+            document.getElementById('crate-overlay').classList.add('active');
+            document.getElementById('crate-result').classList.add('hidden');
+            document.getElementById('crate-animation').style.display = 'block';
+            document.getElementById('crate-title').textContent = 'Abriendo...';
             
-            conn = peer.connect(hostId);
-            isHost = false;
-            
-            conn.on('open', () => {
-                setupConnection();
-                showLobby();
-                updateLobbyStatus('connected');
-            });
-            
-            conn.on('error', () => {
-                showStatus('join-status', 'Error de conexión', 'error');
-            });
+            // Animación
+            setTimeout(() => {
+                currentData.keys -= cost;
+                
+                // Determinar rareza
+                const rand = Math.random();
+                let rarity = 'common';
+                if (rand > 0.6) rarity = 'rare';
+                if (rand > 0.85) rarity = 'epic';
+                if (rand > 0.97) rarity = 'legendary';
+                
+                if (type === 'premium') {
+                    rarity = rand > 0.4 ? 'epic' : 'rare';
+                    if (rand > 0.9) rarity = 'legendary';
+                }
+                
+                // Seleccionar skin
+                const pool = [...SKINS_DB.player, ...SKINS_DB.weapon].filter(s => s.rarity === rarity);
+                const won = pool[Math.floor(Math.random() * pool.length)];
+                
+                GameData.addSkin(won.id);
+                GameData.save(currentData);
+                updateCurrency();
+                
+                // Mostrar resultado
+                document.getElementById('crate-animation').style.display = 'none';
+                document.getElementById('crate-result').classList.remove('hidden');
+                document.getElementById('won-item-name').textContent = won.name;
+                document.getElementById('won-item-name').className = won.rarity + '-text';
+                document.getElementById('won-item-rarity').textContent = rarity.toUpperCase();
+                document.getElementById('won-item-rarity').style.color = `var(--${won.rarity})`;
+                
+            }, 2000);
         }
 
-        // Configurar conexión bidireccional
-        function setupConnection() {
-            conn.on('data', (data) => {
-                handleNetworkData(data);
-            });
-            
-            conn.on('close', () => {
-                alert('El oponente se ha desconectado');
+        function closeCrate() {
+            document.getElementById('crate-overlay').classList.remove('active');
+        }
+
+        function updateCurrency() {
+            document.getElementById('menu-money').textContent = currentData.money;
+            document.getElementById('menu-keys').textContent = currentData.keys;
+            document.getElementById('crate-keys').textContent = currentData.keys;
+        }
+
+        // ============ CONFIGURACIÓN ============
+        function saveNickname() {
+            const name = document.getElementById('nickname-input').value;
+            if (name.length < 3) return alert('Mínimo 3 caracteres');
+            currentData.nickname = name;
+            GameData.save(currentData);
+            document.getElementById('player-name').textContent = name;
+            alert('Guardado!');
+        }
+
+        function resetData() {
+            if (confirm('¿Borrar TODO? Skins, dinero, progreso...')) {
+                localStorage.removeItem('cs2d_data');
                 location.reload();
-            });
-            
-            // Enviar ping cada 50ms para sincronización
-            setInterval(() => {
-                if (gameState === 'playing' && game && game.localPlayer) {
-                    sendData({
-                        type: 'playerUpdate',
-                        id: peer.id,
-                        x: game.localPlayer.x,
-                        y: game.localPlayer.y,
-                        angle: game.localPlayer.angle,
-                        health: game.localPlayer.health,
-                        currentWeapon: game.localPlayer.currentWeapon,
-                        isShooting: game.mouse.down,
-                        team: myTeam
-                    });
-                }
-            }, 50);
-        }
-
-        // Manejar datos recibidos
-        function handleNetworkData(data) {
-            if (!game) return;
-            
-            switch(data.type) {
-                case 'playerUpdate':
-                    if (!game.players[data.id]) {
-                        // Crear jugador remoto
-                        const spawn = game.getSpawnPoint(data.team);
-                        game.players[data.id] = new Player(data.id, spawn.x, spawn.y, data.team);
-                    }
-                    const remote = game.players[data.id];
-                    if (remote) {
-                        // Interpolación suave
-                        remote.x = lerp(remote.x, data.x, 0.3);
-                        remote.y = lerp(remote.y, data.y, 0.3);
-                        remote.angle = data.angle;
-                        remote.health = data.health;
-                        remote.currentWeapon = data.currentWeapon;
-                        
-                        // Si está disparando
-                        if (data.isShooting && Date.now() - remote.lastShot > WEAPONS[remote.currentWeapon].fireRate) {
-                            remote.shoot(true); // true = no sonido local
-                        }
-                    }
-                    break;
-                    
-                case 'bullet':
-                    // Crear bala remota
-                    game.bullets.push(new Bullet(data.x, data.y, data.angle, data.weapon, data.owner));
-                    break;
-                    
-                case 'damage':
-                    if (game.localPlayer && data.target === peer.id) {
-                        game.localPlayer.takeDamage(data.amount, data.isHeadshot);
-                    }
-                    break;
-                    
-                case 'teamSelected':
-                    // El otro jugador seleccionó equipo
-                    enemyTeam = data.team;
-                    checkTeamsReady();
-                    break;
-                    
-                case 'startGame':
-                    // Host inició el juego
-                    startGameLocal();
-                    break;
             }
         }
 
-        function lerp(start, end, t) {
-            return start + (end - start) * t;
-        }
-
-        function sendData(data) {
-            if (conn && conn.open) {
-                conn.send(data);
-            }
-        }
-
-        // UI Functions
-        function switchTab(tab) {
-            document.querySelectorAll('.menu-tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            
-            event.target.classList.add('active');
-            document.getElementById('tab-' + tab).classList.add('active');
-        }
-
-        function showStatus(elementId, text, type) {
-            const el = document.getElementById(elementId);
-            el.textContent = text;
-            el.className = 'connection-status ' + type;
-        }
-
-        function showLobby() {
-            document.getElementById('connection-panel').classList.add('hidden');
-            document.getElementById('lobby-panel').classList.remove('hidden');
-            document.getElementById('slot-host').querySelector('span:last-child').textContent = isHost ? 'Tú' : 'Host';
-        }
-
-        function updateLobbyStatus(status) {
-            const clientSpan = document.getElementById('slot-client').querySelector('span:last-child');
-            const startBtn = document.getElementById('start-btn');
-            
-            if (status === 'connected') {
-                clientSpan.textContent = 'Conectado';
-                clientSpan.style.color = '#4caf50';
-                if (isHost) {
-                    startBtn.disabled = false;
-                    startBtn.style.opacity = '1';
-                    startBtn.textContent = 'Iniciar Partida';
-                } else {
-                    startBtn.textContent = 'Esperando al host...';
-                }
-            }
-        }
-
-        function selectTeam(team) {
-            myTeam = team;
-            
-            // Actualizar UI
-            document.querySelectorAll('.team-btn').forEach(btn => btn.classList.remove('selected'));
-            event.target.classList.add('selected');
-            
-            // Enviar al otro
-            sendData({ type: 'teamSelected', team: team });
-            
-            // Actualizar slot
-            const slotId = isHost ? 'slot-host' : 'slot-client';
-            document.getElementById(slotId).querySelector('span:last-child').textContent = team;
-            document.getElementById(slotId).classList.add('ready');
-            
-            checkTeamsReady();
-        }
-
-        function checkTeamsReady() {
-            if (!isHost) return;
-            
-            // Verificar que ambos tengan equipo y sean diferentes
-            const hostReady = document.getElementById('slot-host').classList.contains('ready');
-            const clientReady = document.getElementById('slot-client').classList.contains('ready');
-            
-            if (hostReady && clientReady) {
-                const startBtn = document.getElementById('start-btn');
-                startBtn.textContent = '¡Iniciar Partida!';
-                startBtn.style.background = 'rgba(76, 175, 80, 0.2)';
-                startBtn.style.borderColor = '#4caf50';
-                startBtn.style.color = '#4caf50';
-            }
-        }
-
-        function startGame() {
-            if (!isHost) return;
-            sendData({ type: 'startGame' });
-            startGameLocal();
-        }
-
-        function startGameLocal() {
-            gameState = 'playing';
-            document.getElementById('main-menu').style.display = 'none';
-            document.getElementById('game-container').style.display = 'block';
-            
-            // Iniciar juego
-            game = new Game();
-            game.isMultiplayer = true;
-            game.isHost = isHost;
-            
-            // Crear jugador local
-            const spawn = game.getSpawnPoint(myTeam);
-            game.localPlayer = new Player(peer.id, spawn.x, spawn.y, myTeam);
-            game.players[peer.id] = game.localPlayer;
-            
-            // Si es host, crear bots en el equipo contrario (opcional)
-            if (isHost) {
-                // Aquí podrías añadir bots si quieres 2v2, etc.
-            }
-        }
-
+        // ============ JUEGO (Simplificado para el ejemplo) ============
         function startLocalGame() {
-            gameState = 'playing';
             document.getElementById('main-menu').style.display = 'none';
             document.getElementById('game-container').style.display = 'block';
             
-            game = new Game();
-            game.isMultiplayer = false;
+            // Canvas responsive
+            const canvas = document.getElementById('gameCanvas');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
             
-            // Jugador CT por defecto
-            game.startLocalGame('CT');
-        }
-
-        function leaveRoom() {
-            if (conn) conn.close();
-            location.reload();
-        }
-
-        // ============ CLASES DEL JUEGO (Mejoradas para red) ============
-        
-        const CANVAS_WIDTH = 1200;
-        const CANVAS_HEIGHT = 800;
-        const PLAYER_RADIUS = 15;
-        const PLAYER_SPEED = 4;
-        const FRICTION = 0.85;
-        const ACCELERATION = 0.8;
-        
-        const WEAPONS = {
-            glock: { name: 'Glock-18', damage: 28, fireRate: 120, clipSize: 20, reserveAmmo: 120, reloadTime: 2000, automatic: true, spread: 0.15, price: 200 },
-            usp: { name: 'USP-S', damage: 35, fireRate: 150, clipSize: 12, reserveAmmo: 24, reloadTime: 2200, automatic: false, spread: 0.08, price: 200 },
-            ak47: { name: 'AK-47', damage: 36, fireRate: 100, clipSize: 30, reserveAmmo: 90, reloadTime: 2500, automatic: true, spread: 0.25, price: 2700 },
-            m4a4: { name: 'M4A4', damage: 33, fireRate: 90, clipSize: 30, reserveAmmo: 90, reloadTime: 2300, automatic: true, spread: 0.18, price: 3100 },
-            awp: { name: 'AWP', damage: 115, fireRate: 1500, clipSize: 10, reserveAmmo: 30, reloadTime: 3500, automatic: false, spread: 0.02, price: 4750 },
-            mp7: { name: 'MP7', damage: 29, fireRate: 80, clipSize: 30, reserveAmmo: 120, reloadTime: 2100, automatic: true, spread: 0.20, price: 1500 },
-            knife: { name: 'Cuchillo', damage: 65, fireRate: 500, clipSize: 1, reserveAmmo: 0, reloadTime: 0, automatic: false, spread: 0, price: 0 }
-        };
-
-        const MAP_WALLS = [
-            {x: 0, y: 0, w: CANVAS_WIDTH, h: 50},
-            {x: 0, y: CANVAS_HEIGHT-50, w: CANVAS_WIDTH, h: 50},
-            {x: 0, y: 0, w: 50, h: CANVAS_HEIGHT},
-            {x: CANVAS_WIDTH-50, y: 0, w: 50, h: CANVAS_HEIGHT},
-            {x: 300, y: 200, w: 100, h: 20},
-            {x: 500, y: 300, w: 20, h: 200},
-            {x: 700, y: 400, w: 150, h: 20},
-            {x: 200, y: 500, w: 20, h: 150},
-            {x: 900, y: 150, w: 200, h: 20},
-            {x: 1000, y: 600, w: 20, h: 100},
-            {x: 400, y: 600, w: 60, h: 60},
-            {x: 800, y: 300, w: 60, h: 60}
-        ];
-
-        class Bullet {
-            constructor(x, y, angle, weapon, owner) {
-                this.x = x;
-                this.y = y;
-                this.vx = Math.cos(angle) * 15;
-                this.vy = Math.sin(angle) * 15;
-                this.weapon = weapon;
-                this.owner = owner;
-                this.damage = WEAPONS[weapon].damage;
-                this.life = 100;
-            }
-
-            update() {
-                this.x += this.vx;
-                this.y += this.vy;
-                this.life--;
-            }
-        }
-
-        class Player {
-            constructor(id, x, y, team) {
-                this.id = id;
-                this.x = x;
-                this.y = y;
-                this.vx = 0;
-                this.vy = 0;
-                this.team = team;
-                this.health = 100;
-                this.armor = 0;
-                this.hasHelmet = false;
-                this.money = 800;
-                this.angle = 0;
-                this.currentWeapon = team === 'T' ? 'glock' : 'usp';
-                this.weapons = [this.currentWeapon, 'knife'];
-                this.ammo = {};
-                this.ammo[this.currentWeapon] = {clip: WEAPONS[this.currentWeapon].clipSize, reserve: WEAPONS[this.currentWeapon].reserveAmmo};
-                this.isReloading = false;
-                this.reloadTime = 0;
-                this.lastShot = 0;
-                this.dead = false;
-                this.respawnTime = 0;
-            }
-
-            update() {
-                if (this.dead) return;
+            const ctx = canvas.getContext('2d');
+            
+            // Loop básico
+            function loop() {
+                ctx.fillStyle = '#0d1117';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
-                this.vx *= FRICTION;
-                this.vy *= FRICTION;
-                this.x += this.vx;
-                this.y += this.vy;
+                // Dibujar jugador con skin equipada
+                const skinId = currentData.equipped.player_ct;
+                const skin = SKINS_DB.player.find(s => s.id === skinId);
                 
-                this.checkWallCollision();
-                
-                if (this.isReloading && Date.now() > this.reloadTime) {
-                    this.finishReload();
-                }
-            }
-
-            checkWallCollision() {
-                for (let wall of MAP_WALLS) {
-                    if (this.x + PLAYER_RADIUS > wall.x && 
-                        this.x - PLAYER_RADIUS < wall.x + wall.w &&
-                        this.y + PLAYER_RADIUS > wall.y && 
-                        this.y - PLAYER_RADIUS < wall.y + wall.h) {
-                        
-                        let overlapX = (this.x < wall.x + wall.w/2) ? 
-                            (this.x + PLAYER_RADIUS) - wall.x : 
-                            (wall.x + wall.w) - (this.x - PLAYER_RADIUS);
-                        let overlapY = (this.y < wall.y + wall.h/2) ? 
-                            (this.y + PLAYER_RADIUS) - wall.y : 
-                            (wall.y + wall.h) - (this.y - PLAYER_RADIUS);
-                        
-                        if (Math.abs(overlapX) < Math.abs(overlapY)) {
-                            this.x -= overlapX * (this.x < wall.x + wall.w/2 ? 1 : -1);
-                            this.vx = 0;
-                        } else {
-                            this.y -= overlapY * (this.y < wall.y + wall.h/2 ? 1 : -1);
-                            this.vy = 0;
-                        }
-                    }
-                }
-                
-                this.x = Math.max(PLAYER_RADIUS, Math.min(CANVAS_WIDTH - PLAYER_RADIUS, this.x));
-                this.y = Math.max(PLAYER_RADIUS, Math.min(CANVAS_HEIGHT - PLAYER_RADIUS, this.y));
-            }
-
-            takeDamage(amount, isHeadshot) {
-                if (this.dead) return;
-                
-                let damage = amount;
-                if (isHeadshot && this.hasHelmet) damage *= 0.35;
-                else if (isHeadshot) damage *= 3;
-                
-                if (this.armor > 0) {
-                    let armorDamage = damage * 0.5;
-                    this.armor = Math.max(0, this.armor - armorDamage);
-                    damage *= 0.5;
-                }
-                
-                this.health = Math.max(0, this.health - damage);
-                if (this.health <= 0) this.die();
-            }
-
-            die() {
-                this.dead = true;
-                this.respawnTime = Date.now() + 3000;
-            }
-
-            shoot(isRemote = false) {
-                let weapon = WEAPONS[this.currentWeapon];
-                let now = Date.now();
-                
-                if (this.isReloading || now - this.lastShot < weapon.fireRate) return false;
-                if (this.ammo[this.currentWeapon].clip <= 0) {
-                    this.reload();
-                    return false;
-                }
-
-                this.ammo[this.currentWeapon].clip--;
-                this.lastShot = now;
-                
-                let spread = (Math.random() - 0.5) * weapon.spread;
-                let finalAngle = this.angle + spread;
-                
-                // Si no es remoto, enviar por red
-                if (!isRemote && game && game.isMultiplayer) {
-                    sendData({
-                        type: 'bullet',
-                        x: this.x,
-                        y: this.y,
-                        angle: finalAngle,
-                        weapon: this.currentWeapon,
-                        owner: this.id
-                    });
-                }
-                
-                return new Bullet(this.x, this.y, finalAngle, this.currentWeapon, this.id);
-            }
-
-            reload() {
-                if (this.isReloading || this.currentWeapon === 'knife') return;
-                let weapon = WEAPONS[this.currentWeapon];
-                if (this.ammo[this.currentWeapon].clip >= weapon.clipSize) return;
-                if (this.ammo[this.currentWeapon].reserve <= 0) return;
-                
-                this.isReloading = true;
-                this.reloadTime = Date.now() + weapon.reloadTime;
-            }
-
-            finishReload() {
-                let weapon = WEAPONS[this.currentWeapon];
-                let needed = weapon.clipSize - this.ammo[this.currentWeapon].clip;
-                let available = Math.min(needed, this.ammo[this.currentWeapon].reserve);
-                this.ammo[this.currentWeapon].clip += available;
-                this.ammo[this.currentWeapon].reserve -= available;
-                this.isReloading = false;
-            }
-
-            draw(ctx) {
-                if (this.dead) return;
-                
-                ctx.save();
-                ctx.translate(this.x, this.y);
-                ctx.rotate(this.angle);
-                
-                ctx.fillStyle = this.team === 'CT' ? '#4da6ff' : '#ff6b6b';
+                ctx.fillStyle = skin ? skin.color : '#4da6ff';
                 ctx.beginPath();
-                ctx.arc(0, 0, PLAYER_RADIUS, 0, Math.PI * 2);
+                ctx.arc(canvas.width/2, canvas.height/2, 30, 0, Math.PI * 2);
                 ctx.fill();
                 
-                ctx.fillStyle = '#222';
-                ctx.fillRect(10, -5, 20, 10);
-                
-                if (this.armor > 0) {
-                    ctx.strokeStyle = '#4caf50';
-                    ctx.lineWidth = 2;
-                    ctx.beginPath();
-                    ctx.arc(0, 0, PLAYER_RADIUS + 3, 0, Math.PI * 2);
-                    ctx.stroke();
-                }
-                
-                ctx.restore();
-                
                 ctx.fillStyle = 'white';
-                ctx.font = 'bold 12px Rajdhani';
-                ctx.textAlign = 'center';
-                ctx.fillText(this.team, this.x, this.y - 25);
+                ctx.font = '20px Rajdhani';
+                ctx.fillText(currentData.nickname, canvas.width/2 - 40, canvas.height/2 - 40);
                 
-                if (this.health < 100) {
-                    ctx.fillStyle = 'red';
-                    ctx.fillRect(this.x - 15, this.y - 35, 30 * (this.health/100), 4);
-                    ctx.strokeStyle = 'black';
-                    ctx.strokeRect(this.x - 15, this.y - 35, 30, 4);
-                }
+                requestAnimationFrame(loop);
             }
+            loop();
         }
 
-        class Game {
-            constructor() {
-                this.canvas = document.getElementById('gameCanvas');
-                this.ctx = this.canvas.getContext('2d');
-                
-                this.players = {};
-                this.bullets = [];
-                this.localPlayer = null;
-                this.isMultiplayer = false;
-                this.isHost = false;
-                
-                this.roundActive = false;
-                this.roundTime = 115;
-                this.score = { CT: 0, T: 0 };
-                this.freezeTime = false;
-                
-                this.keys = {};
-                this.mouse = { x: 0, y: 0, down: false };
-                
-                this.setupInputs();
-                this.startRound();
-                this.loop();
-            }
-
-            startLocalGame(team) {
-                this.localPlayer = new Player('local', team === 'CT' ? 200 : 1000, team === 'CT' ? 600 : 200, team);
-                this.players['local'] = this.localPlayer;
-                
-                // Bots para modo local
-                for (let i = 0; i < 3; i++) {
-                    let botTeam = team === 'CT' ? 'T' : 'CT';
-                    let bot = new Player('bot' + i, botTeam === 'CT' ? 200 : 1000, botTeam === 'CT' ? 600 : 200, botTeam);
-                    this.players['bot' + i] = bot;
-                }
-            }
-
-            startRound() {
-                this.roundActive = true;
-                this.roundTime = 115;
-                this.freezeTime = true;
-                setTimeout(() => { this.freezeTime = false; }, 3000);
-            }
-
-            setupInputs() {
-                window.addEventListener('keydown', (e) => {
-                    this.keys[e.key] = true;
-                    if (e.key === 'r' || e.key === 'R') this.localPlayer?.reload();
-                    if (e.key >= '1' && e.key <= '5') this.localPlayer?.switchWeapon(parseInt(e.key) - 1);
-                });
-                
-                window.addEventListener('keyup', (e) => this.keys[e.key] = false);
-                
-                this.canvas.addEventListener('mousemove', (e) => {
-                    let rect = this.canvas.getBoundingClientRect();
-                    this.mouse.x = e.clientX - rect.left;
-                    this.mouse.y = e.clientY - rect.top;
-                });
-                
-                this.canvas.addEventListener('mousedown', () => {
-                    this.mouse.down = true;
-                    if (this.localPlayer && !WEAPONS[this.localPlayer.currentWeapon].automatic) {
-                        let bullet = this.localPlayer.shoot();
-                        if (bullet) this.bullets.push(bullet);
-                    }
-                });
-                
-                this.canvas.addEventListener('mouseup', () => this.mouse.down = false);
-            }
-
-            update() {
-                if (!this.localPlayer) return;
-                
-                if (this.roundActive && !this.freezeTime) {
-                    this.roundTime -= 1/60;
-                }
-                
-                // Movimiento local
-                if (!this.freezeTime && !this.localPlayer.dead) {
-                    let moveX = 0, moveY = 0;
-                    if (this.keys['w'] || this.keys['W']) moveY -= ACCELERATION;
-                    if (this.keys['s'] || this.keys['S']) moveY += ACCELERATION;
-                    if (this.keys['a'] || this.keys['A']) moveX -= ACCELERATION;
-                    if (this.keys['d'] || this.keys['D']) moveX += ACCELERATION;
-                    
-                    this.localPlayer.vx += moveX;
-                    this.localPlayer.vy += moveY;
-                    this.localPlayer.angle = Math.atan2(
-                        this.mouse.y - this.localPlayer.y,
-                        this.mouse.x - this.localPlayer.x
-                    );
-                    
-                    if (this.mouse.down && WEAPONS[this.localPlayer.currentWeapon].automatic) {
-                        let bullet = this.localPlayer.shoot();
-                        if (bullet) this.bullets.push(bullet);
-                    }
-                }
-                
-                // Actualizar jugadores
-                for (let id in this.players) this.players[id].update();
-                
-                // Balas
-                for (let i = this.bullets.length - 1; i >= 0; i--) {
-                    let b = this.bullets[i];
-                    b.update();
-                    
-                    // Colisión paredes
-                    for (let wall of MAP_WALLS) {
-                        if (b.x > wall.x && b.x < wall.x + wall.w && 
-                            b.y > wall.y && b.y < wall.y + wall.h) {
-                            this.bullets.splice(i, 1);
-                            break;
-                        }
-                    }
-                    
-                    // Colisión jugadores
-                    for (let id in this.players) {
-                        let p = this.players[id];
-                        if (p.id !== b.owner && !p.dead) {
-                            let dist = Math.hypot(b.x - p.x, b.y - p.y);
-                            if (dist < PLAYER_RADIUS) {
-                                let isHeadshot = dist < PLAYER_RADIUS * 0.5;
-                                
-                                // En multiplayer, notificar daño al host/peer
-                                if (this.isMultiplayer) {
-                                    sendData({
-                                        type: 'damage',
-                                        target: p.id,
-                                        amount: b.damage,
-                                        isHeadshot: isHeadshot
-                                    });
-                                } else {
-                                    p.takeDamage(b.damage, isHeadshot);
-                                }
-                                this.bullets.splice(i, 1);
-                                break;
-                            }
-                        }
-                    }
-                    
-                    if (b.life <= 0) this.bullets.splice(i, 1);
-                }
-                
-                this.updateUI();
-            }
-
-            draw() {
-                this.ctx.fillStyle = '#0d1117';
-                this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-                
-                // Grid
-                this.ctx.strokeStyle = '#161b22';
-                this.ctx.lineWidth = 1;
-                for (let i = 0; i < CANVAS_WIDTH; i += 50) {
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(i, 0);
-                    this.ctx.lineTo(i, CANVAS_HEIGHT);
-                    this.ctx.stroke();
-                }
-                for (let i = 0; i < CANVAS_HEIGHT; i += 50) {
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(0, i);
-                    this.ctx.lineTo(CANVAS_WIDTH, i);
-                    this.ctx.stroke();
-                }
-                
-                // Paredes
-                this.ctx.fillStyle = '#30363d';
-                this.ctx.shadowBlur = 10;
-                this.ctx.shadowColor = 'rgba(0,0,0,0.5)';
-                for (let wall of MAP_WALLS) {
-                    this.ctx.fillRect(wall.x, wall.y, wall.w, wall.h);
-                }
-                this.ctx.shadowBlur = 0;
-                
-                // Entidades
-                for (let b of this.bullets) {
-                    this.ctx.fillStyle = '#ffeb3b';
-                    this.ctx.beginPath();
-                    this.ctx.arc(b.x, b.y, 3, 0, Math.PI * 2);
-                    this.ctx.fill();
-                }
-                
-                for (let id in this.players) this.players[id].draw(this.ctx);
-                
-                // Iluminación
-                if (this.localPlayer && !this.localPlayer.dead) {
-                    let gradient = this.ctx.createRadialGradient(
-                        this.localPlayer.x, this.localPlayer.y, 100,
-                        this.localPlayer.x, this.localPlayer.y, 400
-                    );
-                    gradient.addColorStop(0, 'rgba(0,0,0,0)');
-                    gradient.addColorStop(1, 'rgba(0,0,0,0.7)');
-                    this.ctx.fillStyle = gradient;
-                    this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-                }
-            }
-
-            updateUI() {
-                if (!this.localPlayer) return;
-                
-                document.getElementById('health-fill').style.width = this.localPlayer.health + '%';
-                document.getElementById('armor-fill').style.width = this.localPlayer.armor + '%';
-                
-                let w = WEAPONS[this.localPlayer.currentWeapon];
-                document.getElementById('weapon-name').textContent = w.name;
-                document.getElementById('ammo-primary').textContent = this.localPlayer.ammo[this.localPlayer.currentWeapon]?.clip || 0;
-                document.getElementById('ammo-reserve').textContent = this.localPlayer.ammo[this.localPlayer.currentWeapon]?.reserve || 0;
-                
-                document.getElementById('money').textContent = this.localPlayer.money;
-                
-                let mins = Math.floor(this.roundTime / 60);
-                let secs = Math.floor(this.roundTime % 60);
-                document.getElementById('round-timer').textContent = 
-                    `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-                
-                document.getElementById('score-ct').textContent = this.score.CT;
-                document.getElementById('score-t').textContent = this.score.T;
-            }
-
-            getSpawnPoint(team) {
-                return team === 'CT' ? 
-                    {x: 200 + Math.random()*50, y: 600 + Math.random()*50} : 
-                    {x: 1000 + Math.random()*50, y: 200 + Math.random()*50};
-            }
-
-            loop() {
-                this.update();
-                this.draw();
-                requestAnimationFrame(() => this.loop());
-            }
+        function backToMenu() {
+            document.getElementById('game-container').style.display = 'none';
+            document.getElementById('main-menu').style.display = 'flex';
         }
 
-        // Inicialización
-        let game = null;
-        
-        // Generar ID al cargar
-        window.onload = () => {
-            initPeer();
-        };
+        // Iniciar al cargar
+        window.onload = init;
     </script>
 </body>
 </html>
